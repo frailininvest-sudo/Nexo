@@ -1,13 +1,8 @@
-NEXO V0.10 - EDIT PROFILE
+NEXO V0.11 - CREATE DROP
+- Keeps V0.10 login and Edit Profile.
+- Removes fake follower/following/drop/streak numbers; starts at 0.
+- Create now publishes real photo/video Drops to Supabase.
+- Home loads real Drops from Supabase.
+- Profile Drop count is calculated from the database.
 
-Adds real Supabase-backed profile editing:
-- Display name
-- @username
-- Bio
-- Profile photo
-- Cover photo
-
-IMPORTANT FIRST:
-Run PROFILE_MEDIA_SETUP.sql once in the NEXO Supabase SQL Editor.
-Then upload index.html + assets + README.txt to GitHub.
-Do NOT upload PROFILE_MEDIA_SETUP.sql to the public GitHub repo if you prefer to keep setup files out of the site (it contains no secret keys, but it is not needed by the browser).
+SETUP: Run DROPS_SETUP.sql once in Supabase SQL Editor before publishing this version.
