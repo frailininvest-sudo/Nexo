@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>NEXO V0.9.1</title>
+<meta name="theme-color" content="#07100b"><title>NEXO V0.9.2</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -65,40 +65,9 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 <main id="app" style="display:none">
 <header><div></div><div class="brandLogo"><img src="assets/nexo-logo.png" alt="NEXO"></div><div class="headerActions"><button class="icon" data-go="search">⌕</button> <button class="icon" data-go="messages">↗</button></div></header>
 
-<section id="home" class="page active"><div class="tabs"><button class="on">For You</button><button>Following</button><button data-go="drop">DROP ⚡</button></div><div class="card dropHero"><small class="mint"><b>EVERY DAY · 3:00 PM ET</b></small><h2>⚡ GLOBAL DROP</h2><p class="sub">The whole world in one daily window. No posting required to watch.</p><button class="primary" data-go="drop">ENTER WORLD DROP</button></div><div class="card post"><div class="postHead"><div class="ava">MK</div><div class="who"><b>mika.jpg ✓</b><small>Miami · 2m</small></div>•••</div><div class="media">TONIGHT · MIAMI</div><div class="actions"><span>♡</span><span>◯</span><span>↗</span><span>⌑</span></div></div></section>
 
-<section id="drop" class="page"><div class="title">⚡ World DROP</div><p class="sub">Everyone sees everyone. Today's window disappears tomorrow at 2:55 PM ET.</p><div class="card dropHero"><small class="mint"><b>NEXT DROP · 3:00 PM ET</b></small><div class="clock" id="clock">--:--:--</div><p class="sub" id="dropStatus">Today's World Drop is live.</p><button class="primary" id="postDrop">＋ POST MY DROP</button></div><div class="worldGrid"><div class="world"><b>Tokyo 🇯🇵</b><small>Today's moments</small></div><div class="world"><b>Puerto Rico 🇵🇷</b><small>Today's moments</small></div><div class="world"><b>Miami 🇺🇸</b><small>Today's moments</small></div><div class="world"><b>Madrid 🇪🇸</b><small>Today's moments</small></div></div></section>
 
-<section id="loops" class="page"><div class="title">◎ Loops</div><p class="sub">Living photos built around motion and replay.</p><div class="loopStage"><div class="loopDot"></div></div><div class="actions"><span>♡ 8.2K</span><span>◯ 312</span><span>🔗 Chain</span></div></section>
 
-<section id="create" class="page"><div class="orb">＋</div><div class="title" style="text-align:center">Create</div><p class="sub" style="text-align:center">One place for every format.</p><div class="createGrid"><button>📷<br>PHOTO</button><button>▶<br>VIDEO</button><button data-go="loops">◎<br>LOOP</button><button>✦<br>PULSE</button></div></section>
-
-<section id="spaces" class="page"><div class="title">Spaces</div><p class="sub">Find your people.</p><div class="row"><b>🎮 After Hours Gaming</b><p>Clips, squads, tournaments and gaming culture.</p></div><div class="row"><b>💻 Build & Hustle</b><p>Apps, businesses and projects people are building.</p></div><div class="row"><b>🏎 Car Culture</b><p>Builds, meets and automotive culture.</p></div></section>
-
-<section id="profile" class="page">
-<div id="profileShell" class="profileShell"><div id="profileBg" class="profileBg"></div><div class="profileShade"></div><div class="profileContent"><div class="cover"></div><div id="realProfileAva" class="profileAva">N</div><div id="realProfileName" class="name">nexo</div><p id="realProfileBio" class="bio">@nexo</p><div class="stats"><div><b>18.4K</b><small>FOLLOWERS</small></div><div><b>612</b><small>FOLLOWING</small></div><div><b>147</b><small>DROPS</small></div></div><div class="streak">⚡ DROP STREAK · 38 DAYS</div><div class="module" id="profileTrackModule">
-<div class="track"><div><small class="mint">PROFILE TRACK</small><h4 id="profileTrackTitle">No track selected</h4><span class="meta" id="profileTrackArtist">Customize your profile to add YouTube music</span></div><button class="play" id="playTrack" type="button">▶</button></div>
-<div id="ytPlayerWrap" style="display:none;margin-top:10px">
-<div id="ytPlayer" style="width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#050806;border:1px solid var(--line)"></div>
-<div id="playerMsg" class="meta" style="margin-top:7px">Plays inside your NEXO profile.</div>
-</div></div><div class="module"><h4>👥 My Top 8</h4><div class="top8"><div class="face">MJ</div><div class="face">JR</div><div class="face">KL</div><div class="face">AY</div><div class="face">TC</div><div class="face">DR</div><div class="face">MS</div><div class="face">＋</div></div></div><div class="module"><h4>◎ Favorite Loops</h4><div class="worldGrid"><div class="world"></div><div class="world"></div></div></div></div></div>
-<div class="accountBar"><small id="signedInAs">Signed in</small><button id="logoutBtn" class="secondary" style="width:auto;min-height:38px;padding:0 14px">LOG OUT</button></div><button class="secondary" data-go="customize">🎨 CUSTOMIZE MY NEXO</button></section>
-
-<section id="customize" class="page"><div class="title">🎨 Customize</div><p class="sub">Make your profile feel like your own corner of the internet.</p>
-
-<div class="card"><b>🎵 Profile Music · YouTube</b>
-<p class="sub">Paste a YouTube link. NEXO will save it as your Profile Track.</p>
-<input id="ytUrl" type="text" placeholder="https://www.youtube.com/watch?v=...">
-<input id="trackTitle" type="text" placeholder="Song title (optional)" style="margin-top:8px">
-<input id="trackArtist" type="text" placeholder="Artist (optional)" style="margin-top:8px">
-<button id="saveTrack" class="primary" style="margin-top:9px">SAVE PROFILE TRACK</button>
-<div id="musicMsg" class="meta" style="margin-top:9px">No YouTube track selected.</div>
-</div>
-<div class="card"><b>Background image</b><p class="sub">Upload any image from your phone — your team, car, gaming setup, city, art, or your own photo.</p><label class="upload">📷 CHOOSE BACKGROUND IMAGE<input id="bgUpload" type="file" accept="image/*"></label><div id="bgPreview" class="preview">NO BACKGROUND SELECTED</div><button id="removeBg" class="secondary" style="margin-top:9px">REMOVE BACKGROUND</button></div>
-<div class="card"><b>Background controls</b><div class="control"><label><span>Dark overlay</span><span id="overlayVal">55%</span></label><input id="overlay" type="range" min="0" max="90" value="55"></div><div class="control"><label><span>Background blur</span><span id="blurVal">0px</span></label><input id="blur" type="range" min="0" max="20" value="0"></div><div class="control"><label><span>Card transparency</span><span id="cardVal">88%</span></label><input id="cards" type="range" min="30" max="100" value="88"></div></div>
-<div class="card"><b>Accent color</b><div class="swatches" style="margin-top:12px"><button class="sw sw1" data-color="#62ff32"></button><button class="sw sw2" data-color="#62b7ff"></button><button class="sw sw3" data-color="#ffad5c"></button><button class="sw sw4" data-color="#ff79ad"></button><button class="sw sw5" data-color="#ffffff"></button><button class="sw sw6" data-color="#9c7cff"></button></div></div>
-<div class="card"><b>Profile style</b><div class="styleGrid" style="margin-top:10px"><button class="styleBtn on">Minimal</button><button class="styleBtn">Y2K</button><button class="styleBtn">Neon</button><button class="styleBtn">Editorial</button></div></div>
-<div class="card"><b>Modules</b><p class="sub">These will be draggable in the full app.</p><div class="drag">☰ About Me</div><div class="drag">☰ Profile Track</div><div class="drag">☰ Top 8</div><div class="drag">☰ Favorite Loops</div><div class="drag">☰ Spaces I'm In</div></div><button class="primary" data-go="profile">SAVE & VIEW PROFILE</button></section>
 
 <section id="search" class="page"><div class="title">Explore</div><input type="text" placeholder="Search people, Spaces, Loops..."><div class="worldGrid"><div class="world"><b>🌎 Now</b><small>What's happening</small></div><div class="world"><b>🔗 Chains</b><small>Continue a story</small></div></div></section>
 <section id="messages" class="page"><div class="title">Messages</div><div class="row"><b>Maya</b><p>that DROP was crazy 😂</p></div><div class="row"><b>Gaming Crew</b><p>Jared sent a Loop ◎</p></div></section>
