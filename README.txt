@@ -1,6 +1,12 @@
-NEXO V0.11.1 — Feed Fix
+NEXO V0.11.3 — Password Recovery + Demo Cleanup
 
-- Fixes Home feed loading for real Drops.
-- Drops and profiles are loaded separately so the feed does not depend on an inferred database relationship.
-- Existing published Drops remain intact and should appear automatically.
-- No new Supabase SQL setup is required for this fix.
+Changes:
+- Added Forgot password? to Login.
+- Sends Supabase password recovery email.
+- Detects Supabase PASSWORD_RECOVERY sessions.
+- Adds Create New Password / Confirm Password screen.
+- Updates password securely through Supabase Auth and signs out afterward.
+- Removed remaining demo Home post and fake Loops interaction counts.
+- Keeps existing Profile, Edit Profile, Create Drop and real Supabase feed functionality.
+
+No new SQL setup is required for this version.

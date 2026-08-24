@@ -29,7 +29,7 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 .authForm{display:none}.authForm.on{display:block}.authField{margin:9px 0}.authField label{display:block;font-size:10px;font-weight:800;color:#9eaaa2;margin:0 0 6px}
 .authSwitch{display:flex;gap:6px;padding:4px;background:#030604;border:1px solid var(--line);border-radius:14px;margin:15px 0}
 .authSwitch button{flex:1;border:0;border-radius:10px;padding:10px;background:transparent;color:#738279;font-weight:800}.authSwitch button.on{background:#101711;color:#fff}
-.authMsg{min-height:34px;margin-top:10px;font-size:11px;line-height:1.4;color:#aab8af}.authMsg.good{color:var(--accent)}.authMsg.bad{color:#ff8c8c}
+.authMsg{min-height:34px;margin-top:10px;font-size:11px;line-height:1.4;color:#aab8af}.authMsg.good{color:var(--accent)}.authMsg.bad{color:#ff8c8c}.authLink{display:block;margin:10px 2px 0;text-align:right;color:var(--accent);font-size:11px;font-weight:800;background:none;border:0;cursor:pointer}.recoveryTitle{text-align:center;font-size:25px;margin:8px 0}.recoverySub{text-align:center;color:#94a098;font-size:12px;margin-bottom:16px}
 .accountBar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}.accountBar small{color:var(--muted)}
 
 @media(prefers-reduced-motion:reduce){.loopDot{animation:none}}
@@ -50,6 +50,7 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
       <div class="authField"><label>EMAIL</label><input id="loginEmail" type="email" autocomplete="email" required placeholder="you@email.com"></div>
       <div class="authField"><label>PASSWORD</label><input id="loginPassword" type="password" autocomplete="current-password" required placeholder="••••••••"></div>
       <button class="primary" type="submit" style="margin-top:8px">ENTER NEXO</button>
+      <button id="forgotPasswordBtn" class="authLink" type="button">Forgot password?</button>
     </form>
 
     <form id="signupForm" class="authForm">
@@ -59,17 +60,24 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
       <div class="authField"><label>PASSWORD</label><input id="signupPassword" type="password" autocomplete="new-password" required minlength="8" placeholder="Minimum 8 characters"></div>
       <button class="primary" type="submit" style="margin-top:8px">CREATE MY NEXO</button>
     </form>
+    <form id="recoveryForm" class="authForm">
+      <div class="recoveryTitle">Create New Password</div>
+      <div class="recoverySub">Choose a new password for your NEXO account.</div>
+      <div class="authField"><label>NEW PASSWORD</label><input id="newPassword" type="password" autocomplete="new-password" required minlength="8" placeholder="Minimum 8 characters"></div>
+      <div class="authField"><label>CONFIRM PASSWORD</label><input id="confirmPassword" type="password" autocomplete="new-password" required minlength="8" placeholder="Repeat new password"></div>
+      <button class="primary" type="submit" style="margin-top:8px">UPDATE PASSWORD</button>
+    </form>
     <div id="authMsg" class="authMsg">Log in or create your NEXO account.</div>
   </div>
 </div>
 <main id="app" style="display:none">
 <header><div></div><div class="brandLogo"><img src="assets/nexo-logo.png" alt="NEXO"></div><div class="headerActions"><button class="icon" data-go="search">⌕</button> <button class="icon" data-go="messages">↗</button></div></header>
 
-<section id="home" class="page active"><div class="tabs"><button class="on">For You</button><button>Following</button><button data-go="drop">DROP ⚡</button></div><div class="card dropHero"><small class="mint"><b>EVERY DAY · 3:00 PM ET</b></small><h2>⚡ GLOBAL DROP</h2><p class="sub">The whole world in one daily window. No posting required to watch.</p><button class="primary" data-go="drop">ENTER WORLD DROP</button></div><div id="realFeed"></div><div class="card post"><div class="postHead"><div class="ava">MK</div><div class="who"><b>mika.jpg ✓</b><small>Miami · 2m</small></div>•••</div><div class="media">TONIGHT · MIAMI</div><div class="actions"><span>♡</span><span>◯</span><span>↗</span><span>⌑</span></div></div></section>
+<section id="home" class="page active"><div class="tabs"><button class="on">For You</button><button>Following</button><button data-go="drop">DROP ⚡</button></div><div class="card dropHero"><small class="mint"><b>EVERY DAY · 3:00 PM ET</b></small><h2>⚡ GLOBAL DROP</h2><p class="sub">The whole world in one daily window. No posting required to watch.</p><button class="primary" data-go="drop">ENTER WORLD DROP</button></div><div id="realFeed"></div></section>
 
 <section id="drop" class="page"><div class="title">⚡ World DROP</div><p class="sub">Everyone sees everyone. Today's window disappears tomorrow at 2:55 PM ET.</p><div class="card dropHero"><small class="mint"><b>NEXT DROP · 3:00 PM ET</b></small><div class="clock" id="clock">--:--:--</div><p class="sub" id="dropStatus">Today's World Drop is live.</p><button class="primary" id="postDrop">＋ POST MY DROP</button></div><div class="worldGrid"><div class="world"><b>Tokyo 🇯🇵</b><small>Today's moments</small></div><div class="world"><b>Puerto Rico 🇵🇷</b><small>Today's moments</small></div><div class="world"><b>Miami 🇺🇸</b><small>Today's moments</small></div><div class="world"><b>Madrid 🇪🇸</b><small>Today's moments</small></div></div></section>
 
-<section id="loops" class="page"><div class="title">◎ Loops</div><p class="sub">Living photos built around motion and replay.</p><div class="loopStage"><div class="loopDot"></div></div><div class="actions"><span>♡ 8.2K</span><span>◯ 312</span><span>🔗 Chain</span></div></section>
+<section id="loops" class="page"><div class="title">◎ Loops</div><p class="sub">Living photos built around motion and replay.</p><div class="loopStage"><div class="loopDot"></div></div><div class="actions"><span>♡</span><span>◯</span><span>🔗 Chain</span></div></section>
 
 <section id="create" class="page"><div class="orb">＋</div><div class="title" style="text-align:center">Create Drop</div><p class="sub" style="text-align:center">Share a photo or video with NEXO.</p><div class="card"><label class="upload">📷 PHOTO OR VIDEO<input id="dropMedia" type="file" accept="image/*,video/*"></label><div id="dropPreview" class="preview" style="margin-top:10px">NO MEDIA SELECTED</div><textarea id="dropCaption" maxlength="500" placeholder="Write a caption..." style="margin-top:10px"></textarea><div id="createDropMsg" class="meta" style="margin-top:8px"></div><button id="publishDropBtn" class="primary" style="margin-top:10px">PUBLISH DROP</button></div></section>
 
@@ -126,11 +134,17 @@ const loginForm=document.getElementById('loginForm');
 const signupForm=document.getElementById('signupForm');
 const showLogin=document.getElementById('showLogin');
 const showSignup=document.getElementById('showSignup');
+const recoveryForm=document.getElementById('recoveryForm');
+const forgotPasswordBtn=document.getElementById('forgotPasswordBtn');
+let recoveryMode=false;
 
 function setAuthTab(which){
   const login=which==='login';
+  recoveryMode=false;
+  recoveryForm.classList.remove('on');
   loginForm.classList.toggle('on',login);
   signupForm.classList.toggle('on',!login);
+  document.querySelector('.authSwitch').style.display='flex';
   showLogin.classList.toggle('on',login);
   showSignup.classList.toggle('on',!login);
   authMsg.className='authMsg';
@@ -207,7 +221,44 @@ async function uploadProfileMedia(file,kind,userId){
   return sb.storage.from('profile-media').getPublicUrl(path).data.publicUrl;
 }
 
+function showRecovery(){
+  recoveryMode=true;
+  loginForm.classList.remove('on');
+  signupForm.classList.remove('on');
+  recoveryForm.classList.add('on');
+  document.querySelector('.authSwitch').style.display='none';
+  authGate.style.display='grid';
+  app.style.display='none';
+  authMessage('Enter and confirm your new password.');
+}
+
+forgotPasswordBtn.addEventListener('click',async()=>{
+  const email=document.getElementById('loginEmail').value.trim();
+  if(!email){authMessage('Enter your email first, then tap Forgot password.','bad');return;}
+  authMessage('Sending password recovery email…');
+  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:'https://frailininvest-sudo.github.io/Nexo/'});
+  if(error){authMessage(error.message,'bad');return;}
+  authMessage('Recovery email sent. Open it and tap the recovery link.','good');
+});
+
+recoveryForm.addEventListener('submit',async(e)=>{
+  e.preventDefault();
+  const password=document.getElementById('newPassword').value;
+  const confirm=document.getElementById('confirmPassword').value;
+  if(password.length<8){authMessage('Password must be at least 8 characters.','bad');return;}
+  if(password!==confirm){authMessage('Passwords do not match.','bad');return;}
+  authMessage('Updating your password…');
+  const {error}=await sb.auth.updateUser({password});
+  if(error){authMessage(error.message,'bad');return;}
+  await sb.auth.signOut();
+  setAuthTab('login');
+  authGate.style.display='grid'; app.style.display='none';
+  document.getElementById('loginPassword').value='';
+  authMessage('Password updated successfully. Log in with your new password.','good');
+});
+
 async function enterApp(session){
+  if(recoveryMode){ showRecovery(); return; }
   if(!session||!session.user){
     authGate.style.display='grid';
     app.style.display='none';
@@ -272,10 +323,21 @@ document.getElementById('logoutBtn').addEventListener('click',async()=>{
 });
 
 sb.auth.onAuthStateChange((event,session)=>{
+  if(event==='PASSWORD_RECOVERY'){
+    recoveryMode=true;
+    setTimeout(showRecovery,0);
+    return;
+  }
   if(event==='SIGNED_OUT') return;
-  if(session) setTimeout(()=>enterApp(session),0);
+  if(session && !recoveryMode) setTimeout(()=>enterApp(session),0);
 });
-sb.auth.getSession().then(({data})=>enterApp(data.session));
+sb.auth.getSession().then(({data})=>{
+  const hash=window.location.hash||'';
+  const query=window.location.search||'';
+  if(hash.includes('type=recovery') || query.includes('type=recovery')){
+    recoveryMode=true; showRecovery();
+  }else enterApp(data.session);
+});
 
 const pages=[...document.querySelectorAll('.page')],nav=[...document.querySelectorAll('nav button')];
 function go(id){pages.forEach(p=>p.classList.toggle('active',p.id===id));nav.forEach(b=>b.classList.toggle('on',b.dataset.go===id));window.scrollTo(0,0)}
