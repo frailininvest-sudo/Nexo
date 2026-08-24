@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>NEXO V0.3</title>
+<meta name="theme-color" content="#07100b"><title>NEXO V0.9</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -19,11 +19,50 @@ header{position:sticky;top:0;z-index:20;display:grid;grid-template-columns:1fr a
 .profileShell{position:relative;border-radius:22px;overflow:hidden;min-height:610px;background:#030604;margin-bottom:12px}.profileBg{position:absolute;inset:-12px;background-position:center;background-size:cover;background-repeat:no-repeat;filter:blur(var(--profileBlur));transform:scale(1.05);z-index:0}.profileShade{position:absolute;inset:0;background:rgba(0,0,0,var(--profileOverlay));z-index:1}.profileContent{position:relative;z-index:2;padding:12px}.cover{height:118px;border-radius:18px;background:linear-gradient(135deg,rgba(25,58,42,.72),rgba(11,17,14,.58),rgba(49,95,71,.68));margin-bottom:-34px}.profileAva{width:82px;height:82px;border-radius:50%;border:5px solid rgba(3,6,4,.92);background:#141a15;display:grid;place-items:center;font-weight:950;margin-left:14px}.name{font-size:26px;font-weight:950;margin:7px 14px 0}.bio{font-size:11px;color:#d1ddd6;margin:4px 14px}.stats{display:flex;gap:23px;margin:15px}.stats b{display:block}.stats small{font-size:8px;color:#b1bdb6}.streak{margin:0 14px 12px;border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);background:rgba(3,5,3,.66);border-radius:13px;padding:11px;color:var(--accent);font-size:11px;font-weight:900}.module{backdrop-filter:blur(8px);background:rgba(5,7,6,var(--cardAlpha))}.track{display:flex;justify-content:space-between;align-items:center}.play{width:38px;height:38px;border:0;border-radius:50%;background:var(--accent);box-shadow:0 0 16px color-mix(in srgb,var(--accent) 25%,transparent)}.top8{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.face{aspect-ratio:1;border-radius:12px;background:rgba(18,23,19,.92);display:grid;place-items:center;font-size:9px}
 .control{margin:14px 0}.control label{display:flex;justify-content:space-between;font-size:11px;font-weight:800;margin-bottom:7px}.control input[type=range]{width:100%;accent-color:var(--accent)}.upload{display:block;border:1px dashed #3a5545;border-radius:16px;padding:18px;text-align:center;color:#d7e3dc;font-size:12px}.upload input{display:none}.preview{height:150px;border-radius:15px;background:#080b09 center/cover no-repeat;border:1px solid var(--line);margin-top:10px;display:grid;place-items:center;color:#738279;font-size:10px}iframe{max-width:100%}.swatches{display:flex;gap:8px;flex-wrap:wrap}.sw{width:36px;height:36px;border-radius:50%;border:2px solid #ffffff44}.sw1{background:#62ff32}.sw2{background:#62b7ff}.sw3{background:#ffad5c}.sw4{background:#ff79ad}.sw5{background:#fff}.sw6{background:#9c7cff}
 .styleGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.styleBtn{min-height:48px;border-radius:12px;border:1px solid var(--line);background:#080b09;color:#fff}.styleBtn.on{border-color:var(--accent);color:var(--accent)}
-.drag{padding:12px;border:1px solid var(--line);border-radius:12px;margin:7px 0;background:#070907;font-size:11px}input[type=text]{width:100%;padding:14px;border:1px solid var(--line);border-radius:13px;background:#070907;color:#fff;font-size:16px}
+.drag{padding:12px;border:1px solid var(--line);border-radius:12px;margin:7px 0;background:#070907;font-size:11px}input[type=text],input[type=email],input[type=password]{width:100%;padding:14px;border:1px solid var(--line);border-radius:13px;background:#070907;color:#fff;font-size:16px}
 nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width:min(430px,100%);display:grid;grid-template-columns:repeat(5,1fr);background:#050a07f7;border-top:1px solid var(--line);padding:7px 3px calc(8px + env(safe-area-inset-bottom))}nav button{border:0;background:transparent;color:#6f7e75;min-height:52px;font-size:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}nav button span{font-size:19px}nav button.on{color:var(--accent)}nav .plus{width:39px;height:32px;border-radius:11px;background:var(--accent);color:#020402;display:grid;place-items:center}
+
+#authGate{min-height:100vh;display:grid;place-items:center;padding:24px 18px;background:radial-gradient(circle at 50% 15%,#102218 0,transparent 34%),#020403}
+.authBox{width:min(390px,100%);background:#060a07;border:1px solid #1c2d22;border-radius:24px;padding:22px;box-shadow:0 24px 70px #0008}
+.authLogo{display:flex;justify-content:center;margin:4px 0 18px}.authLogo img{width:150px;height:auto}
+.authBox h1{font-size:30px;margin:0 0 6px;letter-spacing:-1.2px}.authBox .sub{text-align:center}
+.authForm{display:none}.authForm.on{display:block}.authField{margin:9px 0}.authField label{display:block;font-size:10px;font-weight:800;color:#9eaaa2;margin:0 0 6px}
+.authSwitch{display:flex;gap:6px;padding:4px;background:#030604;border:1px solid var(--line);border-radius:14px;margin:15px 0}
+.authSwitch button{flex:1;border:0;border-radius:10px;padding:10px;background:transparent;color:#738279;font-weight:800}.authSwitch button.on{background:#101711;color:#fff}
+.authMsg{min-height:34px;margin-top:10px;font-size:11px;line-height:1.4;color:#aab8af}.authMsg.good{color:var(--accent)}.authMsg.bad{color:#ff8c8c}
+.accountBar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}.accountBar small{color:var(--muted)}
+
 @media(prefers-reduced-motion:reduce){.loopDot{animation:none}}
 </style></head>
-<body><main id="app">
+<body>
+<div id="authGate">
+  <div class="authBox">
+    <div class="authLogo"><img src="assets/nexo-logo.png" alt="NEXO"></div>
+    <h1 style="text-align:center">Welcome to NEXO</h1>
+    <p class="sub">CONNECT. EXPRESS. DROP.</p>
+
+    <div class="authSwitch">
+      <button id="showLogin" class="on" type="button">LOG IN</button>
+      <button id="showSignup" type="button">CREATE ACCOUNT</button>
+    </div>
+
+    <form id="loginForm" class="authForm on">
+      <div class="authField"><label>EMAIL</label><input id="loginEmail" type="email" autocomplete="email" required placeholder="you@email.com"></div>
+      <div class="authField"><label>PASSWORD</label><input id="loginPassword" type="password" autocomplete="current-password" required placeholder="••••••••"></div>
+      <button class="primary" type="submit" style="margin-top:8px">ENTER NEXO</button>
+    </form>
+
+    <form id="signupForm" class="authForm">
+      <div class="authField"><label>USERNAME</label><input id="signupUsername" type="text" autocomplete="username" required maxlength="30" placeholder="frai"></div>
+      <div class="authField"><label>DISPLAY NAME</label><input id="signupDisplay" type="text" required maxlength="50" placeholder="Frai"></div>
+      <div class="authField"><label>EMAIL</label><input id="signupEmail" type="email" autocomplete="email" required placeholder="you@email.com"></div>
+      <div class="authField"><label>PASSWORD</label><input id="signupPassword" type="password" autocomplete="new-password" required minlength="8" placeholder="Minimum 8 characters"></div>
+      <button class="primary" type="submit" style="margin-top:8px">CREATE MY NEXO</button>
+    </form>
+    <div id="authMsg" class="authMsg">Log in or create your NEXO account.</div>
+  </div>
+</div>
+<main id="app" style="display:none">
 <header><div></div><div class="brandLogo"><img src="assets/nexo-logo.png" alt="NEXO"></div><div class="headerActions"><button class="icon" data-go="search">⌕</button> <button class="icon" data-go="messages">↗</button></div></header>
 
 <section id="home" class="page active"><div class="tabs"><button class="on">For You</button><button>Following</button><button data-go="drop">DROP ⚡</button></div><div class="card dropHero"><small class="mint"><b>EVERY DAY · 3:00 PM ET</b></small><h2>⚡ GLOBAL DROP</h2><p class="sub">The whole world in one daily window. No posting required to watch.</p><button class="primary" data-go="drop">ENTER WORLD DROP</button></div><div class="card post"><div class="postHead"><div class="ava">MK</div><div class="who"><b>mika.jpg ✓</b><small>Miami · 2m</small></div>•••</div><div class="media">TONIGHT · MIAMI</div><div class="actions"><span>♡</span><span>◯</span><span>↗</span><span>⌑</span></div></div></section>
@@ -37,17 +76,13 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 <section id="spaces" class="page"><div class="title">Spaces</div><p class="sub">Find your people.</p><div class="row"><b>🎮 After Hours Gaming</b><p>Clips, squads, tournaments and gaming culture.</p></div><div class="row"><b>💻 Build & Hustle</b><p>Apps, businesses and projects people are building.</p></div><div class="row"><b>🏎 Car Culture</b><p>Builds, meets and automotive culture.</p></div></section>
 
 <section id="profile" class="page">
-<div id="profileShell" class="profileShell"><div id="profileBg" class="profileBg"></div><div class="profileShade"></div><div class="profileContent"><div class="cover"></div><div class="profileAva">F</div><div class="name">frai</div><p class="bio">@frai · building things · gaming · life</p><div class="stats"><div><b>18.4K</b><small>FOLLOWERS</small></div><div><b>612</b><small>FOLLOWING</small></div><div><b>147</b><small>DROPS</small></div></div><div class="streak">⚡ DROP STREAK · 38 DAYS</div><div class="module" id="profileTrackModule">
+<div id="profileShell" class="profileShell"><div id="profileBg" class="profileBg"></div><div class="profileShade"></div><div class="profileContent"><div class="cover"></div><div id="realProfileAva" class="profileAva">N</div><div id="realProfileName" class="name">nexo</div><p id="realProfileBio" class="bio">@nexo</p><div class="stats"><div><b>18.4K</b><small>FOLLOWERS</small></div><div><b>612</b><small>FOLLOWING</small></div><div><b>147</b><small>DROPS</small></div></div><div class="streak">⚡ DROP STREAK · 38 DAYS</div><div class="module" id="profileTrackModule">
 <div class="track"><div><small class="mint">PROFILE TRACK</small><h4 id="profileTrackTitle">No track selected</h4><span class="meta" id="profileTrackArtist">Customize your profile to add YouTube music</span></div><button class="play" id="playTrack" type="button">▶</button></div>
 <div id="ytPlayerWrap" style="display:none;margin-top:10px">
-<div id="ytThumb" style="height:190px;border-radius:14px;background:#171b18 center/cover no-repeat;position:relative;overflow:hidden;border:1px solid var(--line)">
-<div style="position:absolute;inset:0;background:linear-gradient(transparent,rgba(0,0,0,.72));"></div>
-<button id="openYoutube" type="button" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border:0;border-radius:999px;background:var(--accent);color:#06100a;width:58px;height:58px;font-size:23px;font-weight:900">▶</button>
-<div style="position:absolute;left:13px;right:13px;bottom:12px;font-size:10px;font-weight:800">PLAY ON YOUTUBE ↗</div>
-</div>
-<div class="meta" style="margin-top:7px">Playback opens through YouTube, avoiding blocked embedded-player errors.</div>
+<div id="ytPlayer" style="width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#050806;border:1px solid var(--line)"></div>
+<div id="playerMsg" class="meta" style="margin-top:7px">Plays inside your NEXO profile.</div>
 </div></div><div class="module"><h4>👥 My Top 8</h4><div class="top8"><div class="face">MJ</div><div class="face">JR</div><div class="face">KL</div><div class="face">AY</div><div class="face">TC</div><div class="face">DR</div><div class="face">MS</div><div class="face">＋</div></div></div><div class="module"><h4>◎ Favorite Loops</h4><div class="worldGrid"><div class="world"></div><div class="world"></div></div></div></div></div>
-<button class="secondary" data-go="customize">🎨 CUSTOMIZE MY NEXO</button></section>
+<div class="accountBar"><small id="signedInAs">Signed in</small><button id="logoutBtn" class="secondary" style="width:auto;min-height:38px;padding:0 14px">LOG OUT</button></div><button class="secondary" data-go="customize">🎨 CUSTOMIZE MY NEXO</button></section>
 
 <section id="customize" class="page"><div class="title">🎨 Customize</div><p class="sub">Make your profile feel like your own corner of the internet.</p>
 
@@ -70,9 +105,143 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 
 <nav><button class="on" data-go="home"><span>⌂</span>Home</button><button data-go="loops"><span>◎</span>Loops</button><button data-go="create"><span class="plus">＋</span>Create</button><button data-go="spaces"><span>⌘</span>Spaces</button><button data-go="profile"><span>◉</span>Profile</button></nav>
 </main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
-const pages=[...document.querySelectorAll('.page')],nav=[...document.querySelectorAll('nav button')];
+const SUPABASE_URL='https://nisiywhlgmjhznmbswly.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_N7GpDjtXPIjJiVq__c8MUA_UGwhr7TA';
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+
+const authGate=document.getElementById('authGate');
+const app=document.getElementById('app');
+const authMsg=document.getElementById('authMsg');
+const loginForm=document.getElementById('loginForm');
+const signupForm=document.getElementById('signupForm');
+const showLogin=document.getElementById('showLogin');
+const showSignup=document.getElementById('showSignup');
+
+function setAuthTab(which){
+  const login=which==='login';
+  loginForm.classList.toggle('on',login);
+  signupForm.classList.toggle('on',!login);
+  showLogin.classList.toggle('on',login);
+  showSignup.classList.toggle('on',!login);
+  authMsg.className='authMsg';
+  authMsg.textContent=login?'Log in to enter NEXO.':'Create your NEXO identity.';
+}
+showLogin.addEventListener('click',()=>setAuthTab('login'));
+showSignup.addEventListener('click',()=>setAuthTab('signup'));
+
+function cleanUsername(v){
+  return (v||'').trim().toLowerCase().replace(/^@/,'');
+}
+function authMessage(text,type=''){
+  authMsg.textContent=text;
+  authMsg.className='authMsg'+(type?' '+type:'');
+}
+
+async function ensureProfile(user){
+  if(!user) return null;
+  let {data:profile,error}=await sb.from('profiles').select('*').eq('id',user.id).maybeSingle();
+  if(error) throw error;
+  if(!profile){
+    const meta=user.user_metadata||{};
+    const username=cleanUsername(meta.username);
+    if(!username) return null;
+    const payload={
+      id:user.id,
+      username,
+      display_name:(meta.display_name||username).slice(0,50),
+      bio:''
+    };
+    const res=await sb.from('profiles').insert(payload).select().single();
+    if(res.error) throw res.error;
+    profile=res.data;
+  }
+  return profile;
+}
+
+function paintProfile(user,profile){
+  if(!user) return;
+  const username=(profile&&profile.username)||(user.user_metadata&&user.user_metadata.username)||'nexo';
+  const display=(profile&&profile.display_name)||(user.user_metadata&&user.user_metadata.display_name)||username;
+  const bio=(profile&&profile.bio)||'';
+  document.getElementById('realProfileName').textContent=display;
+  document.getElementById('realProfileBio').textContent='@'+username+(bio?' · '+bio:'');
+  document.getElementById('realProfileAva').textContent=(display||username).charAt(0).toUpperCase();
+  document.getElementById('signedInAs').textContent='@'+username+' · '+(user.email||'');
+}
+
+async function enterApp(session){
+  if(!session||!session.user){
+    authGate.style.display='grid';
+    app.style.display='none';
+    return;
+  }
+  try{
+    const profile=await ensureProfile(session.user);
+    paintProfile(session.user,profile);
+    authGate.style.display='none';
+    app.style.display='block';
+  }catch(err){
+    authGate.style.display='grid';
+    app.style.display='none';
+    setAuthTab('login');
+    authMessage(err.message||'Could not load your NEXO profile.','bad');
+  }
+}
+
+signupForm.addEventListener('submit',async(e)=>{
+  e.preventDefault();
+  const username=cleanUsername(document.getElementById('signupUsername').value);
+  const displayName=document.getElementById('signupDisplay').value.trim();
+  const email=document.getElementById('signupEmail').value.trim();
+  const password=document.getElementById('signupPassword').value;
+  if(!/^[a-z0-9._]{3,30}$/.test(username)){
+    authMessage('Username must be 3–30 characters using lowercase letters, numbers, . or _.','bad');return;
+  }
+  authMessage('Creating your account…');
+  const {data,error}=await sb.auth.signUp({
+    email,password,
+    options:{
+      emailRedirectTo:'https://frailininvest-sudo.github.io/Nexo/',
+      data:{username,display_name:displayName}
+    }
+  });
+  if(error){authMessage(error.message,'bad');return;}
+  if(data.session){
+    await enterApp(data.session);
+  }else{
+    setAuthTab('login');
+    authMessage('Account created. Check your email and tap the confirmation link, then log in.','good');
+  }
+});
+
+loginForm.addEventListener('submit',async(e)=>{
+  e.preventDefault();
+  authMessage('Signing in…');
+  const email=document.getElementById('loginEmail').value.trim();
+  const password=document.getElementById('loginPassword').value;
+  const {data,error}=await sb.auth.signInWithPassword({email,password});
+  if(error){authMessage(error.message,'bad');return;}
+  await enterApp(data.session);
+});
+
+document.getElementById('logoutBtn').addEventListener('click',async()=>{
+  await sb.auth.signOut();
+  app.style.display='none';
+  authGate.style.display='grid';
+  setAuthTab('login');
+  authMessage('You are signed out.','good');
+});
+
+sb.auth.onAuthStateChange((event,session)=>{
+  if(event==='SIGNED_OUT') return;
+  if(session) setTimeout(()=>enterApp(session),0);
+});
+sb.auth.getSession().then(({data})=>enterApp(data.session));
+
+[...document.querySelectorAll('.page')],nav=[...document.querySelectorAll('nav button')];
 function go(id){pages.forEach(p=>p.classList.toggle('active',p.id===id));nav.forEach(b=>b.classList.toggle('on',b.dataset.go===id));window.scrollTo(0,0)}
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
 document.querySelectorAll('.tabs').forEach(t=>t.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.go)return;t.querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on')})));
@@ -100,35 +269,74 @@ function youtubeId(value){
   }catch(e){}
   return '';
 }
-let selectedVideo='', selectedUrl='';
+let selectedVideo='', ytPlayer=null, ytReady=false;
+const savedTrack=()=>{try{return JSON.parse(localStorage.getItem('nexoProfileTrack')||'null')}catch(e){return null}};
+function setTrackUI(track){
+  if(!track)return;
+  selectedVideo=track.id;
+  document.getElementById('ytUrl').value=track.url||'';
+  document.getElementById('trackTitle').value=track.title||'';
+  document.getElementById('trackArtist').value=track.artist||'';
+  document.getElementById('profileTrackTitle').textContent=track.title||'My YouTube Track';
+  document.getElementById('profileTrackArtist').textContent=(track.artist||'YouTube')+' · Tap ▶ to play inside NEXO';
+  document.getElementById('musicMsg').textContent='✓ Profile Track saved.';
+}
+setTrackUI(savedTrack());
+window.onYouTubeIframeAPIReady=function(){
+  ytReady=true;
+  if(selectedVideo) buildPlayer(selectedVideo);
+};
+function buildPlayer(id){
+  if(!ytReady || !id)return;
+  if(ytPlayer && typeof ytPlayer.destroy==='function') ytPlayer.destroy();
+  document.getElementById('ytPlayer').innerHTML='';
+  ytPlayer=new YT.Player('ytPlayer',{
+    videoId:id,
+    width:'100%',height:'100%',
+    playerVars:{playsinline:1,rel:0,modestbranding:1,origin:window.location.origin},
+    events:{
+      onReady:function(){document.getElementById('playerMsg').textContent='Ready · playback stays inside NEXO';},
+      onStateChange:function(e){
+        if(e.data===YT.PlayerState.PLAYING) document.getElementById('playTrack').textContent='Ⅱ';
+        if(e.data===YT.PlayerState.PAUSED || e.data===YT.PlayerState.ENDED) document.getElementById('playTrack').textContent='▶';
+      },
+      onError:function(e){
+        document.getElementById('playerMsg').textContent='This YouTube video cannot be played embedded. Try another official video/audio.';
+        document.getElementById('playTrack').textContent='▶';
+      }
+    }
+  });
+}
+(function loadYouTubeAPI(){
+  const tag=document.createElement('script');
+  tag.src='https://www.youtube.com/iframe_api';
+  const first=document.getElementsByTagName('script')[0];
+  first.parentNode.insertBefore(tag,first);
+})();
 document.getElementById('saveTrack').addEventListener('click',function(){
   const url=document.getElementById('ytUrl').value.trim();
   const id=youtubeId(url), msg=document.getElementById('musicMsg');
   if(!id){msg.textContent='Please paste a valid YouTube link.';return}
-  selectedVideo=id;
-  selectedUrl='https://www.youtube.com/watch?v='+encodeURIComponent(id);
-  const title=document.getElementById('trackTitle').value.trim()||'My YouTube Track';
-  const artist=document.getElementById('trackArtist').value.trim()||'YouTube';
-  document.getElementById('profileTrackTitle').textContent=title;
-  document.getElementById('profileTrackArtist').textContent=artist+' · Tap ▶ to play';
-  document.getElementById('ytThumb').style.backgroundImage='url("https://i.ytimg.com/vi/'+encodeURIComponent(id)+'/hqdefault.jpg")';
+  const track={id,url:'https://www.youtube.com/watch?v='+id,title:document.getElementById('trackTitle').value.trim()||'My YouTube Track',artist:document.getElementById('trackArtist').value.trim()||'YouTube'};
+  localStorage.setItem('nexoProfileTrack',JSON.stringify(track));
+  setTrackUI(track);
   document.getElementById('ytPlayerWrap').style.display='none';
   document.getElementById('playTrack').textContent='▶';
-  msg.textContent='✓ Profile Track saved. Open Profile and press Play.';
+  if(ytReady) buildPlayer(id);
+  msg.textContent='✓ Saved. Open Profile and tap ▶.';
 });
 document.getElementById('playTrack').addEventListener('click',function(){
-  if(!selectedVideo){
-    go('customize');
-    document.getElementById('musicMsg').textContent='Add a YouTube link first.';
-    return;
-  }
+  if(!selectedVideo){go('customize');document.getElementById('musicMsg').textContent='Add a YouTube link first.';return}
   const wrap=document.getElementById('ytPlayerWrap');
-  const open=wrap.style.display==='none';
-  wrap.style.display=open?'block':'none';
-  this.textContent=open?'×':'▶';
-});
-document.getElementById('openYoutube').addEventListener('click',function(){
-  if(selectedUrl) window.open(selectedUrl,'_blank','noopener,noreferrer');
+  wrap.style.display='block';
+  if(ytReady && !ytPlayer) buildPlayer(selectedVideo);
+  if(ytPlayer && typeof ytPlayer.getPlayerState==='function'){
+    const st=ytPlayer.getPlayerState();
+    if(st===YT.PlayerState.PLAYING){ytPlayer.pauseVideo();this.textContent='▶'}
+    else{ytPlayer.playVideo();this.textContent='Ⅱ'}
+  } else {
+    document.getElementById('playerMsg').textContent='Loading YouTube player… tap ▶ again in a moment.';
+  }
 });
 document.getElementById('postDrop').addEventListener('click',function(){this.textContent='✓ DROP POSTED ⚡'});
 function tick(){const p=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).formatToParts(new Date()).reduce((a,x)=>(a[x.type]=x.value,a),{});const cur=(+p.hour)*3600+(+p.minute)*60+(+p.second);let d=54000-cur;if(d<=0)d+=86400;document.getElementById('clock').textContent=[Math.floor(d/3600),Math.floor((d%3600)/60),d%60].map(x=>String(x).padStart(2,'0')).join(':');document.getElementById('dropStatus').textContent=(cur>=53700&&cur<54000)?'⚡ RESET WINDOW · Yesterday is gone · New DROP at 3:00 PM ET':"Today's World Drop stays public until 2:55 PM ET tomorrow."}

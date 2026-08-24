@@ -1,8 +1,21 @@
-NEXO V0.7 — Official Centered Logo
+NEXO V0.9 — Supabase Auth
 
-Changes:
-- Uses the supplied NEXO infinity-symbol + NEXO wordmark as the official header logo.
-- Logo is centered at the top of the app.
-- Keeps the black + neon green visual identity from V0.6.
-- Keeps the existing NEXO prototype layout and functionality.
-- Includes the logo locally in assets/nexo-logo.png so GitHub Pages can load it reliably.
+Connected project:
+https://nisiywhlgmjhznmbswly.supabase.co
+
+Included:
+- Real Create Account flow
+- Email confirmation redirect to GitHub Pages
+- Email/password login
+- Persistent Supabase session
+- Logout
+- First authenticated login creates the user's public profile row
+- Profile screen uses the logged-in username/display name
+- Existing NEXO black + neon green design and centered official logo retained
+- Existing World DROP, Loops, Spaces, customization and prototype features retained
+- YouTube Profile Music remains experimental / pending
+
+Security:
+- Uses only the Supabase publishable browser key.
+- No secret/service_role key is included.
+- Profile writes remain protected by the RLS policies already created in Supabase.
