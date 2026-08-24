@@ -1,10 +1,8 @@
-NEXO V0.12 — Search + Public Profiles
-
-New:
-- Search real NEXO users by display name or @username.
-- Search results use the public profiles table in Supabase.
-- Tap a result to open a real public profile.
-- Public profile shows avatar, background, display name, @username, bio and that user's real Drops.
-- Existing login, password recovery, Edit Profile, Create Drop and Home feed remain intact.
-
-No new SQL is required because profiles are already publicly readable and Drops already have SELECT access.
+EXOF V1.0 — Identity Migration
+- NEXO user-facing identity replaced with EXOF.
+- New EXOF wordmark; black + neon-green identity preserved.
+- CONNECT. EXPRESS. DROP. retained.
+- Drops, Loops, World Drop, Spaces, Search, public profiles, Edit Profile, auth,
+  password recovery and Supabase integration preserved.
+- Existing /Nexo/ GitHub callback path intentionally remains for auth compatibility.
+- No SQL changes required.

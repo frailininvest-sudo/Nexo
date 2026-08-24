@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>NEXO V0.9.4</title>
+<meta name="theme-color" content="#07100b"><title>EXOF — CONNECT. EXPRESS. DROP.</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -42,13 +42,17 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 .publicName{font-size:24px;font-weight:950;margin-top:8px}.publicHandle{color:var(--accent);font-size:12px;font-weight:800}.publicBio{color:#c5cec8;font-size:13px;line-height:1.45;margin-top:7px}
 .publicDrops{padding:0 12px}.emptyState{padding:28px 12px;text-align:center;color:var(--muted);font-size:12px}
 
+
+.exofWordmark{font-weight:1000;font-size:31px;letter-spacing:7px;color:#f5fff8;text-shadow:0 0 18px rgba(83,255,139,.24);line-height:1}
+.authLogo .exofWordmark{font-size:40px;letter-spacing:9px;margin:8px 0 4px}
+
 @media(prefers-reduced-motion:reduce){.loopDot{animation:none}}
 </style></head>
 <body>
 <div id="authGate">
   <div class="authBox">
-    <div class="authLogo"><img src="assets/nexo-logo.png" alt="NEXO"></div>
-    <h1 style="text-align:center">Welcome to NEXO</h1>
+    <div class="authLogo"><div class="exofWordmark" aria-label="EXOF">EXOF</div></div>
+    <h1 style="text-align:center">Welcome to EXOF</h1>
     <p class="sub">CONNECT. EXPRESS. DROP.</p>
 
     <div class="authSwitch">
@@ -59,7 +63,7 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
     <form id="loginForm" class="authForm on">
       <div class="authField"><label>EMAIL</label><input id="loginEmail" type="email" autocomplete="email" required placeholder="you@email.com"></div>
       <div class="authField"><label>PASSWORD</label><input id="loginPassword" type="password" autocomplete="current-password" required placeholder="••••••••"></div>
-      <button class="primary" type="submit" style="margin-top:8px">ENTER NEXO</button>
+      <button class="primary" type="submit" style="margin-top:8px">ENTER EXOF</button>
       <button id="forgotPasswordBtn" class="authLink" type="button">Forgot password?</button>
     </form>
 
@@ -68,20 +72,20 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
       <div class="authField"><label>DISPLAY NAME</label><input id="signupDisplay" type="text" required maxlength="50" placeholder="Frai"></div>
       <div class="authField"><label>EMAIL</label><input id="signupEmail" type="email" autocomplete="email" required placeholder="you@email.com"></div>
       <div class="authField"><label>PASSWORD</label><input id="signupPassword" type="password" autocomplete="new-password" required minlength="8" placeholder="Minimum 8 characters"></div>
-      <button class="primary" type="submit" style="margin-top:8px">CREATE MY NEXO</button>
+      <button class="primary" type="submit" style="margin-top:8px">CREATE MY EXOF</button>
     </form>
     <form id="recoveryForm" class="authForm">
       <div class="recoveryTitle">Create New Password</div>
-      <div class="recoverySub">Choose a new password for your NEXO account.</div>
+      <div class="recoverySub">Choose a new password for your EXOF account.</div>
       <div class="authField"><label>NEW PASSWORD</label><input id="newPassword" type="password" autocomplete="new-password" required minlength="8" placeholder="Minimum 8 characters"></div>
       <div class="authField"><label>CONFIRM PASSWORD</label><input id="confirmPassword" type="password" autocomplete="new-password" required minlength="8" placeholder="Repeat new password"></div>
       <button class="primary" type="submit" style="margin-top:8px">UPDATE PASSWORD</button>
     </form>
-    <div id="authMsg" class="authMsg">Log in or create your NEXO account.</div>
+    <div id="authMsg" class="authMsg">Log in or create your EXOF account.</div>
   </div>
 </div>
 <main id="app" style="display:none">
-<header><div></div><div class="brandLogo"><img src="assets/nexo-logo.png" alt="NEXO"></div><div class="headerActions"><button class="icon" data-go="search">⌕</button> <button class="icon" data-go="messages">↗</button></div></header>
+<header><div></div><div class="brandLogo"><div class="exofWordmark" aria-label="EXOF">EXOF</div></div><div class="headerActions"><button class="icon" data-go="search">⌕</button> <button class="icon" data-go="messages">↗</button></div></header>
 
 <section id="home" class="page active"><div class="tabs"><button class="on">For You</button><button>Following</button><button data-go="drop">DROP ⚡</button></div><div class="card dropHero"><small class="mint"><b>EVERY DAY · 3:00 PM ET</b></small><h2>⚡ GLOBAL DROP</h2><p class="sub">The whole world in one daily window. No posting required to watch.</p><button class="primary" data-go="drop">ENTER WORLD DROP</button></div><div id="realFeed"></div></section>
 
@@ -89,21 +93,21 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 
 <section id="loops" class="page"><div class="title">◎ Loops</div><p class="sub">Living photos built around motion and replay.</p><div class="loopStage"><div class="loopDot"></div></div><div class="actions"><span>♡</span><span>◯</span><span>🔗 Chain</span></div></section>
 
-<section id="create" class="page"><div class="orb">＋</div><div class="title" style="text-align:center">Create Drop</div><p class="sub" style="text-align:center">Share a photo or video with NEXO.</p><div class="card"><label class="upload">📷 PHOTO OR VIDEO<input id="dropMedia" type="file" accept="image/*,video/*"></label><div id="dropPreview" class="preview" style="margin-top:10px">NO MEDIA SELECTED</div><textarea id="dropCaption" maxlength="500" placeholder="Write a caption..." style="margin-top:10px"></textarea><div id="createDropMsg" class="meta" style="margin-top:8px"></div><button id="publishDropBtn" class="primary" style="margin-top:10px">PUBLISH DROP</button></div></section>
+<section id="create" class="page"><div class="orb">＋</div><div class="title" style="text-align:center">Create Drop</div><p class="sub" style="text-align:center">Share a photo or video with EXOF.</p><div class="card"><label class="upload">📷 PHOTO OR VIDEO<input id="dropMedia" type="file" accept="image/*,video/*"></label><div id="dropPreview" class="preview" style="margin-top:10px">NO MEDIA SELECTED</div><textarea id="dropCaption" maxlength="500" placeholder="Write a caption..." style="margin-top:10px"></textarea><div id="createDropMsg" class="meta" style="margin-top:8px"></div><button id="publishDropBtn" class="primary" style="margin-top:10px">PUBLISH DROP</button></div></section>
 
 <section id="spaces" class="page"><div class="title">Spaces</div><p class="sub">Find your people.</p><div class="row"><b>🎮 After Hours Gaming</b><p>Clips, squads, tournaments and gaming culture.</p></div><div class="row"><b>💻 Build & Hustle</b><p>Apps, businesses and projects people are building.</p></div><div class="row"><b>🏎 Car Culture</b><p>Builds, meets and automotive culture.</p></div></section>
 
 <section id="profile" class="page">
-<div id="profileShell" class="profileShell"><div id="profileBg" class="profileBg"></div><div class="profileShade"></div><div class="profileContent"><div class="cover"></div><div id="realProfileAva" class="profileAva">N</div><div id="realProfileName" class="name">nexo</div><p id="realProfileBio" class="bio">@nexo</p><div class="stats"><div><b>0</b><small>FOLLOWERS</small></div><div><b>0</b><small>FOLLOWING</small></div><div><b id="dropCount">0</b><small>DROPS</small></div></div><div class="module" id="profileTrackModule">
+<div id="profileShell" class="profileShell"><div id="profileBg" class="profileBg"></div><div class="profileShade"></div><div class="profileContent"><div class="cover"></div><div id="realProfileAva" class="profileAva">N</div><div id="realProfileName" class="name">exof</div><p id="realProfileBio" class="bio">@exof</p><div class="stats"><div><b>0</b><small>FOLLOWERS</small></div><div><b>0</b><small>FOLLOWING</small></div><div><b id="dropCount">0</b><small>DROPS</small></div></div><div class="module" id="profileTrackModule">
 <div class="track"><div><small class="mint">PROFILE TRACK</small><h4 id="profileTrackTitle">No track selected</h4><span class="meta" id="profileTrackArtist">Customize your profile to add YouTube music</span></div><button class="play" id="playTrack" type="button">▶</button></div>
 <div id="ytPlayerWrap" style="display:none;margin-top:10px">
 <div id="ytPlayer" style="width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#050806;border:1px solid var(--line)"></div>
-<div id="playerMsg" class="meta" style="margin-top:7px">Plays inside your NEXO profile.</div>
+<div id="playerMsg" class="meta" style="margin-top:7px">Plays inside your EXOF profile.</div>
 </div></div></div><div class="module"><h4>◎ Favorite Loops</h4><div class="worldGrid"><div class="world"></div><div class="world"></div></div></div></div></div>
-<div class="accountBar"><small id="signedInAs">Signed in</small><button id="logoutBtn" class="secondary" style="width:auto;min-height:38px;padding:0 14px">LOG OUT</button></div><button class="primary" data-go="editprofile" style="margin-bottom:9px">EDIT PROFILE</button><button class="secondary" data-go="customize">🎨 CUSTOMIZE MY NEXO</button></section>
+<div class="accountBar"><small id="signedInAs">Signed in</small><button id="logoutBtn" class="secondary" style="width:auto;min-height:38px;padding:0 14px">LOG OUT</button></div><button class="primary" data-go="editprofile" style="margin-bottom:9px">EDIT PROFILE</button><button class="secondary" data-go="customize">🎨 CUSTOMIZE MY EXOF</button></section>
 
 
-<section id="editprofile" class="page"><div class="title">Edit Profile</div><p class="sub">Update the profile people see on NEXO.</p>
+<section id="editprofile" class="page"><div class="title">Edit Profile</div><p class="sub">Update the profile people see on EXOF.</p>
 <div class="card"><b>Profile photo</b><div id="editAvatarPreview" class="editAvatarPreview">N</div><label class="upload">📷 CHOOSE PROFILE PHOTO<input id="avatarUpload" type="file" accept="image/*"></label></div>
 <div class="card"><b>Cover photo</b><div id="editCoverPreview" class="editCoverPreview">NO COVER SELECTED</div><label class="upload">🖼 CHOOSE COVER PHOTO<input id="coverUpload" type="file" accept="image/*"></label></div>
 <div class="card"><label class="meta">DISPLAY NAME</label><input id="editDisplayName" type="text" maxlength="50" placeholder="Your name" style="margin-top:6px"><label class="meta" style="display:block;margin-top:12px">USERNAME</label><input id="editUsername" type="text" maxlength="30" placeholder="username" style="margin-top:6px"><label class="meta" style="display:block;margin-top:12px">BIO</label><textarea id="editBio" maxlength="160" placeholder="Tell people about you" style="margin-top:6px"></textarea><div id="editProfileMsg" class="meta" style="margin-top:8px"></div></div>
@@ -112,7 +116,7 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 <section id="customize" class="page"><div class="title">🎨 Customize</div><p class="sub">Make your profile feel like your own corner of the internet.</p>
 
 <div class="card"><b>🎵 Profile Music · YouTube</b>
-<p class="sub">Paste a YouTube link. NEXO will save it as your Profile Track.</p>
+<p class="sub">Paste a YouTube link. EXOF will save it as your Profile Track.</p>
 <input id="ytUrl" type="text" placeholder="https://www.youtube.com/watch?v=...">
 <input id="trackTitle" type="text" placeholder="Song title (optional)" style="margin-top:8px">
 <input id="trackArtist" type="text" placeholder="Artist (optional)" style="margin-top:8px">
@@ -158,7 +162,7 @@ function setAuthTab(which){
   showLogin.classList.toggle('on',login);
   showSignup.classList.toggle('on',!login);
   authMsg.className='authMsg';
-  authMsg.textContent=login?'Log in to enter NEXO.':'Create your NEXO identity.';
+  authMsg.textContent=login?'Log in to enter EXOF.':'Create your EXOF identity.';
 }
 showLogin.addEventListener('click',()=>setAuthTab('login'));
 showSignup.addEventListener('click',()=>setAuthTab('signup'));
@@ -194,7 +198,7 @@ async function ensureProfile(user){
 
 function paintProfile(user,profile){
   if(!user) return;
-  const username=(profile&&profile.username)||(user.user_metadata&&user.user_metadata.username)||'nexo';
+  const username=(profile&&profile.username)||(user.user_metadata&&user.user_metadata.username)||'exof';
   const display=(profile&&profile.display_name)||(user.user_metadata&&user.user_metadata.display_name)||username;
   const bio=(profile&&profile.bio)||'';
 
@@ -287,7 +291,7 @@ async function enterApp(session){
     authGate.style.display='grid';
     app.style.display='none';
     setAuthTab('login');
-    authMessage(err.message||'Could not load your NEXO profile.','bad');
+    authMessage(err.message||'Could not load your EXOF profile.','bad');
   }
 }
 
@@ -351,7 +355,7 @@ sb.auth.getSession().then(({data})=>{
   const recoveryUrl=hash.includes('type=recovery') || query.includes('type=recovery');
 
   // Modern Supabase PKCE recovery links often return only ?code=...
-  // sessionStorage tells NEXO that this callback began from Forgot Password.
+  // sessionStorage tells EXOF that this callback began from Forgot Password.
   if(pendingRecovery || recoveryUrl){
     recoveryMode=true;
     showRecovery();
@@ -438,7 +442,7 @@ function youtubeId(value){
   return '';
 }
 let selectedVideo='', ytPlayer=null, ytReady=false;
-const savedTrack=()=>{try{return JSON.parse(localStorage.getItem('nexoProfileTrack')||'null')}catch(e){return null}};
+const savedTrack=()=>{try{return JSON.parse(localStorage.getItem('exofProfileTrack')||'null')}catch(e){return null}};
 function setTrackUI(track){
   if(!track)return;
   selectedVideo=track.id;
@@ -446,7 +450,7 @@ function setTrackUI(track){
   document.getElementById('trackTitle').value=track.title||'';
   document.getElementById('trackArtist').value=track.artist||'';
   document.getElementById('profileTrackTitle').textContent=track.title||'My YouTube Track';
-  document.getElementById('profileTrackArtist').textContent=(track.artist||'YouTube')+' · Tap ▶ to play inside NEXO';
+  document.getElementById('profileTrackArtist').textContent=(track.artist||'YouTube')+' · Tap ▶ to play inside EXOF';
   document.getElementById('musicMsg').textContent='✓ Profile Track saved.';
 }
 setTrackUI(savedTrack());
@@ -463,7 +467,7 @@ function buildPlayer(id){
     width:'100%',height:'100%',
     playerVars:{playsinline:1,rel:0,modestbranding:1,origin:window.location.origin},
     events:{
-      onReady:function(){document.getElementById('playerMsg').textContent='Ready · playback stays inside NEXO';},
+      onReady:function(){document.getElementById('playerMsg').textContent='Ready · playback stays inside EXOF';},
       onStateChange:function(e){
         if(e.data===YT.PlayerState.PLAYING) document.getElementById('playTrack').textContent='Ⅱ';
         if(e.data===YT.PlayerState.PAUSED || e.data===YT.PlayerState.ENDED) document.getElementById('playTrack').textContent='▶';
@@ -486,7 +490,7 @@ document.getElementById('saveTrack').addEventListener('click',function(){
   const id=youtubeId(url), msg=document.getElementById('musicMsg');
   if(!id){msg.textContent='Please paste a valid YouTube link.';return}
   const track={id,url:'https://www.youtube.com/watch?v='+id,title:document.getElementById('trackTitle').value.trim()||'My YouTube Track',artist:document.getElementById('trackArtist').value.trim()||'YouTube'};
-  localStorage.setItem('nexoProfileTrack',JSON.stringify(track));
+  localStorage.setItem('exofProfileTrack',JSON.stringify(track));
   setTrackUI(track);
   document.getElementById('ytPlayerWrap').style.display='none';
   document.getElementById('playTrack').textContent='▶';
@@ -512,18 +516,18 @@ if(dropMedia) dropMedia.addEventListener('change',e=>{pendingDropFile=e.target.f
 async function loadDrops(){
  const feed=document.getElementById('realFeed'); if(!feed)return;
  const r=await sb.from('drops').select('id,user_id,caption,media_url,media_type,created_at').order('created_at',{ascending:false}).limit(30);
- if(r.error){console.error('NEXO feed error:',r.error);feed.innerHTML='<div class="meta">Could not load Drops yet.</div>';return}
+ if(r.error){console.error('EXOF feed error:',r.error);feed.innerHTML='<div class="meta">Could not load Drops yet.</div>';return}
  const drops=r.data||[];
  const userIds=[...new Set(drops.map(d=>d.user_id).filter(Boolean))];
  let profileMap={};
  if(userIds.length){
    const pr=await sb.from('profiles').select('id,username,display_name,avatar_url').in('id',userIds);
    if(!pr.error) (pr.data||[]).forEach(p=>profileMap[p.id]=p);
-   else console.error('NEXO profile lookup error:',pr.error);
+   else console.error('EXOF profile lookup error:',pr.error);
  }
  feed.innerHTML='';
  if(!drops.length){feed.innerHTML='<div class="meta" style="padding:18px">No Drops yet. Be the first to post.</div>'}
- drops.forEach(d=>{const pr=profileMap[d.user_id]||{}, card=document.createElement('div');card.className='card post';const media=d.media_type==='video'?'<video controls playsinline preload="metadata" style="width:100%;max-height:520px;object-fit:cover;background:#050806" src="'+d.media_url+'"></video>':'<img alt="Drop" style="width:100%;max-height:520px;object-fit:cover;background:#050806" src="'+d.media_url+'">';card.innerHTML='<div class="postHead"><div class="ava" style="'+(pr.avatar_url?'background-image:url('+pr.avatar_url+');background-size:cover;background-position:center;color:transparent':'')+'">'+((pr.display_name||pr.username||'N')[0].toUpperCase())+'</div><div class="who"><b>'+(pr.display_name||pr.username||'NEXO')+'</b><small>@'+(pr.username||'user')+'</small></div>•••</div><div>'+media+'</div>'+(d.caption?'<p style="padding:0 14px 4px">'+d.caption.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))+'</p>':'')+'<div class="actions"><span>♡</span><span>◯</span><span>↗</span><span>⌑</span></div>';feed.appendChild(card)});
+ drops.forEach(d=>{const pr=profileMap[d.user_id]||{}, card=document.createElement('div');card.className='card post';const media=d.media_type==='video'?'<video controls playsinline preload="metadata" style="width:100%;max-height:520px;object-fit:cover;background:#050806" src="'+d.media_url+'"></video>':'<img alt="Drop" style="width:100%;max-height:520px;object-fit:cover;background:#050806" src="'+d.media_url+'">';card.innerHTML='<div class="postHead"><div class="ava" style="'+(pr.avatar_url?'background-image:url('+pr.avatar_url+');background-size:cover;background-position:center;color:transparent':'')+'">'+((pr.display_name||pr.username||'N')[0].toUpperCase())+'</div><div class="who"><b>'+(pr.display_name||pr.username||'EXOF')+'</b><small>@'+(pr.username||'user')+'</small></div>•••</div><div>'+media+'</div>'+(d.caption?'<p style="padding:0 14px 4px">'+d.caption.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))+'</p>':'')+'<div class="actions"><span>♡</span><span>◯</span><span>↗</span><span>⌑</span></div>';feed.appendChild(card)});
  if(currentUser){const c=await sb.from('drops').select('*',{count:'exact',head:true}).eq('user_id',currentUser.id);if(!c.error){const el=document.getElementById('dropCount');if(el)el.textContent=c.count||0}}
 }
 const publishDropBtn=document.getElementById('publishDropBtn');
