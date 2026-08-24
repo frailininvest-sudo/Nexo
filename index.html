@@ -236,6 +236,7 @@ forgotPasswordBtn.addEventListener('click',async()=>{
   const email=document.getElementById('loginEmail').value.trim();
   if(!email){authMessage('Enter your email first, then tap Forgot password.','bad');return;}
   authMessage('Sending password recovery email…');
+  sessionStorage.setItem('nexo_password_recovery','1');
   const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:'https://frailininvest-sudo.github.io/Nexo/'});
   if(error){authMessage(error.message,'bad');return;}
   authMessage('Recovery email sent. Open it and tap the recovery link.','good');
@@ -250,6 +251,8 @@ recoveryForm.addEventListener('submit',async(e)=>{
   authMessage('Updating your password…');
   const {error}=await sb.auth.updateUser({password});
   if(error){authMessage(error.message,'bad');return;}
+  sessionStorage.removeItem('nexo_password_recovery');
+  history.replaceState({},document.title,location.pathname);
   await sb.auth.signOut();
   setAuthTab('login');
   authGate.style.display='grid'; app.style.display='none';
@@ -334,9 +337,17 @@ sb.auth.onAuthStateChange((event,session)=>{
 sb.auth.getSession().then(({data})=>{
   const hash=window.location.hash||'';
   const query=window.location.search||'';
-  if(hash.includes('type=recovery') || query.includes('type=recovery')){
-    recoveryMode=true; showRecovery();
-  }else enterApp(data.session);
+  const pendingRecovery=sessionStorage.getItem('nexo_password_recovery')==='1';
+  const recoveryUrl=hash.includes('type=recovery') || query.includes('type=recovery');
+
+  // Modern Supabase PKCE recovery links often return only ?code=...
+  // sessionStorage tells NEXO that this callback began from Forgot Password.
+  if(pendingRecovery || recoveryUrl){
+    recoveryMode=true;
+    showRecovery();
+  }else{
+    enterApp(data.session);
+  }
 });
 
 const pages=[...document.querySelectorAll('.page')],nav=[...document.querySelectorAll('nav button')];
