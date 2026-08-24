@@ -43,15 +43,31 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 .publicDrops{padding:0 12px}.emptyState{padding:28px 12px;text-align:center;color:var(--muted);font-size:12px}
 
 
-.exofWordmark{font-weight:1000;font-size:31px;letter-spacing:7px;color:#f5fff8;text-shadow:0 0 18px rgba(83,255,139,.24);line-height:1}
-.authLogo .exofWordmark{font-size:40px;letter-spacing:9px;margin:8px 0 4px}
+
+.authLogo 
 
 @media(prefers-reduced-motion:reduce){.loopDot{animation:none}}
+
+/* EXOF V1.1 — Official identity */
+.exofWordmark{
+  display:inline-flex;align-items:center;justify-content:center;gap:.13em;
+  font-family:Arial,Helvetica,sans-serif;font-weight:800;
+  font-size:30px;letter-spacing:.22em;line-height:1;
+  color:#f7f7f7;white-space:nowrap;
+}
+.exofWordmark .exofX{color:#53ff2a;text-shadow:0 0 12px rgba(83,255,42,.28)}
+.authLogo .exofWordmark{
+  padding:15px 20px;border:1px solid rgba(255,255,255,.13);
+  border-radius:18px;background:#050706;
+  box-shadow:inset 0 0 0 1px rgba(83,255,42,.035),0 10px 35px rgba(0,0,0,.35);
+  font-size:34px;margin:4px 0 8px;
+}
+
 </style></head>
 <body>
 <div id="authGate">
   <div class="authBox">
-    <div class="authLogo"><div class="exofWordmark" aria-label="EXOF">EXOF</div></div>
+    <div class="authLogo"><div class="exofWordmark" aria-label="EXOF"><span>E</span><span class="exofX">X</span><span>O</span><span>F</span></div></div>
     <h1 style="text-align:center">Welcome to EXOF</h1>
     <p class="sub">CONNECT. EXPRESS. DROP.</p>
 
@@ -85,7 +101,7 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
   </div>
 </div>
 <main id="app" style="display:none">
-<header><div></div><div class="brandLogo"><div class="exofWordmark" aria-label="EXOF">EXOF</div></div><div class="headerActions"><button class="icon" data-go="search">⌕</button> <button class="icon" data-go="messages">↗</button></div></header>
+<header><div></div><div class="brandLogo"><div class="exofWordmark" aria-label="EXOF"><span>E</span><span class="exofX">X</span><span>O</span><span>F</span></div></div><div class="headerActions"><button class="icon" data-go="search">⌕</button> <button class="icon" data-go="messages">↗</button></div></header>
 
 <section id="home" class="page active"><div class="tabs"><button class="on">For You</button><button>Following</button><button data-go="drop">DROP ⚡</button></div><div class="card dropHero"><small class="mint"><b>EVERY DAY · 3:00 PM ET</b></small><h2>⚡ GLOBAL DROP</h2><p class="sub">The whole world in one daily window. No posting required to watch.</p><button class="primary" data-go="drop">ENTER WORLD DROP</button></div><div id="realFeed"></div></section>
 
