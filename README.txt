@@ -1,13 +1,8 @@
-NEXO V0.5 — YouTube Music Fallback Fix
+NEXO V0.7 — Official Centered Logo
 
 Changes:
-- Removes the embedded YouTube iframe that could display Error 153.
-- A saved YouTube Profile Track now shows its YouTube thumbnail.
-- Tapping the profile Play button reveals a clean music card.
-- Tapping PLAY ON YOUTUBE opens the selected track through YouTube.
-- This prevents YouTube player configuration errors from appearing inside the NEXO profile.
-- Standard YouTube, youtu.be, Shorts, Live and YouTube Music watch links are supported.
-- All V0.4 features remain: custom background image, overlay, blur, card transparency, accent colors, Top 8, Loops, Spaces, and World DROP.
-
-Note:
-This prototype links playback to YouTube rather than extracting or re-hosting audio.
+- Uses the supplied NEXO infinity-symbol + NEXO wordmark as the official header logo.
+- Logo is centered at the top of the app.
+- Keeps the black + neon green visual identity from V0.6.
+- Keeps the existing NEXO prototype layout and functionality.
+- Includes the logo locally in assets/nexo-logo.png so GitHub Pages can load it reliably.
