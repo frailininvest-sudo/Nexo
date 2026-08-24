@@ -1,10 +1,13 @@
-NEXO V0.9.4 — Login Null Fix
+NEXO V0.10 - EDIT PROFILE
 
-Fix:
-- Login can no longer fail because an optional profile UI element is missing.
-- Replaced direct profile textContent writes with safe element checks.
-- Keeps Top 8 removed.
-- Keeps Supabase authentication, profiles, navigation, profile customization,
-  World Drop, Profile Track and the existing NEXO design.
+Adds real Supabase-backed profile editing:
+- Display name
+- @username
+- Bio
+- Profile photo
+- Cover photo
 
-Upload index.html, README.txt and assets to the ROOT of the GitHub Nexo repository.
+IMPORTANT FIRST:
+Run PROFILE_MEDIA_SETUP.sql once in the NEXO Supabase SQL Editor.
+Then upload index.html + assets + README.txt to GitHub.
+Do NOT upload PROFILE_MEDIA_SETUP.sql to the public GitHub repo if you prefer to keep setup files out of the site (it contains no secret keys, but it is not needed by the browser).

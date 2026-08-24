@@ -19,7 +19,7 @@ header{position:sticky;top:0;z-index:20;display:grid;grid-template-columns:1fr a
 .profileShell{position:relative;border-radius:22px;overflow:hidden;min-height:610px;background:#030604;margin-bottom:12px}.profileBg{position:absolute;inset:-12px;background-position:center;background-size:cover;background-repeat:no-repeat;filter:blur(var(--profileBlur));transform:scale(1.05);z-index:0}.profileShade{position:absolute;inset:0;background:rgba(0,0,0,var(--profileOverlay));z-index:1}.profileContent{position:relative;z-index:2;padding:12px}.cover{height:118px;border-radius:18px;background:linear-gradient(135deg,rgba(25,58,42,.72),rgba(11,17,14,.58),rgba(49,95,71,.68));margin-bottom:-34px}.profileAva{width:82px;height:82px;border-radius:50%;border:5px solid rgba(3,6,4,.92);background:#141a15;display:grid;place-items:center;font-weight:950;margin-left:14px}.name{font-size:26px;font-weight:950;margin:7px 14px 0}.bio{font-size:11px;color:#d1ddd6;margin:4px 14px}.stats{display:flex;gap:23px;margin:15px}.stats b{display:block}.stats small{font-size:8px;color:#b1bdb6}.streak{margin:0 14px 12px;border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);background:rgba(3,5,3,.66);border-radius:13px;padding:11px;color:var(--accent);font-size:11px;font-weight:900}.module{backdrop-filter:blur(8px);background:rgba(5,7,6,var(--cardAlpha))}.track{display:flex;justify-content:space-between;align-items:center}.play{width:38px;height:38px;border:0;border-radius:50%;background:var(--accent);box-shadow:0 0 16px color-mix(in srgb,var(--accent) 25%,transparent)}
 .control{margin:14px 0}.control label{display:flex;justify-content:space-between;font-size:11px;font-weight:800;margin-bottom:7px}.control input[type=range]{width:100%;accent-color:var(--accent)}.upload{display:block;border:1px dashed #3a5545;border-radius:16px;padding:18px;text-align:center;color:#d7e3dc;font-size:12px}.upload input{display:none}.preview{height:150px;border-radius:15px;background:#080b09 center/cover no-repeat;border:1px solid var(--line);margin-top:10px;display:grid;place-items:center;color:#738279;font-size:10px}iframe{max-width:100%}.swatches{display:flex;gap:8px;flex-wrap:wrap}.sw{width:36px;height:36px;border-radius:50%;border:2px solid #ffffff44}.sw1{background:#62ff32}.sw2{background:#62b7ff}.sw3{background:#ffad5c}.sw4{background:#ff79ad}.sw5{background:#fff}.sw6{background:#9c7cff}
 .styleGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.styleBtn{min-height:48px;border-radius:12px;border:1px solid var(--line);background:#080b09;color:#fff}.styleBtn.on{border-color:var(--accent);color:var(--accent)}
-.drag{padding:12px;border:1px solid var(--line);border-radius:12px;margin:7px 0;background:#070907;font-size:11px}input[type=text],input[type=email],input[type=password]{width:100%;padding:14px;border:1px solid var(--line);border-radius:13px;background:#070907;color:#fff;font-size:16px}
+.drag{padding:12px;border:1px solid var(--line);border-radius:12px;margin:7px 0;background:#070907;font-size:11px}input[type=text],input[type=email],input[type=password],textarea{width:100%;padding:14px;border:1px solid var(--line);border-radius:13px;background:#070907;color:#fff;font-size:16px} textarea{resize:vertical;min-height:92px}.editAvatarPreview{width:86px;height:86px;border-radius:50%;border:3px solid var(--accent);background:#111 center/cover no-repeat;display:grid;place-items:center;font-weight:950;margin:8px 0}.editCoverPreview{height:120px;border-radius:15px;background:#080b09 center/cover no-repeat;border:1px solid var(--line);margin:8px 0;display:grid;place-items:center;color:#738279;font-size:10px}
 nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width:min(430px,100%);display:grid;grid-template-columns:repeat(5,1fr);background:#050a07f7;border-top:1px solid var(--line);padding:7px 3px calc(8px + env(safe-area-inset-bottom))}nav button{border:0;background:transparent;color:#6f7e75;min-height:52px;font-size:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}nav button span{font-size:19px}nav button.on{color:var(--accent)}nav .plus{width:39px;height:32px;border-radius:11px;background:var(--accent);color:#020402;display:grid;place-items:center}
 
 #authGate{min-height:100vh;display:grid;place-items:center;padding:24px 18px;background:radial-gradient(circle at 50% 15%,#102218 0,transparent 34%),#020403}
@@ -82,7 +82,14 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 <div id="ytPlayer" style="width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#050806;border:1px solid var(--line)"></div>
 <div id="playerMsg" class="meta" style="margin-top:7px">Plays inside your NEXO profile.</div>
 </div></div></div><div class="module"><h4>◎ Favorite Loops</h4><div class="worldGrid"><div class="world"></div><div class="world"></div></div></div></div></div>
-<div class="accountBar"><small id="signedInAs">Signed in</small><button id="logoutBtn" class="secondary" style="width:auto;min-height:38px;padding:0 14px">LOG OUT</button></div><button class="secondary" data-go="customize">🎨 CUSTOMIZE MY NEXO</button></section>
+<div class="accountBar"><small id="signedInAs">Signed in</small><button id="logoutBtn" class="secondary" style="width:auto;min-height:38px;padding:0 14px">LOG OUT</button></div><button class="primary" data-go="editprofile" style="margin-bottom:9px">EDIT PROFILE</button><button class="secondary" data-go="customize">🎨 CUSTOMIZE MY NEXO</button></section>
+
+
+<section id="editprofile" class="page"><div class="title">Edit Profile</div><p class="sub">Update the profile people see on NEXO.</p>
+<div class="card"><b>Profile photo</b><div id="editAvatarPreview" class="editAvatarPreview">N</div><label class="upload">📷 CHOOSE PROFILE PHOTO<input id="avatarUpload" type="file" accept="image/*"></label></div>
+<div class="card"><b>Cover photo</b><div id="editCoverPreview" class="editCoverPreview">NO COVER SELECTED</div><label class="upload">🖼 CHOOSE COVER PHOTO<input id="coverUpload" type="file" accept="image/*"></label></div>
+<div class="card"><label class="meta">DISPLAY NAME</label><input id="editDisplayName" type="text" maxlength="50" placeholder="Your name" style="margin-top:6px"><label class="meta" style="display:block;margin-top:12px">USERNAME</label><input id="editUsername" type="text" maxlength="30" placeholder="username" style="margin-top:6px"><label class="meta" style="display:block;margin-top:12px">BIO</label><textarea id="editBio" maxlength="160" placeholder="Tell people about you" style="margin-top:6px"></textarea><div id="editProfileMsg" class="meta" style="margin-top:8px"></div></div>
+<button id="saveProfileBtn" class="primary">SAVE PROFILE</button><button class="secondary" data-go="profile" style="margin-top:9px">CANCEL</button></section>
 
 <section id="customize" class="page"><div class="title">🎨 Customize</div><p class="sub">Make your profile feel like your own corner of the internet.</p>
 
@@ -175,8 +182,29 @@ function paintProfile(user,profile){
 
   setText('realProfileName',display);
   setText('realProfileBio','@'+username+(bio?' · '+bio:''));
-  setText('realProfileAva',(display||username).charAt(0).toUpperCase());
+  const ava=document.getElementById('realProfileAva'); if(ava){ava.textContent=(display||username).charAt(0).toUpperCase(); if(profile&&profile.avatar_url){ava.style.backgroundImage='url(\"'+profile.avatar_url+'\")';ava.style.backgroundSize='cover';ava.style.backgroundPosition='center';ava.textContent='';}else{ava.style.backgroundImage='none';}}
+  const cover=document.querySelector('#profile .cover'); if(cover&&profile&&profile.background_url){cover.style.backgroundImage='url(\"'+profile.background_url+'\")';cover.style.backgroundSize='cover';cover.style.backgroundPosition='center';}
   setText('signedInAs','@'+username+' · '+(user.email||''));
+  fillEditProfile(profile,user);
+}
+
+let currentProfile=null,currentUser=null,pendingAvatarFile=null,pendingCoverFile=null;
+function fillEditProfile(profile,user){
+  currentProfile=profile||null; currentUser=user||null;
+  const q=id=>document.getElementById(id);
+  if(q('editDisplayName')) q('editDisplayName').value=(profile&&profile.display_name)||'';
+  if(q('editUsername')) q('editUsername').value=(profile&&profile.username)||'';
+  if(q('editBio')) q('editBio').value=(profile&&profile.bio)||'';
+  const ap=q('editAvatarPreview'); if(ap){ap.textContent=((profile&&profile.display_name)||(profile&&profile.username)||'N').charAt(0).toUpperCase();ap.style.backgroundImage='none';if(profile&&profile.avatar_url){ap.style.backgroundImage='url("'+profile.avatar_url+'")';ap.style.backgroundSize='cover';ap.textContent='';}}
+  const cp=q('editCoverPreview'); if(cp){cp.style.backgroundImage='none';cp.textContent='NO COVER SELECTED';if(profile&&profile.background_url){cp.style.backgroundImage='url("'+profile.background_url+'")';cp.style.backgroundSize='cover';cp.textContent='';}}
+}
+async function uploadProfileMedia(file,kind,userId){
+  if(!file) return null;
+  const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const path=userId+'/'+kind+'-'+Date.now()+'.'+ext;
+  const up=await sb.storage.from('profile-media').upload(path,file,{upsert:true,contentType:file.type||undefined});
+  if(up.error) throw up.error;
+  return sb.storage.from('profile-media').getPublicUrl(path).data.publicUrl;
 }
 
 async function enterApp(session){
@@ -348,5 +376,20 @@ document.getElementById('playTrack').addEventListener('click',function(){
 document.getElementById('postDrop').addEventListener('click',function(){this.textContent='✓ DROP POSTED ⚡'});
 function tick(){const p=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).formatToParts(new Date()).reduce((a,x)=>(a[x.type]=x.value,a),{});const cur=(+p.hour)*3600+(+p.minute)*60+(+p.second);let d=54000-cur;if(d<=0)d+=86400;document.getElementById('clock').textContent=[Math.floor(d/3600),Math.floor((d%3600)/60),d%60].map(x=>String(x).padStart(2,'0')).join(':');document.getElementById('dropStatus').textContent=(cur>=53700&&cur<54000)?'⚡ RESET WINDOW · Yesterday is gone · New DROP at 3:00 PM ET':"Today's World Drop stays public until 2:55 PM ET tomorrow."}
 tick();setInterval(tick,1000);
+
+const avatarUploadEl=document.getElementById('avatarUpload');
+if(avatarUploadEl) avatarUploadEl.addEventListener('change',e=>{pendingAvatarFile=e.target.files&&e.target.files[0];if(!pendingAvatarFile)return;const r=new FileReader();r.onload=ev=>{const x=document.getElementById('editAvatarPreview');x.style.backgroundImage='url("'+ev.target.result+'")';x.style.backgroundSize='cover';x.textContent=''};r.readAsDataURL(pendingAvatarFile)});
+const coverUploadEl=document.getElementById('coverUpload');
+if(coverUploadEl) coverUploadEl.addEventListener('change',e=>{pendingCoverFile=e.target.files&&e.target.files[0];if(!pendingCoverFile)return;const r=new FileReader();r.onload=ev=>{const x=document.getElementById('editCoverPreview');x.style.backgroundImage='url("'+ev.target.result+'")';x.style.backgroundSize='cover';x.textContent=''};r.readAsDataURL(pendingCoverFile)});
+const saveProfileBtn=document.getElementById('saveProfileBtn');
+if(saveProfileBtn) saveProfileBtn.addEventListener('click',async()=>{
+ const msg=document.getElementById('editProfileMsg'); const display=document.getElementById('editDisplayName').value.trim(); const username=cleanUsername(document.getElementById('editUsername').value); const bio=document.getElementById('editBio').value.trim();
+ if(!currentUser){msg.textContent='Please log in again.';return} if(!/^[a-z0-9._]{3,30}$/.test(username)){msg.textContent='Username: 3–30 lowercase letters, numbers, . or _';return}
+ saveProfileBtn.disabled=true; saveProfileBtn.textContent='SAVING...'; msg.textContent='';
+ try{let avatar=currentProfile&&currentProfile.avatar_url||null,cover=currentProfile&&currentProfile.background_url||null;if(pendingAvatarFile)avatar=await uploadProfileMedia(pendingAvatarFile,'avatar',currentUser.id);if(pendingCoverFile)cover=await uploadProfileMedia(pendingCoverFile,'cover',currentUser.id);
+ const res=await sb.from('profiles').update({username,display_name:display.slice(0,50),bio:bio.slice(0,160),avatar_url:avatar,background_url:cover}).eq('id',currentUser.id).select().single();if(res.error)throw res.error;currentProfile=res.data;pendingAvatarFile=null;pendingCoverFile=null;paintProfile(currentUser,currentProfile);msg.textContent='✓ Profile saved';document.querySelector('[data-go="profile"]').click();}
+ catch(err){msg.textContent=err.message||'Could not save profile.';} finally{saveProfileBtn.disabled=false;saveProfileBtn.textContent='SAVE PROFILE';}
+});
+
 })();
 </script></body></html>
