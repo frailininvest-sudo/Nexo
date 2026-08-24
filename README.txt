@@ -1,8 +1,6 @@
-NEXO V0.11 - CREATE DROP
-- Keeps V0.10 login and Edit Profile.
-- Removes fake follower/following/drop/streak numbers; starts at 0.
-- Create now publishes real photo/video Drops to Supabase.
-- Home loads real Drops from Supabase.
-- Profile Drop count is calculated from the database.
+NEXO V0.11.1 — Feed Fix
 
-SETUP: Run DROPS_SETUP.sql once in Supabase SQL Editor before publishing this version.
+- Fixes Home feed loading for real Drops.
+- Drops and profiles are loaded separately so the feed does not depend on an inferred database relationship.
+- Existing published Drops remain intact and should appear automatically.
+- No new Supabase SQL setup is required for this fix.
