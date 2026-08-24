@@ -19,3 +19,9 @@ Security:
 - Uses only the Supabase publishable browser key.
 - No secret/service_role key is included.
 - Profile writes remain protected by the RLS policies already created in Supabase.
+
+
+V0.9.1 FIX:
+- Restored the missing pages variable declaration in navigation JavaScript.
+- Home, Loops, Create, Spaces, Profile, World Drop and data-go navigation work again.
+- Supabase authentication/session/profile integration retained.

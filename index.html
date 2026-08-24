@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>NEXO V0.9</title>
+<meta name="theme-color" content="#07100b"><title>NEXO V0.9.1</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -241,7 +241,7 @@ sb.auth.onAuthStateChange((event,session)=>{
 });
 sb.auth.getSession().then(({data})=>enterApp(data.session));
 
-[...document.querySelectorAll('.page')],nav=[...document.querySelectorAll('nav button')];
+const pages=[...document.querySelectorAll('.page')],nav=[...document.querySelectorAll('nav button')];
 function go(id){pages.forEach(p=>p.classList.toggle('active',p.id===id));nav.forEach(b=>b.classList.toggle('on',b.dataset.go===id));window.scrollTo(0,0)}
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
 document.querySelectorAll('.tabs').forEach(t=>t.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.go)return;t.querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on')})));
