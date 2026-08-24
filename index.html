@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07100b"><title>NEXO V0.3</title>
+<style>
+*{box-sizing:border-box}:root{--accent:#64e6ad;--bg:#050806;--panel:rgba(10,18,14,.94);--line:#1c2a22;--text:#f3fff8;--muted:#819087;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
+#app{max-width:430px;margin:auto;min-height:100vh;background:#07100b;position:relative;padding-bottom:82px}
+header{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:17px 15px 10px;background:#07100bf2;border-bottom:1px solid #111c16}.logo{font-size:27px;font-weight:950;letter-spacing:-2px}.logo em{font-style:normal;color:var(--accent)}.icon{width:39px;height:39px;border-radius:50%;border:1px solid var(--line);background:#0b1510;color:#fff}
+.page{display:none;padding:8px 14px 98px}.page.active{display:block}.title{font-size:28px;font-weight:900;letter-spacing:-1.2px;margin:9px 0 3px}.sub{color:var(--muted);font-size:12px;line-height:1.45;margin:0 0 14px}.card,.row,.module{background:rgba(10,18,14,var(--cardAlpha));border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:10px}.mint{color:var(--accent)}
+.primary,.secondary{width:100%;min-height:46px;border-radius:13px;font-weight:900}.primary{border:0;background:var(--accent);color:#06100a}.secondary{border:1px solid #2b4235;background:#0b1510;color:#fff}
+.tabs{display:flex;padding:3px;border:1px solid var(--line);background:#09130d;border-radius:14px;margin-bottom:12px}.tabs button{flex:1;border:0;background:transparent;color:#75857b;padding:10px 3px;border-radius:11px;font-size:11px}.tabs button.on{background:#15251b;color:#fff}
+.dropHero{background:linear-gradient(145deg,#10291b,#09140d);border-color:#315a42}.dropHero h2{margin:3px 0;font-size:22px}.clock{font-size:34px;font-weight:950;color:var(--accent)}
+.post{padding:0;overflow:hidden}.postHead{display:flex;align-items:center;gap:9px;padding:11px}.ava{width:38px;height:38px;border-radius:50%;background:#1c2d23;display:grid;place-items:center;font-size:11px;font-weight:900}.who{flex:1}.who b{display:block;font-size:12px}.who small,.meta{color:var(--muted);font-size:9px}.media{height:250px;background:radial-gradient(circle at 72% 22%,#436153 0,transparent 22%),linear-gradient(145deg,#1d2d25,#0b100d 55%,#2c4136);display:flex;align-items:end;padding:13px;font-size:10px;font-weight:800}.actions{padding:10px 12px}.actions span{margin-right:17px}
+.worldGrid,.createGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.world{min-height:112px;border:1px solid var(--line);border-radius:16px;padding:12px;background:#0c1710}.world small{display:block;color:var(--muted);font-size:9px;margin-top:5px}
+.loopStage{height:300px;border-radius:20px;background:linear-gradient(145deg,#263a31,#0a100d);display:grid;place-items:center;position:relative}.loopDot{width:90px;height:90px;border:2px solid var(--accent);border-radius:50%;animation:lp 1.35s infinite alternate}@keyframes lp{to{transform:scale(1.3);opacity:.3}}
+.orb{width:94px;height:94px;border-radius:50%;background:var(--accent);color:#06100a;display:grid;place-items:center;font-size:42px;margin:20px auto}.createGrid button{min-height:100px;border:1px solid var(--line);border-radius:17px;background:#0b1510;color:#fff;font-weight:900}
+.profileShell{position:relative;border-radius:22px;overflow:hidden;min-height:610px;background:#07100b;margin-bottom:12px}.profileBg{position:absolute;inset:-12px;background-position:center;background-size:cover;background-repeat:no-repeat;filter:blur(var(--profileBlur));transform:scale(1.05);z-index:0}.profileShade{position:absolute;inset:0;background:rgba(0,0,0,var(--profileOverlay));z-index:1}.profileContent{position:relative;z-index:2;padding:12px}.cover{height:118px;border-radius:18px;background:linear-gradient(135deg,rgba(25,58,42,.72),rgba(11,17,14,.58),rgba(49,95,71,.68));margin-bottom:-34px}.profileAva{width:82px;height:82px;border-radius:50%;border:5px solid rgba(7,16,11,.9);background:#1a2b22;display:grid;place-items:center;font-weight:950;margin-left:14px}.name{font-size:26px;font-weight:950;margin:7px 14px 0}.bio{font-size:11px;color:#d1ddd6;margin:4px 14px}.stats{display:flex;gap:23px;margin:15px}.stats b{display:block}.stats small{font-size:8px;color:#b1bdb6}.streak{margin:0 14px 12px;border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);background:rgba(5,10,7,.58);border-radius:13px;padding:11px;color:var(--accent);font-size:11px;font-weight:900}.module{backdrop-filter:blur(8px);background:rgba(7,15,10,var(--cardAlpha))}.track{display:flex;justify-content:space-between;align-items:center}.play{width:38px;height:38px;border:0;border-radius:50%;background:var(--accent)}.top8{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.face{aspect-ratio:1;border-radius:12px;background:rgba(25,42,33,.9);display:grid;place-items:center;font-size:9px}
+.control{margin:14px 0}.control label{display:flex;justify-content:space-between;font-size:11px;font-weight:800;margin-bottom:7px}.control input[type=range]{width:100%;accent-color:var(--accent)}.upload{display:block;border:1px dashed #3a5545;border-radius:16px;padding:18px;text-align:center;color:#d7e3dc;font-size:12px}.upload input{display:none}.preview{height:150px;border-radius:15px;background:#0b1510 center/cover no-repeat;border:1px solid var(--line);margin-top:10px;display:grid;place-items:center;color:#738279;font-size:10px}iframe{max-width:100%}.swatches{display:flex;gap:8px;flex-wrap:wrap}.sw{width:36px;height:36px;border-radius:50%;border:2px solid #ffffff44}.sw1{background:#64e6ad}.sw2{background:#62b7ff}.sw3{background:#ffad5c}.sw4{background:#ff79ad}.sw5{background:#fff}.sw6{background:#9c7cff}
+.styleGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.styleBtn{min-height:48px;border-radius:12px;border:1px solid var(--line);background:#0b1510;color:#fff}.styleBtn.on{border-color:var(--accent);color:var(--accent)}
+.drag{padding:12px;border:1px solid var(--line);border-radius:12px;margin:7px 0;background:#08100c;font-size:11px}input[type=text]{width:100%;padding:14px;border:1px solid var(--line);border-radius:13px;background:#08100c;color:#fff;font-size:16px}
+nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width:min(430px,100%);display:grid;grid-template-columns:repeat(5,1fr);background:#050a07f7;border-top:1px solid var(--line);padding:7px 3px calc(8px + env(safe-area-inset-bottom))}nav button{border:0;background:transparent;color:#6f7e75;min-height:52px;font-size:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}nav button span{font-size:19px}nav button.on{color:var(--accent)}nav .plus{width:39px;height:32px;border-radius:11px;background:var(--accent);color:#06100a;display:grid;place-items:center}
+@media(prefers-reduced-motion:reduce){.loopDot{animation:none}}
+</style></head>
+<body><main id="app">
+<header><div class="logo">ne<em>x</em>o</div><div><button class="icon" data-go="search">⌕</button> <button class="icon" data-go="messages">↗</button></div></header>
+
+<section id="home" class="page active"><div class="tabs"><button class="on">For You</button><button>Following</button><button data-go="drop">DROP ⚡</button></div><div class="card dropHero"><small class="mint"><b>EVERY DAY · 3:00 PM ET</b></small><h2>⚡ GLOBAL DROP</h2><p class="sub">The whole world in one daily window. No posting required to watch.</p><button class="primary" data-go="drop">ENTER WORLD DROP</button></div><div class="card post"><div class="postHead"><div class="ava">MK</div><div class="who"><b>mika.jpg ✓</b><small>Miami · 2m</small></div>•••</div><div class="media">TONIGHT · MIAMI</div><div class="actions"><span>♡</span><span>◯</span><span>↗</span><span>⌑</span></div></div></section>
+
+<section id="drop" class="page"><div class="title">⚡ World DROP</div><p class="sub">Everyone sees everyone. Today's window disappears tomorrow at 2:55 PM ET.</p><div class="card dropHero"><small class="mint"><b>NEXT DROP · 3:00 PM ET</b></small><div class="clock" id="clock">--:--:--</div><p class="sub" id="dropStatus">Today's World Drop is live.</p><button class="primary" id="postDrop">＋ POST MY DROP</button></div><div class="worldGrid"><div class="world"><b>Tokyo 🇯🇵</b><small>Today's moments</small></div><div class="world"><b>Puerto Rico 🇵🇷</b><small>Today's moments</small></div><div class="world"><b>Miami 🇺🇸</b><small>Today's moments</small></div><div class="world"><b>Madrid 🇪🇸</b><small>Today's moments</small></div></div></section>
+
+<section id="loops" class="page"><div class="title">◎ Loops</div><p class="sub">Living photos built around motion and replay.</p><div class="loopStage"><div class="loopDot"></div></div><div class="actions"><span>♡ 8.2K</span><span>◯ 312</span><span>🔗 Chain</span></div></section>
+
+<section id="create" class="page"><div class="orb">＋</div><div class="title" style="text-align:center">Create</div><p class="sub" style="text-align:center">One place for every format.</p><div class="createGrid"><button>📷<br>PHOTO</button><button>▶<br>VIDEO</button><button data-go="loops">◎<br>LOOP</button><button>✦<br>PULSE</button></div></section>
+
+<section id="spaces" class="page"><div class="title">Spaces</div><p class="sub">Find your people.</p><div class="row"><b>🎮 After Hours Gaming</b><p>Clips, squads, tournaments and gaming culture.</p></div><div class="row"><b>💻 Build & Hustle</b><p>Apps, businesses and projects people are building.</p></div><div class="row"><b>🏎 Car Culture</b><p>Builds, meets and automotive culture.</p></div></section>
+
+<section id="profile" class="page">
+<div id="profileShell" class="profileShell"><div id="profileBg" class="profileBg"></div><div class="profileShade"></div><div class="profileContent"><div class="cover"></div><div class="profileAva">F</div><div class="name">frai</div><p class="bio">@frai · building things · gaming · life</p><div class="stats"><div><b>18.4K</b><small>FOLLOWERS</small></div><div><b>612</b><small>FOLLOWING</small></div><div><b>147</b><small>DROPS</small></div></div><div class="streak">⚡ DROP STREAK · 38 DAYS</div><div class="module" id="profileTrackModule">
+<div class="track"><div><small class="mint">PROFILE TRACK</small><h4 id="profileTrackTitle">No track selected</h4><span class="meta" id="profileTrackArtist">Customize your profile to add YouTube music</span></div><button class="play" id="playTrack" type="button">▶</button></div>
+<div id="ytPlayerWrap" style="display:none;margin-top:10px">
+<div id="ytThumb" style="height:190px;border-radius:14px;background:#171b18 center/cover no-repeat;position:relative;overflow:hidden;border:1px solid var(--line)">
+<div style="position:absolute;inset:0;background:linear-gradient(transparent,rgba(0,0,0,.72));"></div>
+<button id="openYoutube" type="button" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border:0;border-radius:999px;background:var(--accent);color:#06100a;width:58px;height:58px;font-size:23px;font-weight:900">▶</button>
+<div style="position:absolute;left:13px;right:13px;bottom:12px;font-size:10px;font-weight:800">PLAY ON YOUTUBE ↗</div>
+</div>
+<div class="meta" style="margin-top:7px">Playback opens through YouTube, avoiding blocked embedded-player errors.</div>
+</div></div><div class="module"><h4>👥 My Top 8</h4><div class="top8"><div class="face">MJ</div><div class="face">JR</div><div class="face">KL</div><div class="face">AY</div><div class="face">TC</div><div class="face">DR</div><div class="face">MS</div><div class="face">＋</div></div></div><div class="module"><h4>◎ Favorite Loops</h4><div class="worldGrid"><div class="world"></div><div class="world"></div></div></div></div></div>
+<button class="secondary" data-go="customize">🎨 CUSTOMIZE MY NEXO</button></section>
+
+<section id="customize" class="page"><div class="title">🎨 Customize</div><p class="sub">Make your profile feel like your own corner of the internet.</p>
+
+<div class="card"><b>🎵 Profile Music · YouTube</b>
+<p class="sub">Paste a YouTube link. NEXO will save it as your Profile Track.</p>
+<input id="ytUrl" type="text" placeholder="https://www.youtube.com/watch?v=...">
+<input id="trackTitle" type="text" placeholder="Song title (optional)" style="margin-top:8px">
+<input id="trackArtist" type="text" placeholder="Artist (optional)" style="margin-top:8px">
+<button id="saveTrack" class="primary" style="margin-top:9px">SAVE PROFILE TRACK</button>
+<div id="musicMsg" class="meta" style="margin-top:9px">No YouTube track selected.</div>
+</div>
+<div class="card"><b>Background image</b><p class="sub">Upload any image from your phone — your team, car, gaming setup, city, art, or your own photo.</p><label class="upload">📷 CHOOSE BACKGROUND IMAGE<input id="bgUpload" type="file" accept="image/*"></label><div id="bgPreview" class="preview">NO BACKGROUND SELECTED</div><button id="removeBg" class="secondary" style="margin-top:9px">REMOVE BACKGROUND</button></div>
+<div class="card"><b>Background controls</b><div class="control"><label><span>Dark overlay</span><span id="overlayVal">55%</span></label><input id="overlay" type="range" min="0" max="90" value="55"></div><div class="control"><label><span>Background blur</span><span id="blurVal">0px</span></label><input id="blur" type="range" min="0" max="20" value="0"></div><div class="control"><label><span>Card transparency</span><span id="cardVal">88%</span></label><input id="cards" type="range" min="30" max="100" value="88"></div></div>
+<div class="card"><b>Accent color</b><div class="swatches" style="margin-top:12px"><button class="sw sw1" data-color="#64e6ad"></button><button class="sw sw2" data-color="#62b7ff"></button><button class="sw sw3" data-color="#ffad5c"></button><button class="sw sw4" data-color="#ff79ad"></button><button class="sw sw5" data-color="#ffffff"></button><button class="sw sw6" data-color="#9c7cff"></button></div></div>
+<div class="card"><b>Profile style</b><div class="styleGrid" style="margin-top:10px"><button class="styleBtn on">Minimal</button><button class="styleBtn">Y2K</button><button class="styleBtn">Neon</button><button class="styleBtn">Editorial</button></div></div>
+<div class="card"><b>Modules</b><p class="sub">These will be draggable in the full app.</p><div class="drag">☰ About Me</div><div class="drag">☰ Profile Track</div><div class="drag">☰ Top 8</div><div class="drag">☰ Favorite Loops</div><div class="drag">☰ Spaces I'm In</div></div><button class="primary" data-go="profile">SAVE & VIEW PROFILE</button></section>
+
+<section id="search" class="page"><div class="title">Explore</div><input type="text" placeholder="Search people, Spaces, Loops..."><div class="worldGrid"><div class="world"><b>🌎 Now</b><small>What's happening</small></div><div class="world"><b>🔗 Chains</b><small>Continue a story</small></div></div></section>
+<section id="messages" class="page"><div class="title">Messages</div><div class="row"><b>Maya</b><p>that DROP was crazy 😂</p></div><div class="row"><b>Gaming Crew</b><p>Jared sent a Loop ◎</p></div></section>
+
+<nav><button class="on" data-go="home"><span>⌂</span>Home</button><button data-go="loops"><span>◎</span>Loops</button><button data-go="create"><span class="plus">＋</span>Create</button><button data-go="spaces"><span>⌘</span>Spaces</button><button data-go="profile"><span>◉</span>Profile</button></nav>
+</main>
+<script>
+(function(){
+const pages=[...document.querySelectorAll('.page')],nav=[...document.querySelectorAll('nav button')];
+function go(id){pages.forEach(p=>p.classList.toggle('active',p.id===id));nav.forEach(b=>b.classList.toggle('on',b.dataset.go===id));window.scrollTo(0,0)}
+document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
+document.querySelectorAll('.tabs').forEach(t=>t.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.go)return;t.querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on')})));
+document.querySelectorAll('.styleBtn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.styleBtn').forEach(x=>x.classList.remove('on'));b.classList.add('on')}));
+document.querySelectorAll('.sw').forEach(b=>b.addEventListener('click',()=>document.documentElement.style.setProperty('--accent',b.dataset.color)));
+const bg=document.getElementById('profileBg'),preview=document.getElementById('bgPreview'),upload=document.getElementById('bgUpload');
+upload.addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{const url='url("'+ev.target.result+'")';bg.style.backgroundImage=url;preview.style.backgroundImage=url;preview.textContent=''};r.readAsDataURL(f)});
+document.getElementById('removeBg').addEventListener('click',()=>{bg.style.backgroundImage='none';preview.style.backgroundImage='none';preview.textContent='NO BACKGROUND SELECTED';upload.value=''});
+const overlay=document.getElementById('overlay'),blur=document.getElementById('blur'),cards=document.getElementById('cards');
+overlay.addEventListener('input',()=>{document.documentElement.style.setProperty('--profileOverlay',overlay.value/100);document.getElementById('overlayVal').textContent=overlay.value+'%'});
+blur.addEventListener('input',()=>{document.documentElement.style.setProperty('--profileBlur',blur.value+'px');document.getElementById('blurVal').textContent=blur.value+'px'});
+cards.addEventListener('input',()=>{document.documentElement.style.setProperty('--cardAlpha',cards.value/100);document.getElementById('cardVal').textContent=cards.value+'%'});
+
+function youtubeId(value){
+  value=(value||'').trim();
+  try{
+    const u=new URL(value);
+    const host=u.hostname.replace(/^www\./,'');
+    if(host==='youtu.be') return u.pathname.split('/').filter(Boolean)[0]||'';
+    if(host==='youtube.com' || host==='m.youtube.com' || host==='music.youtube.com'){
+      if(u.pathname==='/watch') return u.searchParams.get('v')||'';
+      const parts=u.pathname.split('/').filter(Boolean);
+      if(['shorts','embed','live'].includes(parts[0])) return parts[1]||'';
+    }
+  }catch(e){}
+  return '';
+}
+let selectedVideo='', selectedUrl='';
+document.getElementById('saveTrack').addEventListener('click',function(){
+  const url=document.getElementById('ytUrl').value.trim();
+  const id=youtubeId(url), msg=document.getElementById('musicMsg');
+  if(!id){msg.textContent='Please paste a valid YouTube link.';return}
+  selectedVideo=id;
+  selectedUrl='https://www.youtube.com/watch?v='+encodeURIComponent(id);
+  const title=document.getElementById('trackTitle').value.trim()||'My YouTube Track';
+  const artist=document.getElementById('trackArtist').value.trim()||'YouTube';
+  document.getElementById('profileTrackTitle').textContent=title;
+  document.getElementById('profileTrackArtist').textContent=artist+' · Tap ▶ to play';
+  document.getElementById('ytThumb').style.backgroundImage='url("https://i.ytimg.com/vi/'+encodeURIComponent(id)+'/hqdefault.jpg")';
+  document.getElementById('ytPlayerWrap').style.display='none';
+  document.getElementById('playTrack').textContent='▶';
+  msg.textContent='✓ Profile Track saved. Open Profile and press Play.';
+});
+document.getElementById('playTrack').addEventListener('click',function(){
+  if(!selectedVideo){
+    go('customize');
+    document.getElementById('musicMsg').textContent='Add a YouTube link first.';
+    return;
+  }
+  const wrap=document.getElementById('ytPlayerWrap');
+  const open=wrap.style.display==='none';
+  wrap.style.display=open?'block':'none';
+  this.textContent=open?'×':'▶';
+});
+document.getElementById('openYoutube').addEventListener('click',function(){
+  if(selectedUrl) window.open(selectedUrl,'_blank','noopener,noreferrer');
+});
+document.getElementById('postDrop').addEventListener('click',function(){this.textContent='✓ DROP POSTED ⚡'});
+function tick(){const p=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).formatToParts(new Date()).reduce((a,x)=>(a[x.type]=x.value,a),{});const cur=(+p.hour)*3600+(+p.minute)*60+(+p.second);let d=54000-cur;if(d<=0)d+=86400;document.getElementById('clock').textContent=[Math.floor(d/3600),Math.floor((d%3600)/60),d%60].map(x=>String(x).padStart(2,'0')).join(':');document.getElementById('dropStatus').textContent=(cur>=53700&&cur<54000)?'⚡ RESET WINDOW · Yesterday is gone · New DROP at 3:00 PM ET':"Today's World Drop stays public until 2:55 PM ET tomorrow."}
+tick();setInterval(tick,1000);
+})();
+</script></body></html>
