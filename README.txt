@@ -1,8 +1,10 @@
-NEXO V0.9.3 — Top 8 Fix
+NEXO V0.9.4 — Login Null Fix
 
-- Removed My Top 8 from the Profile.
-- Removed Top 8 from Customize > Modules.
-- Preserved all required real-profile elements and JavaScript IDs.
-- Fixes the V0.9.2 login error: Cannot set properties of null (setting 'textContent').
-- Keeps Supabase authentication, sessions, RLS-compatible profiles, navigation, World Drop,
-  profile customization prototype, Profile Track, Favorite Loops and the official NEXO design.
+Fix:
+- Login can no longer fail because an optional profile UI element is missing.
+- Replaced direct profile textContent writes with safe element checks.
+- Keeps Top 8 removed.
+- Keeps Supabase authentication, profiles, navigation, profile customization,
+  World Drop, Profile Track and the existing NEXO design.
+
+Upload index.html, README.txt and assets to the ROOT of the GitHub Nexo repository.
