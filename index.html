@@ -32,6 +32,16 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 .authMsg{min-height:34px;margin-top:10px;font-size:11px;line-height:1.4;color:#aab8af}.authMsg.good{color:var(--accent)}.authMsg.bad{color:#ff8c8c}.authLink{display:block;margin:10px 2px 0;text-align:right;color:var(--accent);font-size:11px;font-weight:800;background:none;border:0;cursor:pointer}.recoveryTitle{text-align:center;font-size:25px;margin:8px 0}.recoverySub{text-align:center;color:#94a098;font-size:12px;margin-bottom:16px}
 .accountBar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}.accountBar small{color:var(--muted)}
 
+
+.searchPanel{padding:14px 12px 100px}.searchBox{display:flex;gap:8px;margin:10px 0 14px}
+.searchBox input{flex:1}.userResult{display:flex;align-items:center;gap:11px;padding:11px;border:1px solid var(--line);border-radius:15px;background:#080c09;margin:8px 0;cursor:pointer}
+.userResult img,.publicAvatar{width:48px;height:48px;border-radius:50%;object-fit:cover;background:#142019;border:1px solid #29402f}
+.userResult .uText{flex:1}.userResult .uName{font-weight:900}.userResult .uHandle{font-size:11px;color:var(--muted)}
+.publicProfile{padding-bottom:100px}.publicCover{height:190px;background:#0b120d center/cover no-repeat;position:relative}
+.publicHead{padding:0 14px 14px}.publicAvatar{width:84px;height:84px;margin-top:-42px;position:relative;border:4px solid #050805}
+.publicName{font-size:24px;font-weight:950;margin-top:8px}.publicHandle{color:var(--accent);font-size:12px;font-weight:800}.publicBio{color:#c5cec8;font-size:13px;line-height:1.45;margin-top:7px}
+.publicDrops{padding:0 12px}.emptyState{padding:28px 12px;text-align:center;color:var(--muted);font-size:12px}
+
 @media(prefers-reduced-motion:reduce){.loopDot{animation:none}}
 </style></head>
 <body>
@@ -349,6 +359,55 @@ sb.auth.getSession().then(({data})=>{
     enterApp(data.session);
   }
 });
+
+
+async function searchUsers(){
+  const box=document.getElementById('searchResults');
+  const q=(document.getElementById('userSearchInput').value||'').trim().replace(/^@/,'');
+  if(!q){ box.innerHTML='<div class="emptyState">Type a name or @username.</div>'; return; }
+  box.innerHTML='<div class="emptyState">Searching…</div>';
+  const safe=q.replace(/[%_,]/g,'');
+  const {data,error}=await sb.from('profiles')
+    .select('id,username,display_name,bio,avatar_url,background_url')
+    .or(`username.ilike.%${safe}%,display_name.ilike.%${safe}%`)
+    .order('username',{ascending:true}).limit(20);
+  if(error){ box.innerHTML='<div class="emptyState">'+escapeHtml(error.message)+'</div>'; return; }
+  if(!data||!data.length){ box.innerHTML='<div class="emptyState">No users found.</div>'; return; }
+  box.innerHTML=data.map(u=>`
+    <div class="userResult" data-public-user="${u.id}">
+      ${u.avatar_url?`<img src="${u.avatar_url}" alt="">`:`<div class="publicAvatar" style="width:48px;height:48px;display:grid;place-items:center">${(u.display_name||u.username||'N')[0].toUpperCase()}</div>`}
+      <div class="uText"><div class="uName">${escapeHtml(u.display_name||u.username)}</div><div class="uHandle">@${escapeHtml(u.username)}</div></div>
+      <b style="color:var(--accent)">›</b>
+    </div>`).join('');
+  box.querySelectorAll('[data-public-user]').forEach(el=>el.addEventListener('click',()=>openPublicProfile(el.dataset.publicUser)));
+}
+function escapeHtml(v){
+  return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+async function openPublicProfile(userId){
+  const {data:u,error}=await sb.from('profiles').select('*').eq('id',userId).single();
+  if(error||!u) return;
+  document.getElementById('publicCover').style.backgroundImage=u.background_url?`url("${u.background_url}")`:'none';
+  const av=document.getElementById('publicAvatar');
+  if(u.avatar_url){ av.src=u.avatar_url; av.style.display='block'; } else { av.removeAttribute('src'); av.style.display='none'; }
+  document.getElementById('publicName').textContent=u.display_name||u.username;
+  document.getElementById('publicHandle').textContent='@'+u.username;
+  document.getElementById('publicBio').textContent=u.bio||'';
+  const list=document.getElementById('publicDropsList');
+  list.innerHTML='<div class="emptyState">Loading Drops…</div>';
+  const {data:drops,error:de}=await sb.from('drops').select('*').eq('user_id',userId).order('created_at',{ascending:false});
+  if(de){ list.innerHTML='<div class="emptyState">'+escapeHtml(de.message)+'</div>'; }
+  else if(!drops||!drops.length){ list.innerHTML='<div class="emptyState">No Drops yet.</div>'; }
+  else list.innerHTML=drops.map(d=>`
+    <article class="card" style="margin:10px 0">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">@${escapeHtml(u.username)}</div>
+      ${d.media_type==='video'?`<video src="${d.media_url}" controls playsinline style="width:100%;border-radius:14px"></video>`:`<img src="${d.media_url}" alt="" style="width:100%;border-radius:14px;display:block">`}
+      ${d.caption?`<p style="margin:10px 2px 2px">${escapeHtml(d.caption)}</p>`:''}
+    </article>`).join('');
+  go('publicProfile');
+}
+document.getElementById('userSearchBtn')?.addEventListener('click',searchUsers);
+document.getElementById('userSearchInput')?.addEventListener('keydown',e=>{if(e.key==='Enter') searchUsers();});
 
 const pages=[...document.querySelectorAll('.page')],nav=[...document.querySelectorAll('nav button')];
 function go(id){pages.forEach(p=>p.classList.toggle('active',p.id===id));nav.forEach(b=>b.classList.toggle('on',b.dataset.go===id));window.scrollTo(0,0)}

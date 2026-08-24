@@ -1,8 +1,10 @@
-NEXO V0.11.4 — Password Recovery Fix
+NEXO V0.12 — Search + Public Profiles
 
-Fix:
-- NEXO now remembers when Forgot Password was initiated.
-- Supabase PKCE recovery callbacks that return with only ?code=... are correctly recognized.
-- Recovery opens Create New Password instead of Home/Profile.
-- Recovery marker is cleared only after the password is successfully changed.
-- No SQL or Supabase configuration changes required.
+New:
+- Search real NEXO users by display name or @username.
+- Search results use the public profiles table in Supabase.
+- Tap a result to open a real public profile.
+- Public profile shows avatar, background, display name, @username, bio and that user's real Drops.
+- Existing login, password recovery, Edit Profile, Create Drop and Home feed remain intact.
+
+No new SQL is required because profiles are already publicly readable and Drops already have SELECT access.
