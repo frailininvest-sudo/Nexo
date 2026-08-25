@@ -40,7 +40,7 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 .publicProfile{padding-bottom:100px}.publicCover{height:190px;background:#0b120d center/cover no-repeat;position:relative}
 .publicHead{padding:0 14px 14px}.publicAvatar{width:84px;height:84px;margin-top:-42px;position:relative;border:4px solid #050805}
 .publicName{font-size:24px;font-weight:950;margin-top:8px}.publicHandle{color:var(--accent);font-size:12px;font-weight:800}.publicBio{color:#c5cec8;font-size:13px;line-height:1.45;margin-top:7px}
-.publicDrops{padding:0 12px}.emptyState{padding:28px 12px;text-align:center;color:var(--muted);font-size:12px}
+.followBtn{margin:2px 14px 14px;width:calc(100% - 28px);min-height:44px;border:1px solid var(--accent);border-radius:13px;background:var(--accent);color:#031003;font-weight:950}.followBtn.following{background:rgba(4,8,5,.72);color:var(--accent)}.publicDrops{padding:0 12px}.emptyState{padding:28px 12px;text-align:center;color:var(--muted);font-size:12px}
 
 
 
@@ -114,7 +114,7 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 <section id="spaces" class="page"><div class="title">Spaces</div><p class="sub">Find your people.</p><div class="row"><b>🎮 After Hours Gaming</b><p>Clips, squads, tournaments and gaming culture.</p></div><div class="row"><b>💻 Build & Hustle</b><p>Apps, businesses and projects people are building.</p></div><div class="row"><b>🏎 Car Culture</b><p>Builds, meets and automotive culture.</p></div></section>
 
 <section id="profile" class="page">
-<div id="profileShell" class="profileShell"><div id="profileBg" class="profileBg"></div><div class="profileShade"></div><div class="profileContent"><div class="cover"></div><div id="realProfileAva" class="profileAva">N</div><div id="realProfileName" class="name">exof</div><p id="realProfileBio" class="bio">@exof</p><div class="stats"><div><b>0</b><small>FOLLOWERS</small></div><div><b>0</b><small>FOLLOWING</small></div><div><b id="dropCount">0</b><small>DROPS</small></div></div><div class="module" id="profileTrackModule">
+<div id="profileShell" class="profileShell"><div id="profileBg" class="profileBg"></div><div class="profileShade"></div><div class="profileContent"><div id="realProfileCover" class="cover"></div><div id="realProfileAva" class="profileAva">N</div><div id="realProfileName" class="name">exof</div><p id="realProfileBio" class="bio">@exof</p><div class="stats"><div><b>0</b><small>FOLLOWERS</small></div><div><b>0</b><small>FOLLOWING</small></div><div><b id="dropCount">0</b><small>DROPS</small></div></div><div class="module" id="profileTrackModule">
 <div class="track"><div><small class="mint">PROFILE TRACK</small><h4 id="profileTrackTitle">No track selected</h4><span class="meta" id="profileTrackArtist">Customize your profile to add YouTube music</span></div><button class="play" id="playTrack" type="button">▶</button></div>
 <div id="ytPlayerWrap" style="display:none;margin-top:10px">
 <div id="ytPlayer" style="width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#050806;border:1px solid var(--line)"></div>
@@ -147,7 +147,7 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 
 <section id="search" class="page"><div class="searchPanel"><div class="title">Explore</div><div class="searchBox"><input id="userSearchInput" type="text" placeholder="Search @username or name..." autocomplete="off"><button id="userSearchBtn" class="primary" style="width:auto;padding:0 18px">SEARCH</button></div><div id="searchResults"><div class="emptyState">Search for people on EXOF.</div></div><div class="worldGrid"><div class="world"><b>🌎 Now</b><small>What's happening</small></div><div class="world"><b>🔗 Chains</b><small>Continue a story</small></div></div></div></section>
 <section id="publicProfile" class="page publicProfile">
-<div id="publicProfileShell" class="profileShell"><div id="publicProfileBg" class="profileBg"></div><div class="profileShade"></div><div class="profileContent"><div id="publicCover" class="cover"></div><div id="publicAvatar" class="profileAva">E</div><div id="publicName" class="name">EXOF user</div><p id="publicHandle" class="bio">@user</p><p id="publicBio" class="bio" style="margin-top:4px"></p><div class="stats"><div><b id="publicFollowers">0</b><small>FOLLOWERS</small></div><div><b id="publicFollowing">0</b><small>FOLLOWING</small></div><div><b id="publicDropCount">0</b><small>DROPS</small></div></div><div class="module"><div class="track"><div><small class="mint">PROFILE TRACK</small><h4>No track selected</h4><span class="meta">No public track selected</span></div><button class="play" type="button">▶</button></div></div><div class="module"><h4>◎ Favorite Loops</h4><div class="worldGrid"><div class="world"></div><div class="world"></div></div></div></div></div>
+<div id="publicProfileShell" class="profileShell"><div id="publicProfileBg" class="profileBg"></div><div class="profileShade"></div><div class="profileContent"><div id="publicCover" class="cover"></div><div id="publicAvatar" class="profileAva">E</div><div id="publicName" class="name">EXOF user</div><p id="publicHandle" class="bio">@user</p><p id="publicBio" class="bio" style="margin-top:4px"></p><button id="publicFollowBtn" class="followBtn" type="button" style="display:none">FOLLOW</button><div class="stats"><div><b id="publicFollowers">0</b><small>FOLLOWERS</small></div><div><b id="publicFollowing">0</b><small>FOLLOWING</small></div><div><b id="publicDropCount">0</b><small>DROPS</small></div></div><div class="module"><div class="track"><div><small class="mint">PROFILE TRACK</small><h4>No track selected</h4><span class="meta">No public track selected</span></div><button class="play" type="button">▶</button></div></div><div class="module"><h4>◎ Favorite Loops</h4><div class="worldGrid"><div class="world"></div><div class="world"></div></div></div></div></div>
 <div style="padding:10px 16px 110px"><button class="secondary" data-go="search" style="margin-bottom:12px">← BACK TO SEARCH</button><div id="publicDropsList"><div class="emptyState">No Drops yet.</div></div></div></section>
 <section id="messages" class="page"><div class="title">Messages</div><div class="row"><b>Maya</b><p>that DROP was crazy 😂</p></div><div class="row"><b>Gaming Crew</b><p>Jared sent a Loop ◎</p></div></section>
 
@@ -230,13 +230,15 @@ function paintProfile(user,profile){
   setText('realProfileName',display);
   setText('realProfileBio','@'+username+(bio?' · '+bio:''));
   const ava=document.getElementById('realProfileAva'); if(ava){ava.textContent=(display||username).charAt(0).toUpperCase(); if(profile&&profile.avatar_url){ava.style.backgroundImage='url(\"'+profile.avatar_url+'\")';ava.style.backgroundSize='cover';ava.style.backgroundPosition='center';ava.textContent='';}else{ava.style.backgroundImage='none';}}
-  const cover=document.querySelector('#profile .cover');
+  const cover=document.getElementById('realProfileCover');
   const profileBgEl=document.getElementById('profileBg');
   const savedBg=(profile&&profile.background_url)||'';
-  if(cover){cover.style.backgroundImage=savedBg?'url("'+savedBg+'")':'';cover.style.backgroundSize='cover';cover.style.backgroundPosition='center';}
+  const savedCover=(profile&&profile.cover_url)||'';
+  if(cover){cover.style.backgroundImage=savedCover?'url("'+savedCover+'")':'';cover.style.backgroundSize='cover';cover.style.backgroundPosition='center';}
   if(profileBgEl){profileBgEl.style.backgroundImage=savedBg?'url("'+savedBg+'")':'none';profileBgEl.style.backgroundSize='cover';profileBgEl.style.backgroundPosition='center';}
   setText('signedInAs','@'+username+' · '+(user.email||''));
   fillEditProfile(profile,user);
+  refreshOwnFollowCounts();
 }
 
 let currentProfile=null,currentUser=null,pendingAvatarFile=null,pendingCoverFile=null;
@@ -247,7 +249,7 @@ function fillEditProfile(profile,user){
   if(q('editUsername')) q('editUsername').value=(profile&&profile.username)||'';
   if(q('editBio')) q('editBio').value=(profile&&profile.bio)||'';
   const ap=q('editAvatarPreview'); if(ap){ap.textContent=((profile&&profile.display_name)||(profile&&profile.username)||'N').charAt(0).toUpperCase();ap.style.backgroundImage='none';if(profile&&profile.avatar_url){ap.style.backgroundImage='url("'+profile.avatar_url+'")';ap.style.backgroundSize='cover';ap.textContent='';}}
-  const cp=q('editCoverPreview'); if(cp){cp.style.backgroundImage='none';cp.textContent='NO COVER SELECTED';if(profile&&profile.background_url){cp.style.backgroundImage='url("'+profile.background_url+'")';cp.style.backgroundSize='cover';cp.textContent='';}}
+  const cp=q('editCoverPreview'); if(cp){cp.style.backgroundImage='none';cp.textContent='NO COVER SELECTED';if(profile&&profile.cover_url){cp.style.backgroundImage='url("'+profile.cover_url+'")';cp.style.backgroundSize='cover';cp.textContent='';}}
 }
 async function uploadProfileMedia(file,kind,userId){
   if(!file) return null;
@@ -388,6 +390,46 @@ sb.auth.getSession().then(({data})=>{
 });
 
 
+let activePublicUserId=null;
+async function getFollowCounts(userId){
+  const [followers,following]=await Promise.all([
+    sb.from('follows').select('*',{count:'exact',head:true}).eq('following_id',userId),
+    sb.from('follows').select('*',{count:'exact',head:true}).eq('follower_id',userId)
+  ]);
+  return {followers:followers.count||0,following:following.count||0};
+}
+async function refreshOwnFollowCounts(){
+  if(!currentUser)return;
+  try{const c=await getFollowCounts(currentUser.id);const stats=document.querySelectorAll('#profile .stats b');if(stats[0])stats[0].textContent=c.followers;if(stats[1])stats[1].textContent=c.following;}catch(e){console.error(e)}
+}
+async function refreshFollowUI(userId){
+  activePublicUserId=userId;
+  const btn=document.getElementById('publicFollowBtn');
+  try{
+    const c=await getFollowCounts(userId);
+    document.getElementById('publicFollowers').textContent=c.followers;
+    document.getElementById('publicFollowing').textContent=c.following;
+    if(!currentUser||currentUser.id===userId){btn.style.display='none';return;}
+    btn.style.display='block';
+    const {data,error}=await sb.from('follows').select('follower_id').eq('follower_id',currentUser.id).eq('following_id',userId).maybeSingle();
+    if(error)throw error;
+    const on=!!data;btn.dataset.following=on?'1':'0';btn.textContent=on?'FOLLOWING':'FOLLOW';btn.classList.toggle('following',on);
+  }catch(e){console.error('EXOF follow UI:',e);btn.style.display='none';}
+}
+document.getElementById('publicFollowBtn')?.addEventListener('click',async()=>{
+  const btn=document.getElementById('publicFollowBtn');
+  if(!currentUser||!activePublicUserId||currentUser.id===activePublicUserId)return;
+  btn.disabled=true;
+  try{
+    if(btn.dataset.following==='1'){
+      const r=await sb.from('follows').delete().eq('follower_id',currentUser.id).eq('following_id',activePublicUserId);if(r.error)throw r.error;
+    }else{
+      const r=await sb.from('follows').insert({follower_id:currentUser.id,following_id:activePublicUserId});if(r.error)throw r.error;
+    }
+    await Promise.all([refreshFollowUI(activePublicUserId),refreshOwnFollowCounts()]);
+  }catch(e){alert(e.message||'Could not update follow.')}finally{btn.disabled=false;}
+});
+
 async function searchUsers(){
   const box=document.getElementById('searchResults');
   const q=(document.getElementById('userSearchInput').value||'').trim().replace(/^@/,'');
@@ -415,15 +457,17 @@ async function openPublicProfile(userId){
   const {data:u,error}=await sb.from('profiles').select('*').eq('id',userId).single();
   if(error||!u) return;
   const bg=u.background_url||'';
+  const coverUrl=u.cover_url||'';
   const cover=document.getElementById('publicCover');
   const bgEl=document.getElementById('publicProfileBg');
-  if(cover){cover.style.backgroundImage=bg?`url("${bg}")`:'';cover.style.backgroundSize='cover';cover.style.backgroundPosition='center';}
+  if(cover){cover.style.backgroundImage=coverUrl?`url("${coverUrl}")`:'';cover.style.backgroundSize='cover';cover.style.backgroundPosition='center';}
   if(bgEl){bgEl.style.backgroundImage=bg?`url("${bg}")`:'none';bgEl.style.backgroundSize='cover';bgEl.style.backgroundPosition='center';}
   const av=document.getElementById('publicAvatar');
   if(av){av.textContent=((u.display_name||u.username||'E')[0]||'E').toUpperCase();av.style.backgroundImage='none';if(u.avatar_url){av.style.backgroundImage=`url("${u.avatar_url}")`;av.style.backgroundSize='cover';av.style.backgroundPosition='center';av.textContent='';}}
   document.getElementById('publicName').textContent=u.display_name||u.username;
   document.getElementById('publicHandle').textContent='@'+u.username;
   document.getElementById('publicBio').textContent=u.bio||'';
+  await refreshFollowUI(userId);
   const list=document.getElementById('publicDropsList');
   list.innerHTML='<div class="emptyState">Loading Drops…</div>';
   const {data:drops,error:de}=await sb.from('drops').select('*').eq('user_id',userId).order('created_at',{ascending:false});
@@ -456,21 +500,21 @@ document.querySelectorAll('.tabs').forEach(t=>t.querySelectorAll('button').forEa
 document.querySelectorAll('.styleBtn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.styleBtn').forEach(x=>x.classList.remove('on'));b.classList.add('on')}));
 document.querySelectorAll('.sw').forEach(b=>b.addEventListener('click',()=>document.documentElement.style.setProperty('--accent',b.dataset.color)));
 const bg=document.getElementById('profileBg'),preview=document.getElementById('bgPreview'),upload=document.getElementById('bgUpload');
-let removeCustomBackground=false;
-upload.addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(!f)return;pendingCoverFile=f;removeCustomBackground=false;const r=new FileReader();r.onload=ev=>{const url='url("'+ev.target.result+'")';bg.style.backgroundImage=url;preview.style.backgroundImage=url;preview.textContent=''};r.readAsDataURL(f)});
-document.getElementById('removeBg').addEventListener('click',()=>{pendingCoverFile=null;removeCustomBackground=true;bg.style.backgroundImage='none';preview.style.backgroundImage='none';preview.textContent='NO BACKGROUND SELECTED';upload.value=''});
+let removeCustomBackground=false,pendingBackgroundFile=null;
+upload.addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(!f)return;pendingBackgroundFile=f;removeCustomBackground=false;const r=new FileReader();r.onload=ev=>{const url='url("'+ev.target.result+'")';bg.style.backgroundImage=url;preview.style.backgroundImage=url;preview.textContent=''};r.readAsDataURL(f)});
+document.getElementById('removeBg').addEventListener('click',()=>{pendingBackgroundFile=null;removeCustomBackground=true;bg.style.backgroundImage='none';preview.style.backgroundImage='none';preview.textContent='NO BACKGROUND SELECTED';upload.value=''});
 const customSaveBtn=document.getElementById('customSaveBtn');
 if(customSaveBtn) customSaveBtn.addEventListener('click',async()=>{
  const msg=document.getElementById('customSaveMsg');
  if(!currentUser){msg.textContent='Please log in again.';return;}
  customSaveBtn.disabled=true;customSaveBtn.textContent='SAVING...';msg.textContent='';
  try{
-   let cover=(currentProfile&&currentProfile.background_url)||null;
-   if(removeCustomBackground) cover=null;
-   if(pendingCoverFile) cover=await uploadProfileMedia(pendingCoverFile,'cover',currentUser.id);
-   const res=await sb.from('profiles').update({background_url:cover}).eq('id',currentUser.id).select().single();
+   let background=(currentProfile&&currentProfile.background_url)||null;
+   if(removeCustomBackground) background=null;
+   if(pendingBackgroundFile) background=await uploadProfileMedia(pendingBackgroundFile,'background',currentUser.id);
+   const res=await sb.from('profiles').update({background_url:background}).eq('id',currentUser.id).select().single();
    if(res.error) throw res.error;
-   currentProfile=res.data;pendingCoverFile=null;removeCustomBackground=false;paintProfile(currentUser,currentProfile);
+   currentProfile=res.data;pendingBackgroundFile=null;removeCustomBackground=false;paintProfile(currentUser,currentProfile);
    msg.textContent='✓ Background saved';go('profile');
  }catch(err){msg.textContent=err.message||'Could not save background.';}
  finally{customSaveBtn.disabled=false;customSaveBtn.textContent='SAVE & VIEW PROFILE';}
@@ -599,8 +643,8 @@ if(saveProfileBtn) saveProfileBtn.addEventListener('click',async()=>{
  const msg=document.getElementById('editProfileMsg'); const display=document.getElementById('editDisplayName').value.trim(); const username=cleanUsername(document.getElementById('editUsername').value); const bio=document.getElementById('editBio').value.trim();
  if(!currentUser){msg.textContent='Please log in again.';return} if(!/^[a-z0-9._]{3,30}$/.test(username)){msg.textContent='Username: 3–30 lowercase letters, numbers, . or _';return}
  saveProfileBtn.disabled=true; saveProfileBtn.textContent='SAVING...'; msg.textContent='';
- try{let avatar=currentProfile&&currentProfile.avatar_url||null,cover=currentProfile&&currentProfile.background_url||null;if(pendingAvatarFile)avatar=await uploadProfileMedia(pendingAvatarFile,'avatar',currentUser.id);if(pendingCoverFile)cover=await uploadProfileMedia(pendingCoverFile,'cover',currentUser.id);
- const res=await sb.from('profiles').update({username,display_name:display.slice(0,50),bio:bio.slice(0,160),avatar_url:avatar,background_url:cover}).eq('id',currentUser.id).select().single();if(res.error)throw res.error;currentProfile=res.data;pendingAvatarFile=null;pendingCoverFile=null;paintProfile(currentUser,currentProfile);msg.textContent='✓ Profile saved';document.querySelector('[data-go="profile"]').click();}
+ try{let avatar=currentProfile&&currentProfile.avatar_url||null,cover=currentProfile&&currentProfile.cover_url||null;if(pendingAvatarFile)avatar=await uploadProfileMedia(pendingAvatarFile,'avatar',currentUser.id);if(pendingCoverFile)cover=await uploadProfileMedia(pendingCoverFile,'cover',currentUser.id);
+ const res=await sb.from('profiles').update({username,display_name:display.slice(0,50),bio:bio.slice(0,160),avatar_url:avatar,cover_url:cover}).eq('id',currentUser.id).select().single();if(res.error)throw res.error;currentProfile=res.data;pendingAvatarFile=null;pendingCoverFile=null;paintProfile(currentUser,currentProfile);msg.textContent='✓ Profile saved';document.querySelector('[data-go="profile"]').click();}
  catch(err){msg.textContent=err.message||'Could not save profile.';} finally{saveProfileBtn.disabled=false;saveProfileBtn.textContent='SAVE PROFILE';}
 });
 
