@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.7.2 — Legal Clean Fix</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.7.2 — Legal Source Fix</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -1087,8 +1087,8 @@ window.EXOF_PRIVACY_API={
      catch(err){alert(err.message||'Unable to send password reset email.')}return;
    }
    if(a==='logout'){await api().logout();location.reload();return}
-   if(a==='about')return alert('EXOF\\nSocial platform\\nVersion 1.6.1');
-   if(a==='terms')return alert('Terms of Service and Privacy Policy will be added in the legal update.');
+   if(a==='about')return window.exofOpenAboutFinal();
+   if(a==='terms')return window.exofOpenLegalFinal();
    if(a==='privacy'||a==='blocked')return;
    alert('This setting will be activated in the next update.');
  },true);
@@ -1449,6 +1449,21 @@ body.exof-own-profile #exofProfileSettingsGear{
  const ot=$('exofOpenTerms');if(ot)ot.onclick=()=>open('exofTermsPanel');
  const op=$('exofOpenPrivacyPolicy');if(op)op.onclick=()=>open('exofPrivacyPolicyPanel');
  bind();setTimeout(bind,300);setTimeout(bind,1000);
+})();
+</script>
+
+<script id="exofLegalSourceFunctions">
+(function(){
+ const $=id=>document.getElementById(id);
+ const ids=['exofAboutPanel','exofTermsPrivacyPanel','exofTermsPanel','exofPrivacyPolicyPanel'];
+ function hide(){ids.forEach(id=>{const x=$(id);if(x)x.hidden=true})}
+ function open(id){
+   hide();
+   const st=$('exofSettingsPage'); if(st)st.hidden=true;
+   const x=$(id); if(x){x.hidden=false;x.scrollTop=0}
+ }
+ window.exofOpenAboutFinal=function(){open('exofAboutPanel')};
+ window.exofOpenLegalFinal=function(){open('exofTermsPrivacyPanel')};
 })();
 </script>
 </body></html>
