@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.8 — Profile Redesign</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.8.1 — Profile Real Redesign</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -156,41 +156,32 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 .exofActivityIcon{position:relative;font-size:27px;line-height:1}.exofActivityX{position:absolute;right:-4px;bottom:-2px;color:var(--accent);font-size:13px;font-weight:1000;text-shadow:0 0 6px #000}
 .exofActivityBadge{position:absolute;right:-7px;top:-7px;min-width:17px;height:17px;padding:0 4px;border-radius:10px;background:var(--accent);color:#061006;font-size:10px;font-weight:1000;display:none;align-items:center;justify-content:center;border:2px solid #020604}
 </style>
-<style id="exofProfileV18">
-/* EXOF V1.8 PROFILE — scoped to #profile only. Bottom navigation intentionally untouched. */
-#profile{padding-bottom:110px}
-#profile .profileHero{
-  border-radius:0 0 26px 26px; overflow:hidden; position:relative;
-}
-#profile .profileHero::after{
-  content:"";position:absolute;inset:35% 0 0;pointer-events:none;
-  background:linear-gradient(transparent,rgba(0,0,0,.92));
-}
-#profile .profileIdentity{position:relative;z-index:2}
-#profile .profileAvatar{box-shadow:0 0 0 2px var(--accent),0 10px 30px #000}
-#profile .profileStats{
-  display:grid!important;grid-template-columns:repeat(3,1fr);gap:0;
-  margin:14px 14px 10px!important;border:1px solid #ffffff18;
-  background:#090d0a;border-radius:18px;overflow:hidden
-}
-#profile .profileStats>*{padding:14px 8px!important;text-align:center;border-right:1px solid #ffffff12}
-#profile .profileStats>*:last-child{border-right:0}
-#profile .profileStats strong,#profile .profileStats b{font-size:20px}
-#profile .profileActionsV18{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 14px 14px}
-#profile .profileActionsV18 button{
-  min-height:46px;border-radius:14px;font-weight:800;background:#080b09;color:#fff;
-  border:1px solid var(--accent)
-}
-#profile .profileActionsV18 button:last-child{border-color:#a34cff}
-#profile .profileTrack,#profile .favoriteLoops,#profile .myDrops,
-#profile [class*="profile-track"],#profile [class*="favorite-loop"]{
-  border-radius:18px!important
-}
-#profile .profileSectionV18{margin:14px;border:1px solid #ffffff16;background:#080b09;border-radius:18px;padding:14px}
-#profile .profileSectionTitleV18{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-#profile .profileSectionTitleV18 b{color:var(--accent);font-size:13px;letter-spacing:.04em}
-#profile .profileSectionTitleV18 span{font-size:11px;color:#7f8981}
-#profile .profileCleanupV18{display:none!important}
+<style id="profileV181Styles">
+/* Real profile redesign. Deliberately does not target .bottomNav/nav. */
+#profile{padding:0 10px 110px}
+#profile .profileV181{margin:0 -10px 14px;border-radius:0 0 26px 26px;overflow:hidden}
+#profile .profileV181 .profileContent{padding:0 14px 16px}
+#profile .profileV181 .cover{height:185px;border-radius:0 0 20px 20px}
+#profile .identityV181{display:flex;align-items:flex-end;gap:13px;margin-top:-42px;position:relative;z-index:3;padding:0 8px}
+#profile .identityV181 .profileAva{position:static!important;transform:none!important;width:88px!important;height:88px!important;min-width:88px;border:3px solid var(--accent);box-shadow:0 8px 25px #000}
+#profile .identityTextV181{padding-bottom:5px}
+#profile .identityTextV181 .name{position:static!important;font-size:27px!important;line-height:1.05}
+#profile .identityTextV181 .bio{position:static!important;margin:5px 0 0!important}
+#profile .statsV181{position:static!important;display:grid!important;grid-template-columns:repeat(3,1fr);margin:16px 0 10px!important;background:#080c09;border:1px solid var(--line);border-radius:16px;padding:0!important}
+#profile .statsV181>div{padding:13px 4px;border-right:1px solid var(--line);text-align:center}
+#profile .statsV181>div:last-child{border-right:0}
+#profile .statsV181 b{font-size:19px} #profile .statsV181 small{display:block;margin-top:3px}
+#profile .profileButtonsV181{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 12px}
+#profile .profileButtonsV181 button{margin:0!important;min-height:44px;border-radius:13px;font-size:11px;font-weight:900}
+#profile .trackModuleV181,#profile .loopsV181{position:static!important;margin:10px 0!important;border-radius:17px!important;background:rgba(5,8,6,.92)!important}
+#profile .sectionHeadV181{display:flex;justify-content:space-between;align-items:center}
+#profile .sectionHeadV181 h4{margin:0} #profile .sectionHeadV181 span{font-size:10px;color:var(--accent);font-weight:800}
+#profile .loopsV181 .worldGrid{margin-top:12px}
+#profile .dropsHeadV181{display:flex;align-items:end;justify-content:space-between;margin:18px 4px 10px}
+#profile .dropsHeadV181 .title{font-size:18px;margin:0!important}
+#profile .dropsHeadV181 span{font-size:9px;color:var(--muted);letter-spacing:.12em}
+#profile .accountBar{display:none!important}
+#profile>#logoutBtn,#profile>button[data-go="editprofile"],#profile>button[data-go="customize"]{display:none!important}
 </style>
 </head>
 <body>
@@ -243,13 +234,28 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 <section id="spaces" class="page"><div class="title">Spaces</div><p class="sub">Find your people.</p><div class="row"><b>🎮 After Hours Gaming</b><p>Clips, squads, tournaments and gaming culture.</p></div><div class="row"><b>💻 Build & Hustle</b><p>Apps, businesses and projects people are building.</p></div><div class="row"><b>🏎 Car Culture</b><p>Builds, meets and automotive culture.</p></div></section>
 
 <section id="profile" class="page">
-<div id="profileShell" class="profileShell"><div id="profileBg" class="profileBg"></div><div class="profileShade"></div><div class="profileContent"><div id="realProfileCover" class="cover"></div><div id="realProfileAva" class="profileAva">N</div><div id="realProfileName" class="name">exof</div><p id="realProfileBio" class="bio">@exof</p><div class="stats"><div><b>0</b><small>FOLLOWERS</small></div><div><b>0</b><small>FOLLOWING</small></div><div><b id="dropCount">0</b><small>DROPS</small></div></div><div class="module" id="profileTrackModule">
-<div class="track"><div><small class="mint">PROFILE TRACK</small><h4 id="profileTrackTitle">No track selected</h4><span class="meta" id="profileTrackArtist">Customize your profile to add YouTube music</span></div><button class="play" id="playTrack" type="button">▶</button></div>
-<div id="ytPlayerWrap" style="display:none;margin-top:10px">
-<div id="ytPlayer" style="width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#050806;border:1px solid var(--line)"></div>
-<div id="playerMsg" class="meta" style="margin-top:7px">Plays inside your EXOF profile.</div>
-</div></div></div><div class="module"><h4>◎ Favorite Loops</h4><div class="worldGrid"><div class="world"></div><div class="world"></div></div></div></div></div>
-<div class="title" style="font-size:20px;margin:14px 2px 8px">MY DROPS</div><div id="myDropsList"><div class="emptyState">Loading your Drops…</div></div><div class="accountBar"><small id="signedInAs">Signed in</small><button id="logoutBtn" class="secondary" style="width:auto;min-height:38px;padding:0 14px">LOG OUT</button></div><button class="primary" data-go="editprofile" style="margin-bottom:9px">EDIT PROFILE</button><button class="secondary" data-go="customize">🎨 CUSTOMIZE MY EXOF</button></section>
+<div id="profileShell" class="profileShell profileV181">
+  <div id="profileBg" class="profileBg"></div><div class="profileShade"></div>
+  <div class="profileContent">
+    <div id="realProfileCover" class="cover"></div>
+    <div class="identityV181">
+      <div id="realProfileAva" class="profileAva">N</div>
+      <div class="identityTextV181"><div id="realProfileName" class="name">exof</div><p id="realProfileBio" class="bio">@exof</p></div>
+    </div>
+    <div class="stats statsV181"><div><b>0</b><small>FOLLOWERS</small></div><div><b>0</b><small>FOLLOWING</small></div><div><b id="dropCount">0</b><small>DROPS</small></div></div>
+    <div class="profileButtonsV181"><button class="primary" data-go="editprofile">EDIT PROFILE</button><button class="secondary" data-go="customize">✦ CUSTOMIZE</button></div>
+
+    <div class="module trackModuleV181" id="profileTrackModule">
+      <div class="track"><div><small class="mint">♫ PROFILE TRACK</small><h4 id="profileTrackTitle">No track selected</h4><span class="meta" id="profileTrackArtist">Customize your profile to add YouTube music</span></div><button class="play" id="playTrack" type="button">▶</button></div>
+      <div id="ytPlayerWrap" style="display:none;margin-top:10px"><div id="ytPlayer" style="width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#050806;border:1px solid var(--line)"></div><div id="playerMsg" class="meta" style="margin-top:7px">Plays inside your EXOF profile.</div></div>
+    </div>
+
+    <div class="module loopsV181"><div class="sectionHeadV181"><h4>◎ FAVORITE LOOPS</h4><span>VIEW ALL</span></div><div class="worldGrid"><div class="world"></div><div class="world"></div></div></div>
+  </div>
+</div>
+<div class="dropsHeadV181"><div class="title">MY DROPS</div><span>YOUR POSTS</span></div>
+<div id="myDropsList"><div class="emptyState">Loading your Drops…</div></div>
+</section>
 
 
 <section id="editprofile" class="page"><div class="title">Edit Profile</div><p class="sub">Update the profile people see on EXOF.</p>
@@ -1534,57 +1540,6 @@ body.exof-own-profile #exofProfileSettingsGear{
     const id=row.dataset.settingAction==='edit-profile'?'editprofile':'customize';
     setTimeout(()=>forcePage(id),10);
   },true);
-})();
-</script>
-
-<script id="exofProfileV18Logic">
-(function(){
- function txt(el){return (el.textContent||'').replace(/\s+/g,' ').trim().toLowerCase()}
- function smallestByText(root,label){
-   const matches=[...root.querySelectorAll('button,a,div')].filter(el=>txt(el).startsWith(label));
-   return matches.sort((a,b)=>a.getBoundingClientRect().height-b.getBoundingClientRect().height)[0];
- }
- function enhance(){
-   const root=document.getElementById('profile'); if(!root)return;
-
-   // Hide profile-only Log Out because it already exists in Settings.
-   [...root.querySelectorAll('button,a,div')].forEach(el=>{
-     const t=txt(el);
-     if((t==='log out'||t==='logout') && el.getBoundingClientRect().height<80) el.classList.add('profileCleanupV18');
-   });
-
-   // Remove duplicated tiny follower/following/drop summary if one exists below My Drops.
-   const dropHead=[...root.querySelectorAll('*')].find(el=>txt(el)==='my drops');
-   if(dropHead){
-     const all=[...root.querySelectorAll('div')];
-     all.forEach(el=>{
-       const t=txt(el);
-       if(t.includes('followers')&&t.includes('following')&&t.includes('drops') &&
-          el.getBoundingClientRect().height<70 && el.compareDocumentPosition(dropHead)&Node.DOCUMENT_POSITION_PRECEDING){
-         el.classList.add('profileCleanupV18');
-       }
-     });
-   }
-
-   // Put Edit Profile + Customize together, without changing their existing click behavior.
-   const edit=smallestByText(root,'edit profile');
-   const custom=smallestByText(root,'customize my exof');
-   if(edit&&custom&&!root.querySelector('.profileActionsV18')){
-     const wrap=document.createElement('div'); wrap.className='profileActionsV18';
-     edit.parentNode.insertBefore(wrap,edit);
-     wrap.appendChild(edit); wrap.appendChild(custom);
-   }
-
-   // Make DELETE less visually dominant while preserving its current behavior.
-   [...root.querySelectorAll('button')].forEach(b=>{
-     if(txt(b)==='delete'){
-       b.textContent='•••';
-       b.title='Drop options';
-       b.style.cssText+='background:transparent;border:0;color:#fff;font-size:20px;letter-spacing:2px;';
-     }
-   });
- }
- enhance(); setTimeout(enhance,350); setTimeout(enhance,1200);
 })();
 </script>
 </body></html>
