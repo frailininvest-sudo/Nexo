@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.9.1 — Public Profile Track</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.9.2 — Compact Profile Menu</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -334,6 +334,30 @@ window.addEventListener('pageshow',function(){
 #publicProfileTrackPlay:disabled{opacity:.45;cursor:default}
 @media(max-width:700px){
   #publicProfileTrackPlayer iframe{max-height:180px}
+}
+</style>
+
+<style id="exofCompactProfileMenuV192">
+#profile .gear,
+#profile #profileSettingsBtn,
+#profile button[data-go="settings"]{
+  width:31px!important;
+  height:31px!important;
+  min-width:31px!important;
+  min-height:31px!important;
+  padding:0!important;
+  border-radius:10px!important;
+  display:grid!important;
+  place-items:center!important;
+}
+#profile .exofMenuBars{
+  width:14px;height:12px;
+  display:flex;flex-direction:column;
+  justify-content:space-between;
+}
+#profile .exofMenuBars i{
+  display:block;width:14px;height:1.7px;
+  border-radius:3px;background:#fff;
 }
 </style>
 </head>
@@ -1289,41 +1313,7 @@ window.EXOF_PRIVACY_API={
  }
 };</script>
 <div id="exofSettingsPage" class="exofSettingsPage" hidden>
-  <div class="exofSettingsHead"><button class="exofSettingsBack" id="exofSettingsBack">‹</button><b title="EXOF Settings v1.5.5">SETTINGS</b></div>
-  <div class="exofSettingsWrap">
-    <div class="exofSettingsUser"><img id="exofSettingsAvatar" alt=""><div><b id="exofSettingsName">EXOF USER</b><div id="exofSettingsUsername" style="color:#89918b;font-size:12px;margin-top:3px">@user</div></div></div>
-    <section class="exofSettingsSection"><h3>YOUR ACCOUNT</h3><div class="exofSettingsCard">
-      <button class="exofSettingRow" data-setting-action="edit-profile"><span class="exofSettingIcon">👤</span><span class="exofSettingText"><b>Edit profile</b><small>Name, bio and profile media</small></span><span class="exofSettingChevron">›</span></button>
-      <button class="exofSettingRow" data-setting-action="account-info"><span class="exofSettingIcon">◎</span><span class="exofSettingText"><b>Account information</b><small>Email and username</small></span><span class="exofSettingChevron">›</span></button>
-    </div></section>
-    <section class="exofSettingsSection"><h3>PRIVACY</h3><div class="exofSettingsCard">
-      <button class="exofSettingRow" data-setting-action="privacy"><span class="exofSettingIcon">🔒</span><span class="exofSettingText"><b>Account privacy</b><small>Manage privacy, comments and account visibility</small></span><span class="exofSettingChevron">›</span></button>
-      <button class="exofSettingRow" data-setting-action="blocked"><span class="exofSettingIcon">⊘</span><span class="exofSettingText"><b>Blocked accounts</b><small>Manage blocked people</small></span><span class="exofSettingChevron">›</span></button>
-    </div></section>
-    <section class="exofSettingsSection"><h3>YOUR ACTIVITY</h3><div class="exofSettingsCard">
-      <button class="exofSettingRow" data-setting-action="saved"><span class="exofSettingIcon">◇</span><span class="exofSettingText"><b>Saved Drops</b><small>Posts you've saved</small></span><span class="exofSettingChevron">›</span></button>
-    </div></section>
-    <section class="exofSettingsSection"><h3>APPEARANCE</h3><div class="exofSettingsCard">
-      <button class="exofSettingRow" data-setting-action="accent"><span class="exofSettingIcon"><i class="exofAccentDot"></i></span><span class="exofSettingText"><b>Accent color</b><small>Your EXOF color</small></span><span class="exofSettingChevron">›</span></button>
-      <button class="exofSettingRow" data-setting-action="customize"><span class="exofSettingIcon">✦</span><span class="exofSettingText"><b>Customize My EXOF</b><small>Cover, background and profile style</small></span><span class="exofSettingChevron">›</span></button>
-    </div></section>
-    <section class="exofSettingsSection"><h3>SECURITY</h3><div class="exofSettingsCard">
-      <button class="exofSettingRow" data-setting-action="password"><span class="exofSettingIcon">⌁</span><span class="exofSettingText"><b>Change password</b><small>Send a secure reset email</small></span><span class="exofSettingChevron">›</span></button>
-    </div></section>
-    <section class="exofSettingsSection"><h3>ABOUT EXOF</h3><div class="exofSettingsCard">
-      <button class="exofSettingRow" data-setting-action="about"><span class="exofSettingIcon">ⓘ</span><span class="exofSettingText"><b>About EXOF</b><small>Version and platform information</small></span><span class="exofSettingChevron">›</span></button>
-      <button class="exofSettingRow" data-setting-action="terms"><span class="exofSettingIcon">≡</span><span class="exofSettingText"><b>Terms & Privacy</b><small>Terms of Service and Privacy Policy</small></span><span class="exofSettingChevron">›</span></button>
-    </div></section>
-    <section class="exofSettingsSection"><div class="exofSettingsCard">
-      <button class="exofSettingRow exofDanger" data-setting-action="logout"><span class="exofSettingIcon">↪</span><span class="exofSettingText"><b>Log out</b></span></button>
-    </div></section>
-  </div>
-</div>
-
-
-
-
-<button id="exofProfileSettingsGear" type="button" aria-label="Settings" title="Settings">⚙</button>
+  <div class="exofSettingsHead"><button class="exofSettingsBack" id="exofSettingsBack"><span class="exofMenuBars" aria-hidden="true"><i></i><i></i><i></i></span></button>
 
 <script>
 (function(){
