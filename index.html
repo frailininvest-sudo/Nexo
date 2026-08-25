@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.6.2 — Privacy Scope Fix</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.7 — Activity Center</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -140,6 +140,21 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 .exofMiniBtn.accent{background:var(--accent);color:#071006;border-color:var(--accent)}
 .exofPrivateNotice{padding:30px 16px;text-align:center;border:1px solid #ffffff12;border-radius:18px;background:#090d0a;margin-top:12px}
 #publicBlockBtn{margin-top:10px;width:100%;border:1px solid #ff666655;background:#160b0b;color:#ff7777;border-radius:14px;padding:12px;font-weight:900}
+
+/* EXOF V1.7 Activity Center */
+.exofActivityPage{position:fixed;inset:0;z-index:235;background:#020604;color:#fff;overflow:auto;padding-bottom:105px}
+.exofActivityHead{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:14px;padding:18px 20px;background:#020604ee;border-bottom:1px solid #ffffff12;backdrop-filter:blur(16px)}
+.exofActivityHead b{font-size:20px}.exofActivityBody{max-width:720px;margin:auto;padding:16px}
+.exofActivitySection{font-size:13px;letter-spacing:1.2px;color:#89918b;margin:22px 5px 10px}
+.exofActivityCard{border:1px solid #ffffff14;border-radius:20px;background:#071008;overflow:hidden}
+.exofActivityRow{display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid #ffffff10;min-height:72px}
+.exofActivityRow:last-child{border-bottom:0}.exofActivityAvatar{width:48px;height:48px;border-radius:50%;object-fit:cover;background:#151b16;flex:none}
+.exofActivityText{flex:1;min-width:0}.exofActivityText b{font-size:14px}.exofActivityText small{display:block;color:#8c958e;margin-top:4px}
+.exofActivityActions{display:flex;gap:7px}.exofActivityBtn{border:1px solid #ffffff22;border-radius:11px;background:#111712;color:#fff;padding:9px 11px;font-weight:900;font-size:11px}
+.exofActivityBtn.accept{background:var(--accent);border-color:var(--accent);color:#071006}
+.exofActivityEmpty{text-align:center;color:#7e8780;padding:35px 15px}
+.exofActivityIcon{position:relative;font-size:27px;line-height:1}.exofActivityX{position:absolute;right:-4px;bottom:-2px;color:var(--accent);font-size:13px;font-weight:1000;text-shadow:0 0 6px #000}
+.exofActivityBadge{position:absolute;right:-7px;top:-7px;min-width:17px;height:17px;padding:0 4px;border-radius:10px;background:var(--accent);color:#061006;font-size:10px;font-weight:1000;display:none;align-items:center;justify-content:center;border:2px solid #020604}
 </style></head>
 <body>
 <div id="authGate">
@@ -1136,6 +1151,104 @@ window.EXOF_PRIVACY_API={
 
  // Update privacy state whenever public profile navigation settles.
  document.addEventListener('click',()=>setTimeout(async()=>{const page=$('publicProfile');if(!page?.classList.contains('active'))return;const uid=(new URLSearchParams(location.search)).get('user');if(!uid)return;window.activePublicUserId=uid;follow.dataset.uid=uid;const block=$('publicBlockBtn');block.dataset.uid=uid;block.style.display='block';try{const r=await api().relation(uid);if(r.blockedByMe){follow.style.display='none';block.textContent='UNBLOCK IN SETTINGS';return}if(r.blockedByThem){follow.style.display='none';block.style.display='none';return}follow.style.display='block';follow.textContent=r.following?'FOLLOWING':r.requested?'REQUESTED':'FOLLOW';follow.dataset.following=r.following?'1':'0';const list=$('publicDropsList');if(r.private&&!r.following){list.innerHTML='<div class="exofPrivateNotice"><div style="font-size:32px">🔒</div><h3>PRIVATE ACCOUNT</h3><p style="color:#818983">Follow this account to see their Drops.</p></div>';}}catch(e){console.error(e)}},180),true);
+})();
+</script>
+
+<section id="exofActivityPage" class="exofActivityPage" hidden>
+ <div class="exofActivityHead"><button id="exofActivityBack" class="exofFuncBack">‹</button><b>ACTIVITY</b></div>
+ <div class="exofActivityBody">
+  <div class="exofActivitySection">FOLLOW REQUESTS</div>
+  <div id="exofActivityRequests" class="exofActivityCard"></div>
+  <div id="exofActivityRequestsEmpty" class="exofActivityEmpty">No pending follow requests.</div>
+  <div class="exofActivitySection">RECENT</div>
+  <div id="exofActivityRecent" class="exofActivityCard"></div>
+  <div id="exofActivityRecentEmpty" class="exofActivityEmpty">Your EXOF activity will appear here.</div>
+ </div>
+</section>
+
+<script>
+(function(){
+ const $=id=>document.getElementById(id);
+ const sb=()=>window.exofSupabase;
+ const priv=()=>window.EXOF_PRIVACY_API;
+ const page=()=>document.getElementById('exofActivityPage');
+ function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+ function avatar(p){return esc(p?.avatar_url||'')}
+ async function me(){const {data:{user},error}=await sb().auth.getUser();if(error)throw error;if(!user)throw new Error('Please log in again.');return user}
+ async function profiles(ids){if(!ids.length)return new Map();const {data,error}=await sb().from('profiles').select('id,username,display_name,avatar_url').in('id',[...new Set(ids)]);if(error)throw error;return new Map((data||[]).map(x=>[x.id,x]))}
+ async function loadRequests(){
+   const box=$('exofActivityRequests'),empty=$('exofActivityRequestsEmpty');box.innerHTML='';empty.hidden=true;
+   try{
+     const rows=await priv().requests();
+     if(!rows.length){empty.hidden=false;return}
+     rows.forEach(r=>{
+       const p=r.profile||{},el=document.createElement('div');el.className='exofActivityRow';
+       el.innerHTML=`<img class="exofActivityAvatar" src="${avatar(p)}"><div class="exofActivityText"><b>${esc(p.display_name||p.username||'EXOF user')}</b><small>@${esc(p.username||'user')} requested to follow you</small></div><div class="exofActivityActions"><button class="exofActivityBtn accept">ACCEPT</button><button class="exofActivityBtn">DELETE</button></div>`;
+       const [yes,no]=el.querySelectorAll('button');
+       yes.onclick=async()=>{yes.disabled=true;try{await priv().resolveRequest(r.requester_id,true);await loadRequests();await updateBadge()}catch(e){alert(e.message)}};
+       no.onclick=async()=>{no.disabled=true;try{await priv().resolveRequest(r.requester_id,false);await loadRequests();await updateBadge()}catch(e){alert(e.message)}};
+       box.appendChild(el);
+     });
+   }catch(e){empty.hidden=false;empty.textContent=e.message||'Unable to load follow requests.'}
+ }
+ async function loadRecent(){
+   const box=$('exofActivityRecent'),empty=$('exofActivityRecentEmpty');box.innerHTML='';empty.hidden=true;
+   try{
+     const user=await me();
+     const {data,error}=await sb().from('notifications').select('*').eq('user_id',user.id).order('created_at',{ascending:false}).limit(50);
+     if(error)throw error;if(!data?.length){empty.hidden=false;return}
+     const pm=await profiles(data.map(n=>n.actor_id).filter(Boolean));
+     data.forEach(n=>{
+       const p=pm.get(n.actor_id)||{},el=document.createElement('div');el.className='exofActivityRow';
+       const verb=n.type==='like'?'liked your Drop':n.type==='comment'?'commented on your Drop':'started following you';
+       el.innerHTML=`<img class="exofActivityAvatar" src="${avatar(p)}"><div class="exofActivityText"><b>${esc(p.display_name||p.username||'EXOF user')}</b><small>${esc(verb)} · ${new Date(n.created_at).toLocaleDateString()}</small></div>`;
+       box.appendChild(el);
+     });
+     await sb().from('notifications').update({is_read:true}).eq('user_id',user.id).eq('is_read',false);
+   }catch(e){empty.hidden=false;empty.textContent='Activity is ready after the V1.7 SQL setup.'}
+ }
+ async function updateBadge(){
+   try{
+     const user=await me();
+     const [{count:req},{count:notif}]=await Promise.all([
+       sb().from('follow_requests').select('*',{count:'exact',head:true}).eq('target_id',user.id).eq('status','pending'),
+       sb().from('notifications').select('*',{count:'exact',head:true}).eq('user_id',user.id).eq('is_read',false)
+     ]);
+     const n=(req||0)+(notif||0);document.querySelectorAll('.exofActivityBadge').forEach(b=>{b.textContent=n>99?'99+':n;b.style.display=n?'flex':'none'});
+   }catch(e){}
+ }
+ async function openActivity(){page().hidden=false;document.body.style.overflow='hidden';await Promise.all([loadRequests(),loadRecent()]);await updateBadge()}
+ function closeActivity(){page().hidden=true;document.body.style.overflow=''}
+ $('exofActivityBack')?.addEventListener('click',closeActivity);
+
+ // Transform the existing Spaces bottom-nav button into Activity without changing the rest of navigation.
+ function installNav(){
+   const candidates=[...document.querySelectorAll('button,a')].filter(x=>(x.textContent||'').trim().toLowerCase().includes('spaces'));
+   candidates.forEach(btn=>{
+     if(btn.dataset.exofActivityInstalled)return;btn.dataset.exofActivityInstalled='1';
+     btn.innerHTML=`<span class="exofActivityIcon">♡<span class="exofActivityX">X</span><span class="exofActivityBadge"></span></span><small style="display:block">Activity</small>`;
+     btn.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openActivity()},true);
+   });
+ }
+ installNav();setTimeout(installNav,400);setTimeout(updateBadge,700);
+
+ // Move Search control to the left side of EXOF header where possible.
+ const searchButtons=[...document.querySelectorAll('button')].filter(b=>['⌕','⌕︎','🔍'].includes((b.textContent||'').trim()) || (b.getAttribute('aria-label')||'').toLowerCase().includes('search'));
+ const logo=[...document.querySelectorAll('header *, .topbar *, .brand, .logo')].find(x=>(x.textContent||'').replace(/\s/g,'')==='EXOF');
+ if(searchButtons[0]&&logo?.parentElement){const b=searchButtons[0];logo.parentElement.insertBefore(b,logo);}
+
+ // Put Spaces access inside Explore/Search: add a Spaces card if Explore's two-card area exists.
+ function addSpacesExplore(){
+   const exp=document.getElementById('search')||document.querySelector('[data-page="search"]')||document.querySelector('.searchPage');
+   if(!exp||exp.querySelector('[data-exof-spaces-card]'))return;
+   const cards=[...exp.querySelectorAll('button,.card')].filter(x=>/Now|Chains/i.test(x.textContent||''));
+   const host=cards[0]?.parentElement;if(!host)return;
+   const b=document.createElement('button');b.dataset.exofSpacesCard='1';b.className=cards[0].className;b.innerHTML='<b>⌘ Spaces</b><small style="display:block;color:#818983;margin-top:6px">Communities & conversations</small>';
+   b.onclick=()=>{if(window.exofGo)window.exofGo('spaces')};host.appendChild(b);
+ }
+ setTimeout(addSpacesExplore,500);
+
+ window.EXOF_ACTIVITY={open:openActivity,refresh:updateBadge};
 })();
 </script>
 </body></html>
