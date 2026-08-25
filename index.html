@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.8.9 — Top Loops + Fast Count</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.9.0 — Top Loops Fixed</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -385,7 +385,7 @@ window.addEventListener('pageshow',function(){
 <div id="ytPlayerWrap" style="display:none;margin-top:10px">
 <div id="ytPlayer" style="width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#050806;border:1px solid var(--line)"></div>
 <div id="playerMsg" class="meta" style="margin-top:7px">Plays inside your EXOF profile.</div>
-</div></div></div><div class="module"><h4>◎ Favorite Loops</h4><div class="worldGrid"><div class="world"></div><div class="world"></div></div></div></div></div>
+</div></div></div><div class="module"><h4>◎ Favorite Loops</h4><div class="worldGrid"><div class="world emptyTopLoop">＋</div><div class="world emptyTopLoop">＋</div><div class="world emptyTopLoop">＋</div><div class="world emptyTopLoop">＋</div></div></div></div></div>
 <div class="title" style="font-size:20px;margin:14px 2px 8px">MY DROPS</div><div id="myDropsList"><div class="emptyState">Loading your Drops…</div></div><div class="accountBar"><small id="signedInAs">Signed in</small><button id="logoutBtn" class="secondary" style="width:auto;min-height:38px;padding:0 14px">LOG OUT</button></div><button class="primary" data-go="editprofile" style="margin-bottom:9px">EDIT PROFILE</button><button class="secondary" data-go="customize">🎨 CUSTOMIZE MY EXOF</button></section>
 
 
@@ -1827,7 +1827,7 @@ window.addEventListener('load',function(){
   }
 
   async function fastProfileDropCount(){
-    if(!window.currentUser || !window.sb)return;
+    if(typeof currentUser==='undefined' || !currentUser || typeof sb==='undefined' || !sb)return;
     try{
       var r=await sb.from('drops')
         .select('id',{count:'exact',head:true})
@@ -1839,7 +1839,7 @@ window.addEventListener('load',function(){
   }
 
   async function loadTopFourLoops(){
-    if(!window.currentUser || !window.sb)return;
+    if(typeof currentUser==='undefined' || !currentUser || typeof sb==='undefined' || !sb)return;
     var root=document.getElementById('profile');
     if(!root)return;
     var module=[].slice.call(root.querySelectorAll('.module')).find(function(m){
@@ -1931,6 +1931,23 @@ window.addEventListener('load',function(){
 
   // Expose refresh so newly created/deleted/liked Drops can refresh it later.
   window.exofRefreshProfileTopLoops=refreshProfileSmart;
+})();
+</script>
+
+<script id="exofTopLoopsV190VisibilityFix">
+(function(){
+  function run(){
+    try{
+      if(document.getElementById('profile')?.classList.contains('active') ||
+         document.getElementById('profile')?.classList.contains('on') ||
+         getComputedStyle(document.getElementById('profile')).display!=='none'){
+        if(typeof window.exofRefreshProfileTopLoops==='function') window.exofRefreshProfileTopLoops();
+      }
+    }catch(e){}
+  }
+  window.addEventListener('pageshow',function(){setTimeout(run,350)});
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)setTimeout(run,250)});
+  setInterval(run,2500);
 })();
 </script>
 </body></html>
