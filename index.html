@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.7.3 — Settings Editor Fix</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.8 — Profile Redesign</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -155,7 +155,44 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 .exofActivityEmpty{text-align:center;color:#7e8780;padding:35px 15px}
 .exofActivityIcon{position:relative;font-size:27px;line-height:1}.exofActivityX{position:absolute;right:-4px;bottom:-2px;color:var(--accent);font-size:13px;font-weight:1000;text-shadow:0 0 6px #000}
 .exofActivityBadge{position:absolute;right:-7px;top:-7px;min-width:17px;height:17px;padding:0 4px;border-radius:10px;background:var(--accent);color:#061006;font-size:10px;font-weight:1000;display:none;align-items:center;justify-content:center;border:2px solid #020604}
-</style></head>
+</style>
+<style id="exofProfileV18">
+/* EXOF V1.8 PROFILE — scoped to #profile only. Bottom navigation intentionally untouched. */
+#profile{padding-bottom:110px}
+#profile .profileHero{
+  border-radius:0 0 26px 26px; overflow:hidden; position:relative;
+}
+#profile .profileHero::after{
+  content:"";position:absolute;inset:35% 0 0;pointer-events:none;
+  background:linear-gradient(transparent,rgba(0,0,0,.92));
+}
+#profile .profileIdentity{position:relative;z-index:2}
+#profile .profileAvatar{box-shadow:0 0 0 2px var(--accent),0 10px 30px #000}
+#profile .profileStats{
+  display:grid!important;grid-template-columns:repeat(3,1fr);gap:0;
+  margin:14px 14px 10px!important;border:1px solid #ffffff18;
+  background:#090d0a;border-radius:18px;overflow:hidden
+}
+#profile .profileStats>*{padding:14px 8px!important;text-align:center;border-right:1px solid #ffffff12}
+#profile .profileStats>*:last-child{border-right:0}
+#profile .profileStats strong,#profile .profileStats b{font-size:20px}
+#profile .profileActionsV18{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 14px 14px}
+#profile .profileActionsV18 button{
+  min-height:46px;border-radius:14px;font-weight:800;background:#080b09;color:#fff;
+  border:1px solid var(--accent)
+}
+#profile .profileActionsV18 button:last-child{border-color:#a34cff}
+#profile .profileTrack,#profile .favoriteLoops,#profile .myDrops,
+#profile [class*="profile-track"],#profile [class*="favorite-loop"]{
+  border-radius:18px!important
+}
+#profile .profileSectionV18{margin:14px;border:1px solid #ffffff16;background:#080b09;border-radius:18px;padding:14px}
+#profile .profileSectionTitleV18{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+#profile .profileSectionTitleV18 b{color:var(--accent);font-size:13px;letter-spacing:.04em}
+#profile .profileSectionTitleV18 span{font-size:11px;color:#7f8981}
+#profile .profileCleanupV18{display:none!important}
+</style>
+</head>
 <body>
 <div id="authGate">
   <div class="authBox">
@@ -1497,6 +1534,57 @@ body.exof-own-profile #exofProfileSettingsGear{
     const id=row.dataset.settingAction==='edit-profile'?'editprofile':'customize';
     setTimeout(()=>forcePage(id),10);
   },true);
+})();
+</script>
+
+<script id="exofProfileV18Logic">
+(function(){
+ function txt(el){return (el.textContent||'').replace(/\s+/g,' ').trim().toLowerCase()}
+ function smallestByText(root,label){
+   const matches=[...root.querySelectorAll('button,a,div')].filter(el=>txt(el).startsWith(label));
+   return matches.sort((a,b)=>a.getBoundingClientRect().height-b.getBoundingClientRect().height)[0];
+ }
+ function enhance(){
+   const root=document.getElementById('profile'); if(!root)return;
+
+   // Hide profile-only Log Out because it already exists in Settings.
+   [...root.querySelectorAll('button,a,div')].forEach(el=>{
+     const t=txt(el);
+     if((t==='log out'||t==='logout') && el.getBoundingClientRect().height<80) el.classList.add('profileCleanupV18');
+   });
+
+   // Remove duplicated tiny follower/following/drop summary if one exists below My Drops.
+   const dropHead=[...root.querySelectorAll('*')].find(el=>txt(el)==='my drops');
+   if(dropHead){
+     const all=[...root.querySelectorAll('div')];
+     all.forEach(el=>{
+       const t=txt(el);
+       if(t.includes('followers')&&t.includes('following')&&t.includes('drops') &&
+          el.getBoundingClientRect().height<70 && el.compareDocumentPosition(dropHead)&Node.DOCUMENT_POSITION_PRECEDING){
+         el.classList.add('profileCleanupV18');
+       }
+     });
+   }
+
+   // Put Edit Profile + Customize together, without changing their existing click behavior.
+   const edit=smallestByText(root,'edit profile');
+   const custom=smallestByText(root,'customize my exof');
+   if(edit&&custom&&!root.querySelector('.profileActionsV18')){
+     const wrap=document.createElement('div'); wrap.className='profileActionsV18';
+     edit.parentNode.insertBefore(wrap,edit);
+     wrap.appendChild(edit); wrap.appendChild(custom);
+   }
+
+   // Make DELETE less visually dominant while preserving its current behavior.
+   [...root.querySelectorAll('button')].forEach(b=>{
+     if(txt(b)==='delete'){
+       b.textContent='•••';
+       b.title='Drop options';
+       b.style.cssText+='background:transparent;border:0;color:#fff;font-size:20px;letter-spacing:2px;';
+     }
+   });
+ }
+ enhance(); setTimeout(enhance,350); setTimeout(enhance,1200);
 })();
 </script>
 </body></html>
