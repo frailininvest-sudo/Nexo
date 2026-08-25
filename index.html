@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.7.2 — Navigation & Privacy Fix</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.7.3 — Header Fix</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -1282,7 +1282,7 @@ window.EXOF_PRIVACY_API={
     });
   }
 
-  function cleanOwnProfileHeader(){
+  function cleanOwnProfileHeader_DISABLED(){
     // Only act while the bottom Profile tab is visibly active.
     const activeProfile = qa('button,a').some(el =>
       /profile/i.test((el.textContent||'').trim()) &&
@@ -1317,13 +1317,88 @@ window.EXOF_PRIVACY_API={
 
   function apply(){
     wirePrivacyBack();
-    cleanOwnProfileHeader();
+    /* v1.7.3: page-aware header manager handles this */
     dropsRecovery();
   }
   apply();
   setTimeout(apply,350);
   setTimeout(apply,1000);
   document.addEventListener('click',()=>setTimeout(apply,60),true);
+})();
+</script>
+
+<style>
+/* EXOF V1.7.3 page-aware top controls */
+#exofV173HomeSearch,#exofV173HomeMessages,#exofV173ProfileSettings{
+ position:fixed;top:max(18px,env(safe-area-inset-top));z-index:120;width:58px;height:58px;border-radius:50%;
+ border:1px solid #ffffff24;background:#050a07;color:#fff;display:none;align-items:center;justify-content:center;
+ font-size:25px;font-weight:800;cursor:pointer
+}
+#exofV173HomeSearch{left:max(18px,calc(50% - 210px))}
+#exofV173HomeMessages{right:max(18px,calc(50% - 210px));font-size:31px}
+#exofV173ProfileSettings{right:max(18px,calc(50% - 210px));font-size:25px}
+@media(max-width:600px){
+ #exofV173HomeSearch{left:20px} #exofV173HomeMessages,#exofV173ProfileSettings{right:20px}
+}
+</style>
+<script>
+(function(){
+ const qa=(s,r=document)=>[...r.querySelectorAll(s)];
+ function button(id,txt,label){
+   let b=document.getElementById(id);if(b)return b;
+   b=document.createElement('button');b.id=id;b.type='button';b.innerHTML=txt;b.setAttribute('aria-label',label);
+   document.body.appendChild(b);return b;
+ }
+ const search=button('exofV173HomeSearch','⌕','Search');
+ const messages=button('exofV173HomeMessages','↗','Messages');
+ const settings=button('exofV173ProfileSettings','⚙','Settings');
+
+ function clickExisting(kind){
+   const words={search:['search','explore'],messages:['message','inbox','dm'],settings:['setting']}[kind];
+   const candidates=qa('button,a').filter(el=>![search,messages,settings].includes(el));
+   const target=candidates.find(el=>{
+     const m=((el.getAttribute('aria-label')||'')+' '+(el.getAttribute('title')||'')+' '+(el.textContent||'')).toLowerCase();
+     return words.some(w=>m.includes(w));
+   });
+   if(target){target.click();return true}
+   return false;
+ }
+ search.onclick=()=>{if(!clickExisting('search')){const x=qa('button,a').find(e=>(e.textContent||'').trim()==='⌕');x?.click()}};
+ messages.onclick=()=>{if(!clickExisting('messages')){const x=qa('button,a').find(e=>/↗/.test(e.textContent||''));x?.click()}};
+ settings.onclick=()=>{if(!clickExisting('settings') && window.EXOF_SETTINGS?.open)window.EXOF_SETTINGS.open()};
+
+ function activeTab(){
+   const tabs=qa('button,a').filter(el=>/^(home|loops|create|activity|profile)$/i.test((el.textContent||'').trim()));
+   let active=tabs.find(el=>el.classList.contains('active') || el.getAttribute('aria-current')==='page');
+   if(!active){
+     active=tabs.find(el=>{
+       const st=getComputedStyle(el), c=st.color;
+       return /83,\s*255,\s*47|82,\s*255,\s*47/.test(c);
+     });
+   }
+   return (active?.textContent||'home').trim().toLowerCase();
+ }
+ function manage(){
+   const tab=activeTab();
+   const activity=document.getElementById('exofActivityPage');
+   const functional=qa('section,div').some(x=>x!==activity && !x.hidden && /ACCOUNT PRIVACY|SETTINGS|BLOCKED ACCOUNTS|SAVED DROPS|ACCOUNT INFORMATION|CHANGE PASSWORD/i.test((x.textContent||'').slice(0,80)));
+   search.style.display=(!functional&&tab==='home')?'flex':'none';
+   messages.style.display=(!functional&&tab==='home')?'flex':'none';
+   settings.style.display=(!functional&&tab==='profile')?'flex':'none';
+
+   // Hide legacy top search/messages/settings so there is exactly the intended set.
+   qa('button,a').forEach(el=>{
+     if([search,messages,settings].includes(el))return;
+     const meta=((el.getAttribute('aria-label')||'')+' '+(el.getAttribute('title')||'')+' '+(el.textContent||'')).toLowerCase();
+     const r=el.getBoundingClientRect();
+     if(r.top<360 && (meta.includes('search')||meta.includes('message')||meta.includes('setting')||/^\s*↗\s*$/.test(el.textContent||''))){
+       el.style.visibility='hidden';
+     }
+   });
+ }
+ document.addEventListener('click',()=>setTimeout(manage,80),true);
+ window.addEventListener('popstate',()=>setTimeout(manage,80));
+ manage();setTimeout(manage,400);setTimeout(manage,1200);
 })();
 </script>
 </body></html>
