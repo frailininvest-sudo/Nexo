@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.7.2 — Legal Row Click Fix</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.7.2 — Exact Legal Navigation</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -1396,33 +1396,7 @@ body.exof-own-profile #exofProfileSettingsGear{
 })();
 </script>
 
-<script id="exofSettingsExactClickFix">
-(function(){
- const $=id=>document.getElementById(id);
- function hideLegal(){['exofAboutPanel','exofTermsPrivacyPanel','exofTermsPanel','exofPrivacyPolicyPanel'].forEach(id=>{const x=$(id);if(x)x.hidden=true})}
- function openPanel(id){
-   hideLegal();
-   const st=$('exofSettingsPage'); if(st) st.hidden=true;
-   const p=$(id); if(p){p.hidden=false;p.scrollTop=0}
- }
- function clickableFrom(target){
-   return target.closest('button,a,[role="button"],.settingsRow,.settingRow,.settings-item,.setting-item,li,div');
- }
- document.addEventListener('click',function(e){
-   let el=e.target;
-   // Walk upward and inspect concise text so nested title clicks work.
-   for(let i=0;el && i<7;i++,el=el.parentElement){
-     const text=(el.textContent||'').replace(/\s+/g,' ').trim();
-     if(/^About EXOF(?:\s|$)/i.test(text) && text.length<120){
-       e.preventDefault();e.stopImmediatePropagation();openPanel('exofAboutPanel');return;
-     }
-     if(/^Terms & Privacy(?:\s|$)/i.test(text) && text.length<160){
-       e.preventDefault();e.stopImmediatePropagation();openPanel('exofTermsPrivacyPanel');return;
-     }
-   }
- },true);
-})();
-</script>
+
 
 <script id="exofLegalBackExactFix">
 (function(){
@@ -1452,35 +1426,56 @@ body.exof-own-profile #exofProfileSettingsGear{
 })();
 </script>
 
-<script id="exofLegalExactRowHitFix">
+
+
+<script id="exofExactLegalNavigationFinal">
 (function(){
  const $=id=>document.getElementById(id);
- function hideLegal(){['exofAboutPanel','exofTermsPrivacyPanel','exofTermsPanel','exofPrivacyPolicyPanel'].forEach(id=>{const x=$(id);if(x)x.hidden=true})}
- function openPanel(id){
+ const legalIds=['exofAboutPanel','exofTermsPrivacyPanel','exofTermsPanel','exofPrivacyPolicyPanel'];
+
+ function hideLegal(){legalIds.forEach(id=>{const x=$(id);if(x)x.hidden=true})}
+ function openLegal(id){
    hideLegal();
-   const st=$('exofSettingsPage');if(st)st.hidden=true;
-   const x=$(id);if(x)x.hidden=false;
+   const st=$('exofSettingsPage'); if(st) st.hidden=true;
+   const x=$(id); if(x){x.hidden=false;x.scrollTop=0}
  }
- function findRowByTitle(title){
-   const candidates=[...document.querySelectorAll('button,a,[role="button"],div')];
-   return candidates.filter(el=>{
-     const txt=(el.textContent||'').replace(/\s+/g,' ').trim();
-     return txt.startsWith(title) && txt.length<150;
-   }).sort((a,b)=>a.getBoundingClientRect().height-b.getBoundingClientRect().height)[0];
+ function smallestExactRow(label){
+   const els=[...document.querySelectorAll('button,a,[role="button"],div')].filter(el=>{
+     if(el.closest('.exofLegalPanel')) return false;
+     const t=(el.textContent||'').replace(/\s+/g,' ').trim();
+     return t.startsWith(label) && t.length<140;
+   });
+   return els.sort((a,b)=>{
+     const A=a.getBoundingClientRect(),B=b.getBoundingClientRect();
+     return (A.width*A.height)-(B.width*B.height);
+   })[0];
  }
- // Install direct handlers after the old document-level logic.
- setTimeout(()=>{
-   const about=findRowByTitle('About EXOF');
-   const terms=findRowByTitle('Terms & Privacy');
-   if(about){
-     about.style.position='relative';about.style.zIndex='2';
-     about.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openPanel('exofAboutPanel')},true);
-   }
-   if(terms){
-     terms.style.position='relative';terms.style.zIndex='3';
-     terms.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openPanel('exofTermsPrivacyPanel')},true);
-   }
- },250);
+ function install(){
+   const a=smallestExactRow('About EXOF');
+   const t=smallestExactRow('Terms & Privacy');
+   if(!a||!t)return;
+
+   // Transparent overlays guarantee that each physical row has one destination.
+   [['exofAboutHit',a,'exofAboutPanel'],['exofTermsHit',t,'exofTermsPrivacyPanel']].forEach(([id,row,dest])=>{
+     let hit=$(id);
+     if(!hit){hit=document.createElement('button');hit.id=id;document.body.appendChild(hit)}
+     const r=row.getBoundingClientRect();
+     Object.assign(hit.style,{
+       position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',
+       zIndex:'9550',opacity:'0',border:'0',padding:'0',margin:'0',cursor:'pointer'
+     });
+     hit.onclick=e=>{e.preventDefault();e.stopPropagation();openLegal(dest)};
+   });
+ }
+ function visibility(){
+   const st=$('exofSettingsPage');
+   const visible=st && !st.hidden;
+   ['exofAboutHit','exofTermsHit'].forEach(id=>{const x=$(id);if(x)x.style.display=visible?'block':'none'});
+   if(visible) install();
+ }
+ setTimeout(()=>{install();visibility()},300);
+ document.addEventListener('click',()=>setTimeout(visibility,20),true);
+ window.addEventListener('resize',()=>setTimeout(install,20));
 })();
 </script>
 </body></html>
