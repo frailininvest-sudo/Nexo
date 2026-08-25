@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.7.2 — Exact Legal Navigation</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.7.2 — Legal Clean Fix</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -1398,84 +1398,57 @@ body.exof-own-profile #exofProfileSettingsGear{
 
 
 
-<script id="exofLegalBackExactFix">
+<script id="exofLegalCleanBinding">
 (function(){
  const $=id=>document.getElementById(id);
- const ids=['exofAboutPanel','exofTermsPrivacyPanel','exofTermsPanel','exofPrivacyPolicyPanel'];
- function hideAll(){ids.forEach(id=>{const x=$(id);if(x)x.hidden=true})}
- function showSettings(){
-   hideAll();
-   const st=$('exofSettingsPage');
-   if(st){st.hidden=false;st.style.removeProperty('display')}
- }
- function showHub(){
-   hideAll();
-   const hub=$('exofTermsPrivacyPanel');
-   if(hub){hub.hidden=false;hub.style.removeProperty('display')}
- }
- document.addEventListener('click',function(e){
-   const b=e.target.closest('.exofLegalBack');
-   if(!b)return;
-   const panel=b.closest('.exofLegalPanel');
-   if(!panel)return;
-   e.preventDefault();
-   e.stopImmediatePropagation();
-   if(panel.id==='exofTermsPanel'||panel.id==='exofPrivacyPolicyPanel') showHub();
-   else showSettings();
- },true);
-})();
-</script>
-
-
-
-<script id="exofExactLegalNavigationFinal">
-(function(){
- const $=id=>document.getElementById(id);
- const legalIds=['exofAboutPanel','exofTermsPrivacyPanel','exofTermsPanel','exofPrivacyPolicyPanel'];
-
- function hideLegal(){legalIds.forEach(id=>{const x=$(id);if(x)x.hidden=true})}
- function openLegal(id){
+ const legal=['exofAboutPanel','exofTermsPrivacyPanel','exofTermsPanel','exofPrivacyPolicyPanel'];
+ function hideLegal(){legal.forEach(id=>{const x=$(id);if(x)x.hidden=true})}
+ function open(id){
    hideLegal();
-   const st=$('exofSettingsPage'); if(st) st.hidden=true;
-   const x=$(id); if(x){x.hidden=false;x.scrollTop=0}
+   const st=$('exofSettingsPage');if(st)st.hidden=true;
+   const x=$(id);if(x){x.hidden=false;x.scrollTop=0}
  }
- function smallestExactRow(label){
-   const els=[...document.querySelectorAll('button,a,[role="button"],div')].filter(el=>{
-     if(el.closest('.exofLegalPanel')) return false;
-     const t=(el.textContent||'').replace(/\s+/g,' ').trim();
-     return t.startsWith(label) && t.length<140;
-   });
-   return els.sort((a,b)=>{
-     const A=a.getBoundingClientRect(),B=b.getBoundingClientRect();
-     return (A.width*A.height)-(B.width*B.height);
-   })[0];
+ function closeToSettings(){
+   hideLegal();
+   const st=$('exofSettingsPage');if(st){st.hidden=false;st.style.removeProperty('display')}
  }
- function install(){
-   const a=smallestExactRow('About EXOF');
-   const t=smallestExactRow('Terms & Privacy');
-   if(!a||!t)return;
-
-   // Transparent overlays guarantee that each physical row has one destination.
-   [['exofAboutHit',a,'exofAboutPanel'],['exofTermsHit',t,'exofTermsPrivacyPanel']].forEach(([id,row,dest])=>{
-     let hit=$(id);
-     if(!hit){hit=document.createElement('button');hit.id=id;document.body.appendChild(hit)}
-     const r=row.getBoundingClientRect();
-     Object.assign(hit.style,{
-       position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',
-       zIndex:'9550',opacity:'0',border:'0',padding:'0',margin:'0',cursor:'pointer'
-     });
-     hit.onclick=e=>{e.preventDefault();e.stopPropagation();openLegal(dest)};
-   });
+ function parentHub(){
+   hideLegal();
+   const h=$('exofTermsPrivacyPanel');if(h)h.hidden=false;
  }
- function visibility(){
-   const st=$('exofSettingsPage');
-   const visible=st && !st.hidden;
-   ['exofAboutHit','exofTermsHit'].forEach(id=>{const x=$(id);if(x)x.style.display=visible?'block':'none'});
-   if(visible) install();
+ function exactTextNode(label){
+   const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+   let n;
+   while(n=walker.nextNode()){
+     if((n.nodeValue||'').trim()===label && !n.parentElement.closest('.exofLegalPanel')) return n.parentElement;
+   }
  }
- setTimeout(()=>{install();visibility()},300);
- document.addEventListener('click',()=>setTimeout(visibility,20),true);
- window.addEventListener('resize',()=>setTimeout(install,20));
+ function clickable(el){
+   if(!el)return null;
+   return el.closest('button,a,[role="button"],[onclick]') || el.parentElement;
+ }
+ function bind(){
+   const about=clickable(exactTextNode('About EXOF'));
+   const terms=clickable(exactTextNode('Terms & Privacy'));
+   if(about && !about.dataset.cleanLegal){
+     about.dataset.cleanLegal='1';
+     about.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();open('exofAboutPanel')},true);
+   }
+   if(terms && !terms.dataset.cleanLegal){
+     terms.dataset.cleanLegal='1';
+     terms.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();open('exofTermsPrivacyPanel')},true);
+   }
+ }
+ // Back: direct binding, no document-wide guessing.
+ document.querySelectorAll('#exofAboutPanel .exofLegalBack,#exofTermsPrivacyPanel .exofLegalBack').forEach(b=>{
+   b.onclick=e=>{e.preventDefault();e.stopPropagation();closeToSettings()}
+ });
+ document.querySelectorAll('#exofTermsPanel .exofLegalBack,#exofPrivacyPolicyPanel .exofLegalBack').forEach(b=>{
+   b.onclick=e=>{e.preventDefault();e.stopPropagation();parentHub()}
+ });
+ const ot=$('exofOpenTerms');if(ot)ot.onclick=()=>open('exofTermsPanel');
+ const op=$('exofOpenPrivacyPolicy');if(op)op.onclick=()=>open('exofPrivacyPolicyPanel');
+ bind();setTimeout(bind,300);setTimeout(bind,1000);
 })();
 </script>
 </body></html>
