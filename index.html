@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.4 — Social Feed</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.5 — Settings</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -89,6 +89,24 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 
 /* EXOF V1.4.3 — persistent accent + route + profile links */
 .exofProfileLink{cursor:pointer}.postHead .ava.exofProfileLink,.postHead .who.exofProfileLink{cursor:pointer}.exofCommentAuthor{display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:3px}.exofCommentAvatar{width:28px;height:28px;border-radius:50%;background:#142019 center/cover no-repeat;display:grid;place-items:center;font-size:10px;font-weight:900;border:1px solid var(--line)}.exofCommentBody{padding-left:36px;margin-top:-2px;margin-bottom:8px;font-size:12px}.sw.selected{outline:3px solid var(--text);outline-offset:2px}
+
+/* EXOF V1.5 SETTINGS */
+.exofSettingsPage{position:fixed;inset:0;z-index:9000;background:#050706;color:#f7f7f7;overflow:auto;padding-bottom:40px}
+.exofSettingsHead{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:14px;padding:18px 16px;background:rgba(5,7,6,.96);border-bottom:1px solid rgba(255,255,255,.08)}
+.exofSettingsBack{width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.12);background:#0b0f0c;color:#fff;font-size:24px}
+.exofSettingsHead b{font-size:18px;letter-spacing:1.5px}
+.exofSettingsWrap{max-width:560px;margin:auto;padding:16px}
+.exofSettingsUser{display:flex;align-items:center;gap:12px;padding:15px;border:1px solid rgba(255,255,255,.09);border-radius:18px;background:#090d0a;margin-bottom:20px}
+.exofSettingsUser img{width:52px;height:52px;border-radius:50%;object-fit:cover;background:#151915}
+.exofSettingsSection{margin:22px 0}
+.exofSettingsSection h3{font-size:11px;letter-spacing:1.5px;color:#89918b;margin:0 10px 8px}
+.exofSettingsCard{border:1px solid rgba(255,255,255,.09);border-radius:18px;overflow:hidden;background:#090d0a}
+.exofSettingRow{width:100%;display:flex;align-items:center;gap:13px;padding:15px 14px;border:0;border-bottom:1px solid rgba(255,255,255,.07);background:transparent;color:#fff;text-align:left;font:inherit}
+.exofSettingRow:last-child{border-bottom:0}.exofSettingIcon{font-size:19px;width:28px;text-align:center}.exofSettingText{flex:1}
+.exofSettingText b{display:block;font-size:14px}.exofSettingText small{display:block;color:#818983;margin-top:3px;font-size:11px}
+.exofSettingChevron{font-size:20px;color:#6f776f}.exofDanger{color:#ff6666!important}
+.exofAccentDot{width:18px;height:18px;border-radius:50%;background:var(--accent,#58ff2f);box-shadow:0 0 12px var(--accent,#58ff2f)}
+
 </style></head>
 <body>
 <div id="authGate">
@@ -782,4 +800,79 @@ if(saveProfileBtn) saveProfileBtn.addEventListener('click',async()=>{
 });
 
 })();
-</script></body></html>
+</script>
+<div id="exofSettingsPage" class="exofSettingsPage" hidden>
+  <div class="exofSettingsHead"><button class="exofSettingsBack" id="exofSettingsBack">‹</button><b>SETTINGS</b></div>
+  <div class="exofSettingsWrap">
+    <div class="exofSettingsUser"><img id="exofSettingsAvatar" alt=""><div><b id="exofSettingsName">EXOF USER</b><div id="exofSettingsUsername" style="color:#89918b;font-size:12px;margin-top:3px">@user</div></div></div>
+    <section class="exofSettingsSection"><h3>YOUR ACCOUNT</h3><div class="exofSettingsCard">
+      <button class="exofSettingRow" data-setting-action="edit-profile"><span class="exofSettingIcon">👤</span><span class="exofSettingText"><b>Edit profile</b><small>Name, bio and profile media</small></span><span class="exofSettingChevron">›</span></button>
+      <button class="exofSettingRow" data-setting-action="account-info"><span class="exofSettingIcon">◎</span><span class="exofSettingText"><b>Account information</b><small>Email and username</small></span><span class="exofSettingChevron">›</span></button>
+    </div></section>
+    <section class="exofSettingsSection"><h3>PRIVACY</h3><div class="exofSettingsCard">
+      <button class="exofSettingRow" data-setting-action="privacy"><span class="exofSettingIcon">🔒</span><span class="exofSettingText"><b>Account privacy</b><small>Privacy controls coming next</small></span><span class="exofSettingChevron">›</span></button>
+      <button class="exofSettingRow" data-setting-action="blocked"><span class="exofSettingIcon">⊘</span><span class="exofSettingText"><b>Blocked accounts</b><small>Manage blocked people</small></span><span class="exofSettingChevron">›</span></button>
+    </div></section>
+    <section class="exofSettingsSection"><h3>YOUR ACTIVITY</h3><div class="exofSettingsCard">
+      <button class="exofSettingRow" data-setting-action="saved"><span class="exofSettingIcon">◇</span><span class="exofSettingText"><b>Saved Drops</b><small>Posts you've saved</small></span><span class="exofSettingChevron">›</span></button>
+    </div></section>
+    <section class="exofSettingsSection"><h3>APPEARANCE</h3><div class="exofSettingsCard">
+      <button class="exofSettingRow" data-setting-action="accent"><span class="exofSettingIcon"><i class="exofAccentDot"></i></span><span class="exofSettingText"><b>Accent color</b><small>Your EXOF color</small></span><span class="exofSettingChevron">›</span></button>
+      <button class="exofSettingRow" data-setting-action="customize"><span class="exofSettingIcon">✦</span><span class="exofSettingText"><b>Customize My EXOF</b><small>Cover, background and profile style</small></span><span class="exofSettingChevron">›</span></button>
+    </div></section>
+    <section class="exofSettingsSection"><h3>SECURITY</h3><div class="exofSettingsCard">
+      <button class="exofSettingRow" data-setting-action="password"><span class="exofSettingIcon">⌁</span><span class="exofSettingText"><b>Change password</b><small>Send a secure reset email</small></span><span class="exofSettingChevron">›</span></button>
+    </div></section>
+    <section class="exofSettingsSection"><h3>ABOUT EXOF</h3><div class="exofSettingsCard">
+      <button class="exofSettingRow" data-setting-action="about"><span class="exofSettingIcon">ⓘ</span><span class="exofSettingText"><b>About EXOF</b><small>Version and platform information</small></span><span class="exofSettingChevron">›</span></button>
+      <button class="exofSettingRow" data-setting-action="terms"><span class="exofSettingIcon">≡</span><span class="exofSettingText"><b>Terms & Privacy</b><small>Will be added in the next legal update</small></span><span class="exofSettingChevron">›</span></button>
+    </div></section>
+    <section class="exofSettingsSection"><div class="exofSettingsCard">
+      <button class="exofSettingRow exofDanger" data-setting-action="logout"><span class="exofSettingIcon">↪</span><span class="exofSettingText"><b>Log out</b></span></button>
+    </div></section>
+  </div>
+</div>
+
+
+<script>
+(function(){
+ const pg=document.getElementById('exofSettingsPage');
+ const back=document.getElementById('exofSettingsBack');
+ function findButton(words){return [...document.querySelectorAll('button,a')].find(x=>words.some(w=>(x.textContent||'').toLowerCase().includes(w)))}
+ window.openExofSettings=function(){
+   pg.hidden=false; document.body.style.overflow='hidden';
+   try{
+     const av=document.querySelector('#profileAvatar,.profileAvatar,[data-profile-avatar]');
+     const nm=document.querySelector('#profileName,.profileName,[data-profile-name]');
+     const un=document.querySelector('#profileUsername,.profileUsername,[data-profile-username]');
+     if(av?.src)document.getElementById('exofSettingsAvatar').src=av.src;
+     if(nm)document.getElementById('exofSettingsName').textContent=nm.textContent;
+     if(un)document.getElementById('exofSettingsUsername').textContent=un.textContent;
+   }catch(e){}
+ };
+ function close(){pg.hidden=true;document.body.style.overflow=''}
+ back.onclick=close;
+ document.addEventListener('click',async e=>{
+   const gear=e.target.closest('[aria-label*="etting"],[title*="etting"],.settingsBtn,#settingsBtn');
+   if(gear && !pg.contains(gear)){e.preventDefault();openExofSettings();return}
+   const row=e.target.closest('[data-setting-action]'); if(!row)return;
+   const a=row.dataset.settingAction;
+   if(a==='logout'){try{await sb.auth.signOut();location.reload()}catch(e){};return}
+   if(a==='password'){
+     try{const {data}=await sb.auth.getUser();if(data?.user?.email){await sb.auth.resetPasswordForEmail(data.user.email,{redirectTo:location.origin});alert('Password reset email sent.')}}catch(e){alert(e.message||'Unable to send reset email.')}return;
+   }
+   if(a==='about'){alert('EXOF\\nSocial platform\\nVersion 1.5');return}
+   if(a==='terms'){alert('Terms of Service and Privacy Policy will be added in the next legal update.');return}
+   close();
+   if(a==='edit-profile'){const b=findButton(['edit profile']);if(b)b.click();return}
+   if(a==='customize'){const b=findButton(['customize']);if(b)b.click();return}
+   if(a==='accent'){const b=findButton(['accent']);if(b)b.click();return}
+   if(a==='saved'){const b=findButton(['saved']);if(b)b.click();return}
+   alert('This control will be activated in the next Settings update.');
+ });
+ // Fallback: make any visible gear open Settings.
+ [...document.querySelectorAll('button')].forEach(b=>{if((b.textContent||'').trim()==='⚙️'||(b.textContent||'').trim()==='⚙')b.addEventListener('click',e=>{e.preventDefault();openExofSettings()})});
+})();
+</script>
+
+</body></html>
