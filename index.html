@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.7.3 — Header Fix</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.7.4 — Exact Header</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -1399,6 +1399,61 @@ window.EXOF_PRIVACY_API={
  document.addEventListener('click',()=>setTimeout(manage,80),true);
  window.addEventListener('popstate',()=>setTimeout(manage,80));
  manage();setTimeout(manage,400);setTimeout(manage,1200);
+})();
+</script>
+
+<style>
+#exofV173HomeSearch,#exofV173HomeMessages,#exofV173ProfileSettings{display:none!important}
+header .headerActions{display:flex!important}
+header{position:relative}
+#exofProfileSettingsGear{top:calc(env(safe-area-inset-top,0px) + 18px)!important}
+</style>
+
+<script>
+(function(){
+ const header=document.querySelector('#app > header')||document.querySelector('main#app header');
+ const search=document.getElementById('searchBtn');
+ const messages=document.getElementById('messagesBtn');
+ const gear=document.getElementById('exofProfileSettingsGear');
+
+ function state(){
+   const active=document.querySelector('#app .page.active');
+   const id=active?.id||'';
+   const functionalOpen=[...document.querySelectorAll('.exofFuncPanel')].some(x=>!x.hidden) ||
+                        (document.getElementById('exofSettingsPage') && !document.getElementById('exofSettingsPage').hidden) ||
+                        (document.getElementById('exofActivityPage') && !document.getElementById('exofActivityPage').hidden);
+   if(header) header.style.display=functionalOpen?'none':'grid';
+   if(search){
+     search.style.setProperty('display',(!functionalOpen&&id==='home')?'grid':'none','important');
+     search.style.visibility='visible';
+   }
+   if(messages){
+     messages.style.setProperty('display',(!functionalOpen&&id==='home')?'grid':'none','important');
+     messages.style.visibility='visible';
+   }
+   if(gear){
+     gear.style.setProperty('display',(!functionalOpen&&id==='profile')?'flex':'none','important');
+     gear.style.visibility='visible';
+   }
+ }
+ // Search on left, messages on right, EXOF centered.
+ if(header && search && messages){
+   const brand=header.querySelector('.brandLogo');
+   const actions=header.querySelector('.headerActions');
+   let left=header.querySelector('.exofHeaderLeft');
+   if(!left){left=document.createElement('div');left.className='exofHeaderLeft';header.insertBefore(left,brand);}
+   left.appendChild(search);
+   actions.appendChild(messages);
+   header.style.gridTemplateColumns='1fr auto 1fr';
+   left.style.display='flex'; left.style.justifyContent='flex-start';
+   actions.style.justifyContent='flex-end';
+ }
+ // Observe the real page class changes made by go().
+ const obs=new MutationObserver(state);
+ document.querySelectorAll('#app .page').forEach(x=>obs.observe(x,{attributes:true,attributeFilter:['class']}));
+ document.addEventListener('click',()=>setTimeout(state,30),true);
+ window.addEventListener('popstate',()=>setTimeout(state,30));
+ state(); setTimeout(state,250); setTimeout(state,900);
 })();
 </script>
 </body></html>
