@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.7.5 — Header Rebuild</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.7.1 — Precise Header Fix</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -1093,7 +1093,15 @@ window.EXOF_PRIVACY_API={
    alert('This setting will be activated in the next update.');
  },true);
 })();
-</span><span class="exofSettingChevron">›</span></button>
+</script>
+
+
+<div id="exofPrivacyPanel" class="exofFuncPanel" hidden>
+ <div class="exofFuncHead"><button class="exofFuncBack exofPrivacyBack">‹</button><b>ACCOUNT PRIVACY</b></div>
+ <div class="exofFuncBody">
+  <div class="exofFuncCard">
+   <button id="exofPrivateToggleRow" class="exofSettingRow"><span class="exofSettingIcon">🔒</span><span class="exofSettingText"><b>Private account</b><small id="exofPrivateText">Only approved followers can see your Drops</small></span><span id="exofPrivateToggle" class="exofPrivacyToggle"></span></button>
+   <button class="exofSettingRow" id="exofRequestsOpen"><span class="exofSettingIcon">👥</span><span class="exofSettingText"><b>Follow requests</b><small id="exofRequestCount">0 pending</small></span><span class="exofSettingChevron">›</span></button>
   </div>
   <h3 style="font-size:11px;letter-spacing:1.5px;color:#89918b;margin:24px 10px 8px">COMMENTS</h3>
   <div class="exofFuncCard" id="exofCommentPolicy">
@@ -1237,281 +1245,40 @@ window.EXOF_PRIVACY_API={
 })();
 </script>
 
-<script>
-/* EXOF V1.7.2 — Navigation & Privacy Fix */
-(function(){
-  const q=(sel,root=document)=>root.querySelector(sel);
-  const qa=(sel,root=document)=>[...root.querySelectorAll(sel)];
+<style id="exofPreciseHeaderFix">
+/* HOME: search left, logo centered, messages right */
+header{grid-template-columns:1fr auto 1fr!important}
+header .headerActions{display:contents!important}
+header #searchBtn{grid-column:1!important;grid-row:1!important;justify-self:start!important;display:inline-grid!important}
+header .brandLogo{grid-column:2!important;grid-row:1!important}
+header #messagesBtn{grid-column:3!important;grid-row:1!important;justify-self:end!important;display:inline-grid!important}
 
-  function closePrivacy(){
-    const privacy = document.getElementById('exofPrivacyPage') ||
-      qa('section,div').find(x => /ACCOUNT PRIVACY/i.test((x.textContent||'').slice(0,120)));
-    if (privacy && privacy !== document.body) {
-      if ('hidden' in privacy) privacy.hidden = true;
-      privacy.style.display = 'none';
-    }
-    document.body.style.overflow = '';
-    // Prefer EXOF's own settings screen; otherwise browser history.
-    const settings = document.getElementById('exofSettingsPage') ||
-      qa('section,div').find(x => /^SETTINGS/i.test((x.textContent||'').trim().slice(0,40)));
-    if (settings && settings !== document.body) {
-      if ('hidden' in settings) settings.hidden = false;
-      settings.style.display = '';
-      return;
-    }
-    if (history.length > 1) history.back();
-  }
-
-  function wirePrivacyBack(){
-    const privacy = document.getElementById('exofPrivacyPage') ||
-      qa('section,div').find(x => /ACCOUNT PRIVACY/i.test((x.textContent||'').slice(0,120)));
-    if(!privacy) return;
-    const back = q('.exofFuncBack',privacy) || qa('button',privacy).find(b => /‹|←|back/i.test((b.textContent||'').trim()));
-    if(back && !back.dataset.v172Back){
-      back.dataset.v172Back='1';
-      back.addEventListener('click',function(e){
-        e.preventDefault(); e.stopImmediatePropagation(); closePrivacy();
-      },true);
-    }
-    // Remove Follow Requests from Privacy if legacy markup survived.
-    qa('*',privacy).forEach(el=>{
-      if((el.textContent||'').trim()==='Follow requests'){
-        let row=el.closest('.exofFuncRow') || el.parentElement?.parentElement || el.parentElement;
-        if(row) row.remove();
-      }
-    });
-  }
-
-  function cleanOwnProfileHeader_DISABLED(){
-    // Only act while the bottom Profile tab is visibly active.
-    const activeProfile = qa('button,a').some(el =>
-      /profile/i.test((el.textContent||'').trim()) &&
-      (el.classList.contains('active') || /var\(--accent\)|rgb\(83,\s*255,\s*47\)|#53ff2f/i.test(el.getAttribute('style')||''))
-    );
-    const profilePage = document.getElementById('profile') || q('[data-page="profile"]') || q('.profilePage');
-    if(!profilePage && !activeProfile) return;
-
-    // Find header controls by semantic labels/title/text. Keep settings; hide search/messages on own Profile.
-    qa('button,a').forEach(el=>{
-      const meta=((el.getAttribute('aria-label')||'')+' '+(el.getAttribute('title')||'')+' '+(el.textContent||'')).toLowerCase();
-      if(meta.includes('setting')) { el.style.display=''; return; }
-      if(meta.includes('search') || meta.includes('message') || (el.textContent||'').trim()==='↗' || (el.textContent||'').trim()==='↗️'){
-        // Restrict to top/header controls, not content buttons.
-        const r=el.getBoundingClientRect();
-        if(r.top < 380) el.style.display='none';
-      }
-    });
-  }
-
-  function dropsRecovery(){
-    const msg=qa('*').find(el => (el.textContent||'').trim()==='Could not load Drops yet.');
-    if(!msg) return;
-    // V1.7.2 does not rewrite the stable Drops query. Trigger the existing Home/For You loader once,
-    // which also clears transient post-deploy/auth initialization failures.
-    const forYou=qa('button,a').find(el => (el.textContent||'').trim()==='For You');
-    if(forYou && !msg.dataset.v172Retry){
-      msg.dataset.v172Retry='1';
-      setTimeout(()=>forYou.click(),700);
-    }
-  }
-
-  function apply(){
-    wirePrivacyBack();
-    /* v1.7.3: page-aware header manager handles this */
-    dropsRecovery();
-  }
-  apply();
-  setTimeout(apply,350);
-  setTimeout(apply,1000);
-  document.addEventListener('click',()=>setTimeout(apply,60),true);
-})();
-</script>
-
-<style>
-/* EXOF V1.7.3 page-aware top controls */
-#exofV173HomeSearch,#exofV173HomeMessages,#exofV173ProfileSettings{
- position:fixed;top:max(18px,env(safe-area-inset-top));z-index:120;width:58px;height:58px;border-radius:50%;
- border:1px solid #ffffff24;background:#050a07;color:#fff;display:none;align-items:center;justify-content:center;
- font-size:25px;font-weight:800;cursor:pointer
-}
-#exofV173HomeSearch{left:max(18px,calc(50% - 210px))}
-#exofV173HomeMessages{right:max(18px,calc(50% - 210px));font-size:31px}
-#exofV173ProfileSettings{right:max(18px,calc(50% - 210px));font-size:25px}
-@media(max-width:600px){
- #exofV173HomeSearch{left:20px} #exofV173HomeMessages,#exofV173ProfileSettings{right:20px}
+/* PROFILE: only Settings in the upper-right. */
+body.exof-own-profile header #searchBtn,
+body.exof-own-profile header #messagesBtn{display:none!important}
+body.exof-own-profile #exofProfileSettingsGear{
+ display:flex!important;
+ position:fixed!important;
+ right:max(18px,calc((100vw - 430px)/2 + 18px))!important;
+ top:calc(env(safe-area-inset-top,0px) + 10px)!important;
+ z-index:8500!important
 }
 </style>
-<script>
+<script id="exofPreciseHeaderLogic">
 (function(){
- const qa=(s,r=document)=>[...r.querySelectorAll(s)];
- function button(id,txt,label){
-   let b=document.getElementById(id);if(b)return b;
-   b=document.createElement('button');b.id=id;b.type='button';b.innerHTML=txt;b.setAttribute('aria-label',label);
-   document.body.appendChild(b);return b;
+ function syncHeader(){
+   const profile=document.getElementById('profile');
+   const onProfile=!!(profile && profile.classList.contains('active'));
+   document.body.classList.toggle('exof-own-profile',onProfile);
+   const gear=document.getElementById('exofProfileSettingsGear');
+   if(gear && !onProfile) gear.style.removeProperty('display');
  }
- const search=button('exofV173HomeSearch','⌕','Search');
- const messages=button('exofV173HomeMessages','↗','Messages');
- const settings=button('exofV173ProfileSettings','⚙','Settings');
-
- function clickExisting(kind){
-   const words={search:['search','explore'],messages:['message','inbox','dm'],settings:['setting']}[kind];
-   const candidates=qa('button,a').filter(el=>![search,messages,settings].includes(el));
-   const target=candidates.find(el=>{
-     const m=((el.getAttribute('aria-label')||'')+' '+(el.getAttribute('title')||'')+' '+(el.textContent||'')).toLowerCase();
-     return words.some(w=>m.includes(w));
-   });
-   if(target){target.click();return true}
-   return false;
- }
- search.onclick=()=>{if(!clickExisting('search')){const x=qa('button,a').find(e=>(e.textContent||'').trim()==='⌕');x?.click()}};
- messages.onclick=()=>{if(!clickExisting('messages')){const x=qa('button,a').find(e=>/↗/.test(e.textContent||''));x?.click()}};
- settings.onclick=()=>{if(!clickExisting('settings') && window.EXOF_SETTINGS?.open)window.EXOF_SETTINGS.open()};
-
- function activeTab(){
-   const tabs=qa('button,a').filter(el=>/^(home|loops|create|activity|profile)$/i.test((el.textContent||'').trim()));
-   let active=tabs.find(el=>el.classList.contains('active') || el.getAttribute('aria-current')==='page');
-   if(!active){
-     active=tabs.find(el=>{
-       const st=getComputedStyle(el), c=st.color;
-       return /83,\s*255,\s*47|82,\s*255,\s*47/.test(c);
-     });
-   }
-   return (active?.textContent||'home').trim().toLowerCase();
- }
- function manage(){
-   const tab=activeTab();
-   const activity=document.getElementById('exofActivityPage');
-   const functional=qa('section,div').some(x=>x!==activity && !x.hidden && /ACCOUNT PRIVACY|SETTINGS|BLOCKED ACCOUNTS|SAVED DROPS|ACCOUNT INFORMATION|CHANGE PASSWORD/i.test((x.textContent||'').slice(0,80)));
-   search.style.display=(!functional&&tab==='home')?'flex':'none';
-   messages.style.display=(!functional&&tab==='home')?'flex':'none';
-   settings.style.display=(!functional&&tab==='profile')?'flex':'none';
-
-   // Hide legacy top search/messages/settings so there is exactly the intended set.
-   qa('button,a').forEach(el=>{
-     if([search,messages,settings].includes(el))return;
-     const meta=((el.getAttribute('aria-label')||'')+' '+(el.getAttribute('title')||'')+' '+(el.textContent||'')).toLowerCase();
-     const r=el.getBoundingClientRect();
-     if(r.top<360 && (meta.includes('search')||meta.includes('message')||meta.includes('setting')||/^\s*↗\s*$/.test(el.textContent||''))){
-       el.style.visibility='hidden';
-     }
-   });
- }
- document.addEventListener('click',()=>setTimeout(manage,80),true);
- window.addEventListener('popstate',()=>setTimeout(manage,80));
- manage();setTimeout(manage,400);setTimeout(manage,1200);
-})();
-</script>
-
-<style>
-#exofV173HomeSearch,#exofV173HomeMessages,#exofV173ProfileSettings{display:none!important}
-header .headerActions{display:flex!important}
-header{position:relative}
-#exofProfileSettingsGear{top:calc(env(safe-area-inset-top,0px) + 18px)!important}
-</style>
-
-<script>
-(function(){
- const header=document.querySelector('#app > header')||document.querySelector('main#app header');
- const search=document.getElementById('searchBtn');
- const messages=document.getElementById('messagesBtn');
- const gear=document.getElementById('exofProfileSettingsGear');
-
- function state(){
-   const active=document.querySelector('#app .page.active');
-   const id=active?.id||'';
-   const functionalOpen=[...document.querySelectorAll('.exofFuncPanel')].some(x=>!x.hidden) ||
-                        (document.getElementById('exofSettingsPage') && !document.getElementById('exofSettingsPage').hidden) ||
-                        (document.getElementById('exofActivityPage') && !document.getElementById('exofActivityPage').hidden);
-   if(header) header.style.display=functionalOpen?'none':'grid';
-   if(search){
-     search.style.setProperty('display',(!functionalOpen&&id==='home')?'grid':'none','important');
-     search.style.visibility='visible';
-   }
-   if(messages){
-     messages.style.setProperty('display',(!functionalOpen&&id==='home')?'grid':'none','important');
-     messages.style.visibility='visible';
-   }
-   if(gear){
-     gear.style.setProperty('display',(!functionalOpen&&id==='profile')?'flex':'none','important');
-     gear.style.visibility='visible';
-   }
- }
- // Search on left, messages on right, EXOF centered.
- if(header && search && messages){
-   const brand=header.querySelector('.brandLogo');
-   const actions=header.querySelector('.headerActions');
-   let left=header.querySelector('.exofHeaderLeft');
-   if(!left){left=document.createElement('div');left.className='exofHeaderLeft';header.insertBefore(left,brand);}
-   left.appendChild(search);
-   actions.appendChild(messages);
-   header.style.gridTemplateColumns='1fr auto 1fr';
-   left.style.display='flex'; left.style.justifyContent='flex-start';
-   actions.style.justifyContent='flex-end';
- }
- // Observe the real page class changes made by go().
- const obs=new MutationObserver(state);
- document.querySelectorAll('#app .page').forEach(x=>obs.observe(x,{attributes:true,attributeFilter:['class']}));
- document.addEventListener('click',()=>setTimeout(state,30),true);
- window.addEventListener('popstate',()=>setTimeout(state,30));
- state(); setTimeout(state,250); setTimeout(state,900);
-})();
-</script>
-
-<style>
-#exofV175Header{position:fixed;top:0;left:50%;transform:translateX(-50%);width:min(100%,760px);height:112px;z-index:190;
-display:grid;grid-template-columns:1fr auto 1fr;align-items:end;padding:0 26px 18px;background:#020604;border-bottom:1px solid #17301e}
-#exofV175Header .v175Brand{font-size:36px;font-weight:1000;letter-spacing:12px;color:#fff;line-height:1}
-#exofV175Header .v175Brand i{font-style:normal;color:var(--accent,#53ff2f)}
-#exofV175Header button{width:58px;height:58px;border-radius:50%;border:1px solid #ffffff25;background:#050a07;color:#fff;font-size:26px;display:grid;place-items:center}
-#exofV175Left{justify-self:start} #exofV175Right{justify-self:end}
-#exofV175Header[hidden]{display:none!important}
-@media(max-width:600px){#exofV175Header{height:122px;padding:0 20px 17px}#exofV175Header .v175Brand{font-size:31px;letter-spacing:10px}}
-</style>
-<div id="exofV175Header">
- <button id="exofV175Left" aria-label="Search">⌕</button>
- <div class="v175Brand">E<i>X</i>OF</div>
- <button id="exofV175Right" aria-label="Messages">↗</button>
-</div>
-<script>
-(function(){
- const H=document.getElementById('exofV175Header'),L=document.getElementById('exofV175Left'),R=document.getElementById('exofV175Right');
- function navTab(){
-   // Prefer visible active page; fall back to bottom-nav visual state/text.
-   const a=[...document.querySelectorAll('.page')].find(x=>x.classList.contains('active')&&!x.hidden);
-   if(a?.id)return a.id.toLowerCase();
-   const tabs=[...document.querySelectorAll('button,a')].filter(x=>/^(home|loops|create|activity|profile)$/i.test((x.textContent||'').trim()));
-   const t=tabs.find(x=>x.classList.contains('active')||x.getAttribute('aria-current')==='page');
-   return (t?.textContent||'home').trim().toLowerCase();
- }
- function functional(){
-   const act=document.getElementById('exofActivityPage'); if(act&&!act.hidden)return true;
-   return [...document.querySelectorAll('section,div')].some(x=>!x.hidden&&/^(ACCOUNT PRIVACY|SETTINGS|SAVED DROPS|BLOCKED ACCOUNTS|ACCOUNT INFORMATION|CHANGE PASSWORD)/i.test((x.textContent||'').trim().slice(0,40)));
- }
- function render(){
-   const tab=navTab(),off=functional()||!['home','profile'].includes(tab);
-   H.hidden=off;if(off)return;
-   if(tab==='home'){L.style.display='grid';L.innerHTML='⌕';L.setAttribute('aria-label','Search');R.innerHTML='↗';R.setAttribute('aria-label','Messages');}
-   else {L.style.display='none';R.innerHTML='⚙';R.setAttribute('aria-label','Settings');}
- }
- function findAction(kind){
-   const terms={Search:['search','explore'],Messages:['message','inbox'],Settings:['setting']}[kind];
-   return [...document.querySelectorAll('button,a')].find(x=>{
-     if(x===L||x===R)return false;
-     const m=((x.getAttribute('aria-label')||'')+' '+(x.getAttribute('title')||'')+' '+(x.textContent||'')).toLowerCase();
-     return terms.some(t=>m.includes(t));
-   });
- }
- L.onclick=()=>findAction('Search')?.click();
- R.onclick=()=>findAction(R.getAttribute('aria-label'))?.click();
-
- // Hide the old header visually only; functionality remains available for proxy clicks.
- [...document.querySelectorAll('header')].forEach(h=>{if(!h.closest('#exofV175Header'))h.style.visibility='hidden'});
- document.body.style.paddingTop='112px';
-
- const mo=new MutationObserver(()=>requestAnimationFrame(render));
- mo.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class','hidden','style']});
- document.addEventListener('click',()=>setTimeout(render,20),true);
- render();setTimeout(render,300);setTimeout(render,1000);
+ const pages=document.querySelectorAll('.page');
+ const ob=new MutationObserver(syncHeader);
+ pages.forEach(p=>ob.observe(p,{attributes:true,attributeFilter:['class']}));
+ document.addEventListener('click',()=>setTimeout(syncHeader,0),true);
+ window.addEventListener('popstate',syncHeader);
+ syncHeader();
 })();
 </script>
 </body></html>
