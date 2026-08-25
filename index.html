@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.7.1 — Auth Scope Fix</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.7.2 — Navigation & Privacy Fix</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -1093,15 +1093,7 @@ window.EXOF_PRIVACY_API={
    alert('This setting will be activated in the next update.');
  },true);
 })();
-</script>
-
-
-<div id="exofPrivacyPanel" class="exofFuncPanel" hidden>
- <div class="exofFuncHead"><button class="exofFuncBack exofPrivacyBack">‹</button><b>ACCOUNT PRIVACY</b></div>
- <div class="exofFuncBody">
-  <div class="exofFuncCard">
-   <button id="exofPrivateToggleRow" class="exofSettingRow"><span class="exofSettingIcon">🔒</span><span class="exofSettingText"><b>Private account</b><small id="exofPrivateText">Only approved followers can see your Drops</small></span><span id="exofPrivateToggle" class="exofPrivacyToggle"></span></button>
-   <button class="exofSettingRow" id="exofRequestsOpen"><span class="exofSettingIcon">👥</span><span class="exofSettingText"><b>Follow requests</b><small id="exofRequestCount">0 pending</small></span><span class="exofSettingChevron">›</span></button>
+</span><span class="exofSettingChevron">›</span></button>
   </div>
   <h3 style="font-size:11px;letter-spacing:1.5px;color:#89918b;margin:24px 10px 8px">COMMENTS</h3>
   <div class="exofFuncCard" id="exofCommentPolicy">
@@ -1242,6 +1234,96 @@ window.EXOF_PRIVACY_API={
  setTimeout(addSpacesExplore,500);
 
  window.EXOF_ACTIVITY={open:openActivity,refresh:updateBadge};
+})();
+</script>
+
+<script>
+/* EXOF V1.7.2 — Navigation & Privacy Fix */
+(function(){
+  const q=(sel,root=document)=>root.querySelector(sel);
+  const qa=(sel,root=document)=>[...root.querySelectorAll(sel)];
+
+  function closePrivacy(){
+    const privacy = document.getElementById('exofPrivacyPage') ||
+      qa('section,div').find(x => /ACCOUNT PRIVACY/i.test((x.textContent||'').slice(0,120)));
+    if (privacy && privacy !== document.body) {
+      if ('hidden' in privacy) privacy.hidden = true;
+      privacy.style.display = 'none';
+    }
+    document.body.style.overflow = '';
+    // Prefer EXOF's own settings screen; otherwise browser history.
+    const settings = document.getElementById('exofSettingsPage') ||
+      qa('section,div').find(x => /^SETTINGS/i.test((x.textContent||'').trim().slice(0,40)));
+    if (settings && settings !== document.body) {
+      if ('hidden' in settings) settings.hidden = false;
+      settings.style.display = '';
+      return;
+    }
+    if (history.length > 1) history.back();
+  }
+
+  function wirePrivacyBack(){
+    const privacy = document.getElementById('exofPrivacyPage') ||
+      qa('section,div').find(x => /ACCOUNT PRIVACY/i.test((x.textContent||'').slice(0,120)));
+    if(!privacy) return;
+    const back = q('.exofFuncBack',privacy) || qa('button',privacy).find(b => /‹|←|back/i.test((b.textContent||'').trim()));
+    if(back && !back.dataset.v172Back){
+      back.dataset.v172Back='1';
+      back.addEventListener('click',function(e){
+        e.preventDefault(); e.stopImmediatePropagation(); closePrivacy();
+      },true);
+    }
+    // Remove Follow Requests from Privacy if legacy markup survived.
+    qa('*',privacy).forEach(el=>{
+      if((el.textContent||'').trim()==='Follow requests'){
+        let row=el.closest('.exofFuncRow') || el.parentElement?.parentElement || el.parentElement;
+        if(row) row.remove();
+      }
+    });
+  }
+
+  function cleanOwnProfileHeader(){
+    // Only act while the bottom Profile tab is visibly active.
+    const activeProfile = qa('button,a').some(el =>
+      /profile/i.test((el.textContent||'').trim()) &&
+      (el.classList.contains('active') || /var\(--accent\)|rgb\(83,\s*255,\s*47\)|#53ff2f/i.test(el.getAttribute('style')||''))
+    );
+    const profilePage = document.getElementById('profile') || q('[data-page="profile"]') || q('.profilePage');
+    if(!profilePage && !activeProfile) return;
+
+    // Find header controls by semantic labels/title/text. Keep settings; hide search/messages on own Profile.
+    qa('button,a').forEach(el=>{
+      const meta=((el.getAttribute('aria-label')||'')+' '+(el.getAttribute('title')||'')+' '+(el.textContent||'')).toLowerCase();
+      if(meta.includes('setting')) { el.style.display=''; return; }
+      if(meta.includes('search') || meta.includes('message') || (el.textContent||'').trim()==='↗' || (el.textContent||'').trim()==='↗️'){
+        // Restrict to top/header controls, not content buttons.
+        const r=el.getBoundingClientRect();
+        if(r.top < 380) el.style.display='none';
+      }
+    });
+  }
+
+  function dropsRecovery(){
+    const msg=qa('*').find(el => (el.textContent||'').trim()==='Could not load Drops yet.');
+    if(!msg) return;
+    // V1.7.2 does not rewrite the stable Drops query. Trigger the existing Home/For You loader once,
+    // which also clears transient post-deploy/auth initialization failures.
+    const forYou=qa('button,a').find(el => (el.textContent||'').trim()==='For You');
+    if(forYou && !msg.dataset.v172Retry){
+      msg.dataset.v172Retry='1';
+      setTimeout(()=>forYou.click(),700);
+    }
+  }
+
+  function apply(){
+    wirePrivacyBack();
+    cleanOwnProfileHeader();
+    dropsRecovery();
+  }
+  apply();
+  setTimeout(apply,350);
+  setTimeout(apply,1000);
+  document.addEventListener('click',()=>setTimeout(apply,60),true);
 })();
 </script>
 </body></html>
