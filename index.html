@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.2.2 — Profile Media Persistence</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.4 — Social Feed</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -62,6 +62,17 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
   box-shadow:inset 0 0 0 1px rgba(83,255,42,.035),0 10px 35px rgba(0,0,0,.35);
   font-size:34px;margin:4px 0 8px;
 }
+
+
+/* EXOF V1.4 */
+#searchBtn,.searchBtn,[aria-label*="Search"],[title*="Search"]{font-size:25px!important;min-width:44px!important;min-height:44px!important}
+#messagesBtn,.messagesBtn,[aria-label*="Message"],[title*="Message"]{font-size:25px!important;min-width:44px!important;min-height:44px!important}
+.exofDropActions{display:flex;gap:14px;align-items:center;margin-top:10px}
+.exofDropActions button{background:none;border:0;color:inherit;font:inherit;cursor:pointer;padding:7px}
+.exofComments{margin-top:10px;border-top:1px solid var(--line);padding-top:9px}
+.exofCommentRow{font-size:12px;margin:6px 0}
+.exofCommentForm{display:flex;gap:7px;margin-top:8px}.exofCommentForm input{flex:1}
+.exofDeleteDrop{margin-left:auto!important;color:#ff7474!important}
 
 </style></head>
 <body>
@@ -493,6 +504,45 @@ async function exofRealStats(userId){
   const el=document.querySelector('[data-real-drops-count]');
   if(el)el.textContent=count||0;
 }
+
+async function exofFollowingIds(){
+  if(!currentUser)return [];
+  const {data,error}=await sb.from('follows').select('following_id').eq('follower_id',currentUser.id);
+  if(error)throw error; return (data||[]).map(x=>x.following_id);
+}
+async function exofFollowingDrops(){
+  const ids=await exofFollowingIds(); if(!ids.length)return [];
+  const {data,error}=await sb.from('drops').select('*').in('user_id',ids).order('created_at',{ascending:false});
+  if(error)throw error; return data||[];
+}
+async function exofToggleLike(dropId){
+  if(!currentUser)return;
+  const {data}=await sb.from('drop_likes').select('drop_id').eq('drop_id',dropId).eq('user_id',currentUser.id).maybeSingle();
+  if(data) await sb.from('drop_likes').delete().eq('drop_id',dropId).eq('user_id',currentUser.id);
+  else await sb.from('drop_likes').insert({drop_id:dropId,user_id:currentUser.id});
+}
+async function exofLikeCount(dropId){
+  const {count}=await sb.from('drop_likes').select('*',{count:'exact',head:true}).eq('drop_id',dropId); return count||0;
+}
+async function exofAddComment(dropId,body){
+  body=(body||'').trim(); if(!currentUser||!body)return;
+  await sb.from('drop_comments').insert({drop_id:dropId,user_id:currentUser.id,body});
+}
+async function exofComments(dropId){
+  const {data,error}=await sb.from('drop_comments').select('id,user_id,body,created_at').eq('drop_id',dropId).order('created_at',{ascending:true});
+  if(error)throw error; return data||[];
+}
+async function exofDeleteOwnDrop(dropId){
+  if(!currentUser)return false;
+  const {error}=await sb.from('drops').delete().eq('id',dropId).eq('user_id',currentUser.id);
+  return !error;
+}
+async function exofOwnDrops(){
+  if(!currentUser)return [];
+  const {data,error}=await sb.from('drops').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});
+  if(error)throw error; return data||[];
+}
+
 const pages=[...document.querySelectorAll('.page')],nav=[...document.querySelectorAll('nav button')];
 function go(id){pages.forEach(p=>p.classList.toggle('active',p.id===id));nav.forEach(b=>b.classList.toggle('on',b.dataset.go===id));window.scrollTo(0,0)}
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
