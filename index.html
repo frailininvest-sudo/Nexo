@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.8.4 — Profile Background Restored</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.8.5 — Vivid Profile Background</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -174,8 +174,8 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
   background-size:cover!important;
   background-position:center!important;
   background-attachment:scroll!important;
-  opacity:.34!important;
-  filter:saturate(.9) brightness(.55)!important;
+  opacity:.88!important;
+  filter:saturate(1.08) brightness(.92)!important;
   z-index:0!important;
   pointer-events:none!important
 }
@@ -185,7 +185,7 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
   inset:0!important;
   z-index:1!important;
   pointer-events:none!important;
-  background:linear-gradient(to bottom,rgba(2,5,3,.12),rgba(2,5,3,.48) 35%,rgba(2,5,3,.88) 100%)!important
+  background:linear-gradient(to bottom,rgba(2,5,3,.03),rgba(2,5,3,.10) 40%,rgba(2,5,3,.16) 100%)!important
 }
 #profile #profileShell{position:relative!important}
 #profile .profileContent{position:relative!important;z-index:2!important}
@@ -253,6 +253,18 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 #profile #myDropsList .actions{padding:8px 10px!important}
 #profile .accountBar{display:none!important}
 #profile .profileOldBottomAction{display:none!important}
+</style>
+
+<style id="exofProfileVividBackgroundV185">
+#profile #profileTrackModule,
+#profile .favoriteLoopsReference,
+#profile .stats{
+  background:rgba(4,8,5,.88)!important;
+  backdrop-filter:blur(3px)!important;
+}
+#profile .profileQuickActions button{
+  backdrop-filter:blur(3px);
+}
 </style>
 </head>
 <body>
