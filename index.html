@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.7.2 — Legal Source Fix</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.7.3 — Settings Editor Fix</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -1080,8 +1080,18 @@ window.EXOF_PRIVACY_API={
    if(a==='account-info')return account();
    if(a==='saved')return saved();
    if(a==='accent')return accent();
-   if(a==='customize'){settingsClose();return api().customize()}
-   if(a==='edit-profile'){settingsClose();return api().editProfile()}
+   if(a==='customize'){
+     settingsClose();
+     document.body.style.overflow='';
+     setTimeout(()=>window.exofGo && window.exofGo('customize'),0);
+     return;
+   }
+   if(a==='edit-profile'){
+     settingsClose();
+     document.body.style.overflow='';
+     setTimeout(()=>window.exofGo && window.exofGo('editprofile'),0);
+     return;
+   }
    if(a==='password'){
      try{const email=await api().resetPassword();alert('EXOF sent a password reset email to '+email+'. Open the link to choose your new password.')}
      catch(err){alert(err.message||'Unable to send password reset email.')}return;
@@ -1464,6 +1474,29 @@ body.exof-own-profile #exofProfileSettingsGear{
  }
  window.exofOpenAboutFinal=function(){open('exofAboutPanel')};
  window.exofOpenLegalFinal=function(){open('exofTermsPrivacyPanel')};
+})();
+</script>
+
+<script id="exofSettingsEditorsFinalGuard">
+(function(){
+  function forcePage(id){
+    const pages=[...document.querySelectorAll('.page')];
+    pages.forEach(p=>p.classList.toggle('active',p.id===id));
+    document.body.style.overflow='';
+    window.scrollTo(0,0);
+    try{
+      const u=new URL(location.href);
+      u.searchParams.set('view',id);
+      u.searchParams.delete('user');
+      history.replaceState({view:id},'',u.pathname+u.search+u.hash);
+    }catch(e){}
+  }
+  document.addEventListener('click',function(e){
+    const row=e.target.closest('[data-setting-action="edit-profile"],[data-setting-action="customize"]');
+    if(!row)return;
+    const id=row.dataset.settingAction==='edit-profile'?'editprofile':'customize';
+    setTimeout(()=>forcePage(id),10);
+  },true);
 })();
 </script>
 </body></html>
