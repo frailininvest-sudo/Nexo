@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.6.1 — Privacy Fix</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.6.2 — Privacy Scope Fix</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -873,73 +873,73 @@ window.EXOF_SETTINGS_API={
 /* EXOF V1.6 privacy bridge */
 window.EXOF_PRIVACY_API={
  async ownSettings(){
-  const {data:{user},error:authError}=await sb.auth.getUser();
+  const {data:{user},error:authError}=await window.exofSupabase.auth.getUser();
   if(authError)throw authError;
   if(!user)throw new Error('Please log in again.');
   const currentUser=user;
-  const {data,error}=await sb.from('profiles').select('is_private,comment_policy').eq('id',currentUser.id).single();if(error)throw error;
-  const {count}=await sb.from('follow_requests').select('*',{count:'exact',head:true}).eq('target_id',currentUser.id).eq('status','pending');
+  const {data,error}=await window.exofSupabase.from('profiles').select('is_private,comment_policy').eq('id',currentUser.id).single();if(error)throw error;
+  const {count}=await window.exofSupabase.from('follow_requests').select('*',{count:'exact',head:true}).eq('target_id',currentUser.id).eq('status','pending');
   return {is_private:!!data?.is_private,comment_policy:data?.comment_policy||'everyone',requests:count||0};
  },
- async setPrivate(v){const {error}=await sb.from('profiles').update({is_private:!!v}).eq('id',currentUser.id);if(error)throw error;},
- async setCommentPolicy(v){const {error}=await sb.from('profiles').update({comment_policy:v}).eq('id',currentUser.id);if(error)throw error;},
+ async setPrivate(v){const {error}=await window.exofSupabase.from('profiles').update({is_private:!!v}).eq('id',currentUser.id);if(error)throw error;},
+ async setCommentPolicy(v){const {error}=await window.exofSupabase.from('profiles').update({comment_policy:v}).eq('id',currentUser.id);if(error)throw error;},
  async requests(){
-  const {data,error}=await sb.from('follow_requests').select('requester_id,created_at').eq('target_id',currentUser.id).eq('status','pending').order('created_at',{ascending:false});if(error)throw error;
-  if(!data?.length)return [];const ids=data.map(x=>x.requester_id);const {data:p,error:pe}=await sb.from('profiles').select('id,username,display_name,avatar_url').in('id',ids);if(pe)throw pe;
+  const {data,error}=await window.exofSupabase.from('follow_requests').select('requester_id,created_at').eq('target_id',currentUser.id).eq('status','pending').order('created_at',{ascending:false});if(error)throw error;
+  if(!data?.length)return [];const ids=data.map(x=>x.requester_id);const {data:p,error:pe}=await window.exofSupabase.from('profiles').select('id,username,display_name,avatar_url').in('id',ids);if(pe)throw pe;
   const mp=new Map((p||[]).map(x=>[x.id,x]));return data.map(x=>({...x,profile:mp.get(x.requester_id)}));
  },
  async resolveRequest(uid,accept){
-  if(accept){const r=await sb.from('follows').upsert({follower_id:uid,following_id:currentUser.id},{onConflict:'follower_id,following_id'});if(r.error)throw r.error;}
-  const {error}=await sb.from('follow_requests').delete().eq('requester_id',uid).eq('target_id',currentUser.id);if(error)throw error;
+  if(accept){const r=await window.exofSupabase.from('follows').upsert({follower_id:uid,following_id:currentUser.id},{onConflict:'follower_id,following_id'});if(r.error)throw r.error;}
+  const {error}=await window.exofSupabase.from('follow_requests').delete().eq('requester_id',uid).eq('target_id',currentUser.id);if(error)throw error;
  },
  async blocked(){
-  const {data,error}=await sb.from('user_blocks').select('blocked_id,created_at').eq('blocker_id',currentUser.id).order('created_at',{ascending:false});if(error)throw error;
-  if(!data?.length)return [];const {data:p,error:pe}=await sb.from('profiles').select('id,username,display_name,avatar_url').in('id',data.map(x=>x.blocked_id));if(pe)throw pe;return p||[];
+  const {data,error}=await window.exofSupabase.from('user_blocks').select('blocked_id,created_at').eq('blocker_id',currentUser.id).order('created_at',{ascending:false});if(error)throw error;
+  if(!data?.length)return [];const {data:p,error:pe}=await window.exofSupabase.from('profiles').select('id,username,display_name,avatar_url').in('id',data.map(x=>x.blocked_id));if(pe)throw pe;return p||[];
  },
- async unblock(uid){const {error}=await sb.from('user_blocks').delete().eq('blocker_id',currentUser.id).eq('blocked_id',uid);if(error)throw error;},
+ async unblock(uid){const {error}=await window.exofSupabase.from('user_blocks').delete().eq('blocker_id',currentUser.id).eq('blocked_id',uid);if(error)throw error;},
  async block(uid){
-  const {data:{user},error:authError}=await sb.auth.getUser();
+  const {data:{user},error:authError}=await window.exofSupabase.auth.getUser();
   if(authError)throw authError;
   if(!user||uid===user.id)return;
   const currentUser=user;
-  const {error}=await sb.from('user_blocks').upsert({blocker_id:currentUser.id,blocked_id:uid},{onConflict:'blocker_id,blocked_id'});if(error)throw error;
-  await sb.from('follows').delete().or(`and(follower_id.eq.${currentUser.id},following_id.eq.${uid}),and(follower_id.eq.${uid},following_id.eq.${currentUser.id})`);
-  await sb.from('follow_requests').delete().or(`and(requester_id.eq.${currentUser.id},target_id.eq.${uid}),and(requester_id.eq.${uid},target_id.eq.${currentUser.id})`);
+  const {error}=await window.exofSupabase.from('user_blocks').upsert({blocker_id:currentUser.id,blocked_id:uid},{onConflict:'blocker_id,blocked_id'});if(error)throw error;
+  await window.exofSupabase.from('follows').delete().or(`and(follower_id.eq.${currentUser.id},following_id.eq.${uid}),and(follower_id.eq.${uid},following_id.eq.${currentUser.id})`);
+  await window.exofSupabase.from('follow_requests').delete().or(`and(requester_id.eq.${currentUser.id},target_id.eq.${uid}),and(requester_id.eq.${uid},target_id.eq.${currentUser.id})`);
  },
  async relation(uid){
-  const {data:{user},error:authError}=await sb.auth.getUser();
+  const {data:{user},error:authError}=await window.exofSupabase.auth.getUser();
   if(authError)throw authError;
   if(!user)throw new Error('Please log in again.');
   const currentUser=user;
   const [{data:p},{data:f},{data:r},{data:b1},{data:b2}]=await Promise.all([
-   sb.from('profiles').select('is_private').eq('id',uid).single(),
-   sb.from('follows').select('follower_id').eq('follower_id',currentUser.id).eq('following_id',uid).maybeSingle(),
-   sb.from('follow_requests').select('requester_id').eq('requester_id',currentUser.id).eq('target_id',uid).eq('status','pending').maybeSingle(),
-   sb.from('user_blocks').select('blocker_id').eq('blocker_id',currentUser.id).eq('blocked_id',uid).maybeSingle(),
-   sb.from('user_blocks').select('blocker_id').eq('blocker_id',uid).eq('blocked_id',currentUser.id).maybeSingle()
+   window.exofSupabase.from('profiles').select('is_private').eq('id',uid).single(),
+   window.exofSupabase.from('follows').select('follower_id').eq('follower_id',currentUser.id).eq('following_id',uid).maybeSingle(),
+   window.exofSupabase.from('follow_requests').select('requester_id').eq('requester_id',currentUser.id).eq('target_id',uid).eq('status','pending').maybeSingle(),
+   window.exofSupabase.from('user_blocks').select('blocker_id').eq('blocker_id',currentUser.id).eq('blocked_id',uid).maybeSingle(),
+   window.exofSupabase.from('user_blocks').select('blocker_id').eq('blocker_id',uid).eq('blocked_id',currentUser.id).maybeSingle()
   ]);
   return {private:!!p?.is_private,following:!!f,requested:!!r,blockedByMe:!!b1,blockedByThem:!!b2};
  },
  async followAction(uid){
   const rel=await this.relation(uid);
   if(rel.blockedByMe||rel.blockedByThem)throw new Error('This follow action is unavailable.');
-  if(rel.following){const {error}=await sb.from('follows').delete().eq('follower_id',currentUser.id).eq('following_id',uid);if(error)throw error;return 'follow';}
-  if(rel.requested){const {error}=await sb.from('follow_requests').delete().eq('requester_id',currentUser.id).eq('target_id',uid);if(error)throw error;return 'follow';}
-  if(rel.private){const {error}=await sb.from('follow_requests').insert({requester_id:currentUser.id,target_id:uid});if(error)throw error;return 'requested';}
-  const {error}=await sb.from('follows').insert({follower_id:currentUser.id,following_id:uid});if(error)throw error;return 'following';
+  if(rel.following){const {error}=await window.exofSupabase.from('follows').delete().eq('follower_id',currentUser.id).eq('following_id',uid);if(error)throw error;return 'follow';}
+  if(rel.requested){const {error}=await window.exofSupabase.from('follow_requests').delete().eq('requester_id',currentUser.id).eq('target_id',uid);if(error)throw error;return 'follow';}
+  if(rel.private){const {error}=await window.exofSupabase.from('follow_requests').insert({requester_id:currentUser.id,target_id:uid});if(error)throw error;return 'requested';}
+  const {error}=await window.exofSupabase.from('follows').insert({follower_id:currentUser.id,following_id:uid});if(error)throw error;return 'following';
  },
- async canView(uid){const {data:{user},error:authError}=await sb.auth.getUser();
+ async canView(uid){const {data:{user},error:authError}=await window.exofSupabase.auth.getUser();
   if(authError||!user)return false;
   const currentUser=user;
   if(uid===currentUser.id)return true;const r=await this.relation(uid);return !r.blockedByMe&&!r.blockedByThem&&(!r.private||r.following);},
  async canComment(ownerId){
-  const {data:{user},error:authError}=await sb.auth.getUser();
+  const {data:{user},error:authError}=await window.exofSupabase.auth.getUser();
   if(authError||!user)return false;
   const currentUser=user;
   if(ownerId===currentUser.id)return true;
-  const {data:p}=await sb.from('profiles').select('comment_policy').eq('id',ownerId).single();const pol=p?.comment_policy||'everyone';
+  const {data:p}=await window.exofSupabase.from('profiles').select('comment_policy').eq('id',ownerId).single();const pol=p?.comment_policy||'everyone';
   if(pol==='nobody')return false;if(pol==='everyone')return true;
-  const {data:f}=await sb.from('follows').select('follower_id').eq('follower_id',ownerId).eq('following_id',currentUser.id).maybeSingle();return !!f;
+  const {data:f}=await window.exofSupabase.from('follows').select('follower_id').eq('follower_id',ownerId).eq('following_id',currentUser.id).maybeSingle();return !!f;
  }
 };
 </script>
