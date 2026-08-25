@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.8.7 — Cross Device Track</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.8.8 — Track Database Sync</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -465,7 +465,7 @@ function exofHydrateTrackFromAccount(user){
 
 function paintProfile(user,profile){
   if(!user) return;
-  setTimeout(function(){exofHydrateTrackFromAccount(user)},0);
+  setTimeout(async function(){exofHydrateTrackFromAccount(user);await exofLoadTrackFromDB();},0);
   const username=(profile&&profile.username)||(user.user_metadata&&user.user_metadata.username)||'exof';
   const display=(profile&&profile.display_name)||(user.user_metadata&&user.user_metadata.display_name)||username;
   const bio=(profile&&profile.bio)||'';
@@ -852,14 +852,35 @@ const savedTrack=()=>{
     if(local && local.id) return local;
   }catch(e){}
   try{
-    const cloud=currentUser && currentUser.user_metadata && currentUser.user_metadata.exof_profile_track;
-    if(cloud && cloud.id){
-      try{localStorage.setItem('exofProfileTrack',JSON.stringify(cloud));}catch(e){}
-      return cloud;
+    const cloud=currentProfile && currentProfile.profile_track;
+    if(cloud){
+      const t=typeof cloud==='string'?JSON.parse(cloud):cloud;
+      if(t&&t.id){try{localStorage.setItem('exofProfileTrack',JSON.stringify(t))}catch(e){} return t;}
     }
+  }catch(e){}
+  try{
+    const meta=currentUser && currentUser.user_metadata && currentUser.user_metadata.exof_profile_track;
+    if(meta && meta.id) return meta;
   }catch(e){}
   return null;
 };
+async function exofLoadTrackFromDB(){
+  if(!currentUser)return null;
+  try{
+    const r=await sb.from('profiles').select('profile_track').eq('id',currentUser.id).maybeSingle();
+    if(r.error)throw r.error;
+    if(r.data&&r.data.profile_track){
+      const t=typeof r.data.profile_track==='string'?JSON.parse(r.data.profile_track):r.data.profile_track;
+      if(t&&t.id){
+        if(currentProfile)currentProfile.profile_track=r.data.profile_track;
+        localStorage.setItem('exofProfileTrack',JSON.stringify(t));
+        setTrackUI(t);
+        return t;
+      }
+    }
+  }catch(e){console.warn('Track DB load:',e)}
+  return null;
+}
 function setTrackUI(track){
   if(!track)return;
   selectedVideo=track.id;
@@ -908,6 +929,14 @@ document.getElementById('saveTrack').addEventListener('click',async function(){
   if(!id){msg.textContent='Please paste a valid YouTube link.';return}
   const track={id,url:'https://www.youtube.com/watch?v='+id,title:document.getElementById('trackTitle').value.trim()||'My YouTube Track',artist:document.getElementById('trackArtist').value.trim()||'YouTube'};
   localStorage.setItem('exofProfileTrack',JSON.stringify(track));
+  // Persist in profiles so the same EXOF account has the same track on every device.
+  try{
+    const dbTrack=await sb.from('profiles').update({profile_track:track}).eq('id',currentUser.id).select().single();
+    if(dbTrack.error) throw dbTrack.error;
+    currentProfile=dbTrack.data;
+  }catch(dbErr){
+    console.warn('Profile Track DB sync:',dbErr);
+  }
   // Sync Profile Track with the logged-in Supabase account so it follows the
   // user across desktop, iPhone, PWA and other browsers.
   try{
@@ -923,10 +952,11 @@ document.getElementById('saveTrack').addEventListener('click',async function(){
   if(ytReady) buildPlayer(id);
   msg.textContent='✓ Saved. Open Profile and tap ▶.';
 });
-document.getElementById('playTrack').addEventListener('click',function(){
-  // Re-read the saved track on every tap. This fixes mobile/PWA cases where
-  // selectedVideo can be stale after navigation or page restoration.
-  const stored=savedTrack();
+document.getElementById('playTrack').addEventListener('click',async function(){
+  // Resolve track from local cache first, then the authenticated profiles row.
+  // Only open Customize after BOTH sources confirm there is no saved track.
+  let stored=savedTrack();
+  if(!stored || !stored.id) stored=await exofLoadTrackFromDB();
   if(stored && stored.id && selectedVideo!==stored.id){
     selectedVideo=stored.id;
     setTrackUI(stored);
@@ -934,7 +964,7 @@ document.getElementById('playTrack').addEventListener('click',function(){
   }
   if(!selectedVideo){
     go('customize');
-    document.getElementById('musicMsg').textContent='Add a YouTube link first.';
+    document.getElementById('musicMsg').textContent='No Profile Track is saved to this account yet.';
     return;
   }
 
