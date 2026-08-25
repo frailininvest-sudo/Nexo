@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.5.1 — Settings Gear</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.5.2 — Functional Settings</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -118,6 +118,13 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 }
 #exofProfileSettingsGear:active{transform:scale(.94)}
 
+
+.exofFuncPanel{position:fixed;inset:0;z-index:9500;background:#050706;color:#fff;overflow:auto}
+.exofFuncHead{position:sticky;top:0;background:#050706;padding:18px 16px;border-bottom:1px solid #ffffff14;display:flex;gap:12px;align-items:center}
+.exofFuncBack{width:42px;height:42px;border-radius:50%;background:#0b0f0c;color:#fff;border:1px solid #ffffff22;font-size:24px}
+.exofFuncBody{max-width:560px;margin:auto;padding:18px}.exofFuncCard{background:#090d0a;border:1px solid #ffffff16;border-radius:18px;overflow:hidden}
+.exofFuncRow{padding:15px;border-bottom:1px solid #ffffff12}.exofFuncRow:last-child{border:0}.exofFuncRow small{display:block;color:#7f8981;margin-bottom:5px}
+.exofSavedGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.exofSavedItem{background:#090d0a;border:1px solid #ffffff16;border-radius:15px;overflow:hidden}.exofSavedItem img{width:100%;aspect-ratio:1;object-fit:cover}
 </style></head>
 <body>
 <div id="authGate">
@@ -906,4 +913,17 @@ if(saveProfileBtn) saveProfileBtn.addEventListener('click',async()=>{
 })();
 </script>
 
+
+<div id="exofAccountInfo" class="exofFuncPanel" hidden><div class="exofFuncHead"><button class="exofFuncBack">‹</button><b>ACCOUNT INFORMATION</b></div><div class="exofFuncBody"><div class="exofFuncCard"><div class="exofFuncRow"><small>EMAIL</small><b id="fiEmail">—</b></div><div class="exofFuncRow"><small>USERNAME</small><b id="fiUser">—</b></div><div class="exofFuncRow"><small>ACCOUNT CREATED</small><b id="fiCreated">—</b></div></div></div></div>
+<div id="exofSavedView" class="exofFuncPanel" hidden><div class="exofFuncHead"><button class="exofFuncBack">‹</button><b>SAVED DROPS</b></div><div class="exofFuncBody"><div id="fiSavedGrid" class="exofSavedGrid"></div><p id="fiSavedMsg" style="text-align:center;color:#7f8981">Loading…</p></div></div>
+
+<script>
+(()=>{const q=x=>document.getElementById(x);
+function back(){q('exofAccountInfo').hidden=true;q('exofSavedView').hidden=true;if(window.openExofSettings)openExofSettings()}
+document.querySelectorAll('.exofFuncBack').forEach(x=>x.onclick=back);
+async function info(){const {data:{user}}=await sb.auth.getUser();if(!user)return;q('fiEmail').textContent=user.email||'—';q('fiCreated').textContent=user.created_at?new Date(user.created_at).toLocaleDateString():'—';const {data}=await sb.from('profiles').select('username').eq('id',user.id).maybeSingle();q('fiUser').textContent=data?.username?'@'+data.username:'—';q('exofSettingsPage').hidden=true;q('exofAccountInfo').hidden=false}
+async function saved(){q('exofSettingsPage').hidden=true;q('exofSavedView').hidden=false;const g=q('fiSavedGrid'),m=q('fiSavedMsg');g.innerHTML='';m.textContent='Loading…';try{const {data:{user}}=await sb.auth.getUser();const {data:a,error}=await sb.from('saved_drops').select('drop_id,created_at').eq('user_id',user.id).order('created_at',{ascending:false});if(error)throw error;if(!a?.length){m.textContent='No saved Drops yet.';return}const {data:d,error:e}=await sb.from('drops').select('*').in('id',a.map(x=>x.drop_id));if(e)throw e;const mp=new Map((d||[]).map(x=>[x.id,x]));m.textContent='';a.forEach(x=>{const z=mp.get(x.drop_id);if(!z)return;const el=document.createElement('div');el.className='exofSavedItem';const u=z.media_url||z.image_url||z.url||'';el.innerHTML=(u?`<img src="${u}">`:'')+'<div style="padding:9px;font-size:11px">SAVED DROP</div>';g.appendChild(el)})}catch(e){m.textContent=e.message}}
+document.addEventListener('click',async e=>{const r=e.target.closest('[data-setting-action]');if(!r)return;const a=r.dataset.settingAction;if(a==='account-info'){e.preventDefault();e.stopImmediatePropagation();info()}if(a==='saved'){e.preventDefault();e.stopImmediatePropagation();saved()}if(a==='password'){e.preventDefault();e.stopImmediatePropagation();try{const {data:{user}}=await sb.auth.getUser();const {error}=await sb.auth.resetPasswordForEmail(user.email,{redirectTo:location.origin});if(error)throw error;alert('Password reset email sent to '+user.email)}catch(x){alert(x.message)}}},true);
+})();
+</script>
 </body></html>
