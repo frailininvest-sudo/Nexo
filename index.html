@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.8.5 — Vivid Profile Background</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.8.6 — Mobile Profile Track</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -266,6 +266,37 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
   backdrop-filter:blur(3px);
 }
 </style>
+
+<style id="exofTrackMobileV186">
+@media (max-width:700px){
+  #profile #ytPlayerWrap.exofTrackPlayerMinimized{
+    height:1px!important;
+    margin:0!important;
+    overflow:hidden!important;
+    opacity:.01!important;
+    pointer-events:none!important;
+  }
+  #profile #ytPlayerWrap.exofTrackPlayerMinimized #ytPlayer{
+    width:2px!important;height:2px!important;min-height:2px!important;
+    aspect-ratio:auto!important;border:0!important;
+  }
+  #profile #ytPlayerWrap.exofTrackPlayerMinimized #playerMsg{display:none!important}
+}
+</style>
+<script id="exofTrackMobileSyncV186">
+window.addEventListener('pageshow',function(){
+  try{
+    var raw=localStorage.getItem('exofProfileTrack');
+    if(!raw)return;
+    var t=JSON.parse(raw);
+    if(!t||!t.id)return;
+    var title=document.getElementById('profileTrackTitle');
+    var artist=document.getElementById('profileTrackArtist');
+    if(title)title.textContent=t.title||'My YouTube Track';
+    if(artist)artist.textContent=(t.artist||'YouTube')+' · Tap ▶ to play inside EXOF';
+  }catch(e){}
+});
+</script>
 </head>
 <body>
 <div id="authGate">
@@ -857,17 +888,47 @@ document.getElementById('saveTrack').addEventListener('click',function(){
   msg.textContent='✓ Saved. Open Profile and tap ▶.';
 });
 document.getElementById('playTrack').addEventListener('click',function(){
-  if(!selectedVideo){go('customize');document.getElementById('musicMsg').textContent='Add a YouTube link first.';return}
-  const wrap=document.getElementById('ytPlayerWrap');
-  wrap.style.display='block';
-  if(ytReady && !ytPlayer) buildPlayer(selectedVideo);
-  if(ytPlayer && typeof ytPlayer.getPlayerState==='function'){
-    const st=ytPlayer.getPlayerState();
-    if(st===YT.PlayerState.PLAYING){ytPlayer.pauseVideo();this.textContent='▶'}
-    else{ytPlayer.playVideo();this.textContent='Ⅱ'}
-  } else {
-    document.getElementById('playerMsg').textContent='Loading YouTube player… tap ▶ again in a moment.';
+  // Re-read the saved track on every tap. This fixes mobile/PWA cases where
+  // selectedVideo can be stale after navigation or page restoration.
+  const stored=savedTrack();
+  if(stored && stored.id && selectedVideo!==stored.id){
+    selectedVideo=stored.id;
+    setTrackUI(stored);
+    if(ytReady) buildPlayer(selectedVideo);
   }
+  if(!selectedVideo){
+    go('customize');
+    document.getElementById('musicMsg').textContent='Add a YouTube link first.';
+    return;
+  }
+
+  const wrap=document.getElementById('ytPlayerWrap');
+  // Keep the large YouTube embed visually minimized on phones. The EXOF
+  // Profile Track card remains the primary control.
+  wrap.style.display='block';
+  wrap.classList.add('exofTrackPlayerMinimized');
+
+  if(ytReady && !ytPlayer) buildPlayer(selectedVideo);
+
+  const btn=this;
+  function toggleWhenReady(attempt){
+    if(ytPlayer && typeof ytPlayer.getPlayerState==='function'){
+      const st=ytPlayer.getPlayerState();
+      if(st===YT.PlayerState.PLAYING){
+        ytPlayer.pauseVideo(); btn.textContent='▶';
+      } else {
+        ytPlayer.playVideo(); btn.textContent='Ⅱ';
+      }
+      return;
+    }
+    if(attempt<8){
+      document.getElementById('playerMsg').textContent='Loading track…';
+      setTimeout(function(){toggleWhenReady(attempt+1)},250);
+    } else {
+      document.getElementById('playerMsg').textContent='Tap ▶ once more to play.';
+    }
+  }
+  toggleWhenReady(0);
 });
 let pendingDropFile=null;
 const dropMedia=document.getElementById('dropMedia');
