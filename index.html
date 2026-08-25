@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.8.2 — Profile Safe</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.8.3 — Profile Reference</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -156,25 +156,80 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 .exofActivityIcon{position:relative;font-size:27px;line-height:1}.exofActivityX{position:absolute;right:-4px;bottom:-2px;color:var(--accent);font-size:13px;font-weight:1000;text-shadow:0 0 6px #000}
 .exofActivityBadge{position:absolute;right:-7px;top:-7px;min-width:17px;height:17px;padding:0 4px;border-radius:10px;background:var(--accent);color:#061006;font-size:10px;font-weight:1000;display:none;align-items:center;justify-content:center;border:2px solid #020604}
 </style>
-<style id="exofProfileSafeV182">
-#profile{padding-bottom:110px}
-#profile #profileShell{border-radius:0 0 24px 24px;overflow:hidden;margin-bottom:14px}
-#profile #realProfileCover{height:185px!important;border-radius:0 0 18px 18px!important}
-#profile .safeIdentity{display:flex;align-items:flex-end;gap:12px;margin:-40px 12px 0;position:relative;z-index:5}
-#profile .safeIdentity #realProfileAva{position:static!important;transform:none!important;width:86px!important;height:86px!important;min-width:86px!important;border:3px solid var(--accent)!important}
-#profile .safeIdentity #realProfileName{position:static!important;font-size:26px!important}
-#profile .safeIdentity #realProfileBio{position:static!important;margin:4px 0 5px!important}
-#profile .stats.safeStats{position:static!important;margin:14px 12px 10px!important;display:grid!important;grid-template-columns:repeat(3,1fr)!important;padding:0!important;border:1px solid var(--line);border-radius:16px;background:#080c09}
-#profile .stats.safeStats>div{padding:12px 4px!important;text-align:center;border-right:1px solid var(--line)}
-#profile .stats.safeStats>div:last-child{border-right:0}
-#profile .safeProfileActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 12px 12px}
-#profile .safeProfileActions button{margin:0!important;min-height:43px!important;border-radius:13px!important;font-size:10px!important;font-weight:900}
-#profile #profileTrackModule{margin:10px 12px!important;border-radius:17px!important}
-#profile .safeLoops{margin:10px 12px!important;border-radius:17px!important}
-#profile .safeDropsTitle{display:flex;justify-content:space-between;align-items:center;margin:18px 4px 9px}
-#profile .safeDropsTitle .title{margin:0!important;font-size:18px!important}
-#profile .safeDropsTitle span{font-size:9px;color:var(--muted);letter-spacing:.12em}
+
+
+<style id="exofProfileReferenceV183">
+/* PROFILE ONLY — bottom nav, login, session, Settings and Supabase untouched */
+#profile{padding:0 10px 110px!important;background:#020503}
+#profile #profileShell{
+  min-height:0!important;margin:0 0 12px!important;border-radius:0!important;
+  overflow:visible!important;background:transparent!important
+}
+#profile #profileBg,#profile .profileShade{display:none!important}
+#profile .profileContent{padding:0!important}
+#profile #realProfileCover{
+  height:128px!important;margin:0!important;border-radius:15px!important;
+  background-position:center!important;background-size:cover!important
+}
+#profile #realProfileAva{
+  width:68px!important;height:68px!important;margin:-35px 0 0 14px!important;
+  position:relative!important;z-index:4!important;border:3px solid #071009!important;
+  box-shadow:0 5px 18px #000!important
+}
+#profile #realProfileName{
+  font-size:20px!important;line-height:1!important;margin:-29px 0 0 91px!important;
+  position:relative!important;z-index:4!important
+}
+#profile #realProfileBio{
+  margin:5px 0 0 91px!important;font-size:9px!important;min-height:24px
+}
+#profile .stats{
+  display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:0!important;
+  margin:13px 0 8px!important;padding:0!important;background:#070b08!important;
+  border:1px solid #183020!important;border-radius:13px!important;overflow:hidden
+}
+#profile .stats>div{padding:10px 3px!important;text-align:center!important;border-right:1px solid #15271a}
+#profile .stats>div:last-child{border-right:0}
+#profile .stats b{font-size:15px!important}
+#profile .stats small{font-size:7px!important;color:#8e9a92!important}
+#profile .profileQuickActions{
+  display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:7px 0 10px
+}
+#profile .profileQuickActions button{
+  min-height:31px!important;margin:0!important;border-radius:8px!important;
+  font-size:8px!important;box-shadow:none!important
+}
+#profile #profileTrackModule{
+  margin:0 0 9px!important;padding:10px!important;border-radius:12px!important;
+  background:#070b08!important;border:1px solid #183020!important;backdrop-filter:none!important
+}
+#profile #profileTrackModule .track{min-height:54px}
+#profile #profileTrackModule h4{margin:5px 0 3px!important;font-size:12px!important}
+#profile #profileTrackModule .meta{font-size:7px!important}
+#profile #profileTrackModule .play{width:34px!important;height:34px!important}
+#profile .favoriteLoopsReference{
+  margin:0 0 10px!important;padding:10px!important;border-radius:12px!important;
+  background:#070b08!important;border:1px solid #183020!important;backdrop-filter:none!important
+}
+#profile .favoriteLoopsReference h4{font-size:9px!important;margin:0 0 8px!important;color:var(--accent)}
+#profile .favoriteLoopsReference .worldGrid{
+  display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:6px!important
+}
+#profile .favoriteLoopsReference .world{
+  min-height:68px!important;padding:0!important;border-radius:9px!important;
+  background:#050706 center/cover no-repeat!important
+}
+#profile .profileDropsHeading{
+  display:flex;justify-content:space-between;align-items:center;margin:11px 2px 7px
+}
+#profile .profileDropsHeading .title{font-size:13px!important;margin:0!important}
+#profile .profileDropsHeading span{font-size:7px;color:var(--accent);font-weight:800}
+#profile #myDropsList .post{border-radius:12px!important}
+#profile #myDropsList .postHead{padding:8px!important}
+#profile #myDropsList .media{height:210px!important}
+#profile #myDropsList .actions{padding:8px 10px!important}
 #profile .accountBar{display:none!important}
+#profile .profileOldBottomAction{display:none!important}
 </style>
 </head>
 <body>
@@ -1521,51 +1576,51 @@ body.exof-own-profile #exofProfileSettingsGear{
 })();
 </script>
 
-<script id="exofProfileSafeV182Logic">
+
+
+<script id="exofProfileReferenceV183Logic">
 window.addEventListener('load',function(){
   setTimeout(function(){
-    var root=document.getElementById('profile');
-    if(!root)return;
+    var root=document.getElementById('profile'); if(!root)return;
 
-    var ava=document.getElementById('realProfileAva');
-    var name=document.getElementById('realProfileName');
-    var bio=document.getElementById('realProfileBio');
-    if(ava&&name&&bio&&!root.querySelector('.safeIdentity')){
-      var identity=document.createElement('div');
-      identity.className='safeIdentity';
-      ava.parentNode.insertBefore(identity,ava);
-      identity.appendChild(ava);
-      var text=document.createElement('div');
-      identity.appendChild(text);
-      text.appendChild(name);
-      text.appendChild(bio);
-    }
-
-    var stats=root.querySelector('.stats');
-    if(stats)stats.classList.add('safeStats');
-
+    // Put the two existing actions where the reference design has them.
     var edit=root.querySelector('button[data-go="editprofile"]');
     var custom=root.querySelector('button[data-go="customize"]');
-    if(edit&&custom&&!root.querySelector('.safeProfileActions')){
+    if(edit&&custom&&!root.querySelector('.profileQuickActions')){
       var actions=document.createElement('div');
-      actions.className='safeProfileActions';
-      edit.parentNode.insertBefore(actions,edit);
+      actions.className='profileQuickActions';
+      var stats=root.querySelector('.stats');
+      if(stats) stats.insertAdjacentElement('afterend',actions);
+      else root.querySelector('.profileContent').appendChild(actions);
       actions.appendChild(edit);
       actions.appendChild(custom);
+      edit.textContent='✎ EDIT PROFILE';
+      custom.textContent='✦ CUSTOMIZE MY EXOF';
     }
 
+    // Identify Favorite Loops module without changing its data/functionality.
     var modules=root.querySelectorAll('.module');
-    if(modules.length>1)modules[1].classList.add('safeLoops');
-
-    var title=[].slice.call(root.querySelectorAll('.title')).find(function(x){
-      return (x.textContent||'').trim()==='MY DROPS';
+    Array.prototype.forEach.call(modules,function(m){
+      if((m.textContent||'').toLowerCase().indexOf('favorite loops')>=0){
+        m.classList.add('favoriteLoopsReference');
+      }
     });
-    if(title&&!root.querySelector('.safeDropsTitle')){
-      var h=document.createElement('div');h.className='safeDropsTitle';
-      title.parentNode.insertBefore(h,title);h.appendChild(title);
-      var sp=document.createElement('span');sp.textContent='YOUR POSTS';h.appendChild(sp);
-    }
-  },500);
+
+    // MY DROPS compact heading + VIEW DROPS.
+    var titles=root.querySelectorAll('.title');
+    Array.prototype.forEach.call(titles,function(t){
+      if((t.textContent||'').trim()==='MY DROPS'&&!t.parentElement.classList.contains('profileDropsHeading')){
+        var wrap=document.createElement('div');wrap.className='profileDropsHeading';
+        t.parentNode.insertBefore(wrap,t);wrap.appendChild(t);
+        var v=document.createElement('span');v.textContent='VIEW DROPS';wrap.appendChild(v);
+      }
+    });
+
+    // Hide only the old standalone bottom buttons if a duplicate survived.
+    Array.prototype.forEach.call(root.querySelectorAll(':scope > button[data-go="editprofile"], :scope > button[data-go="customize"]'),function(b){
+      if(!b.closest('.profileQuickActions'))b.classList.add('profileOldBottomAction');
+    });
+  },450);
 });
 </script>
 </body></html>
