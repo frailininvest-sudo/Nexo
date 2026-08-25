@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.7.1 — Privacy Back Fix</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.7.2 — Complete Settings</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -960,7 +960,7 @@ window.EXOF_PRIVACY_API={
       <button class="exofSettingRow" data-setting-action="account-info"><span class="exofSettingIcon">◎</span><span class="exofSettingText"><b>Account information</b><small>Email and username</small></span><span class="exofSettingChevron">›</span></button>
     </div></section>
     <section class="exofSettingsSection"><h3>PRIVACY</h3><div class="exofSettingsCard">
-      <button class="exofSettingRow" data-setting-action="privacy"><span class="exofSettingIcon">🔒</span><span class="exofSettingText"><b>Account privacy</b><small>Privacy controls coming next</small></span><span class="exofSettingChevron">›</span></button>
+      <button class="exofSettingRow" data-setting-action="privacy"><span class="exofSettingIcon">🔒</span><span class="exofSettingText"><b>Account privacy</b><small>Manage privacy, comments and account visibility</small></span><span class="exofSettingChevron">›</span></button>
       <button class="exofSettingRow" data-setting-action="blocked"><span class="exofSettingIcon">⊘</span><span class="exofSettingText"><b>Blocked accounts</b><small>Manage blocked people</small></span><span class="exofSettingChevron">›</span></button>
     </div></section>
     <section class="exofSettingsSection"><h3>YOUR ACTIVITY</h3><div class="exofSettingsCard">
@@ -975,7 +975,7 @@ window.EXOF_PRIVACY_API={
     </div></section>
     <section class="exofSettingsSection"><h3>ABOUT EXOF</h3><div class="exofSettingsCard">
       <button class="exofSettingRow" data-setting-action="about"><span class="exofSettingIcon">ⓘ</span><span class="exofSettingText"><b>About EXOF</b><small>Version and platform information</small></span><span class="exofSettingChevron">›</span></button>
-      <button class="exofSettingRow" data-setting-action="terms"><span class="exofSettingIcon">≡</span><span class="exofSettingText"><b>Terms & Privacy</b><small>Will be added in the next legal update</small></span><span class="exofSettingChevron">›</span></button>
+      <button class="exofSettingRow" data-setting-action="terms"><span class="exofSettingIcon">≡</span><span class="exofSettingText"><b>Terms & Privacy</b><small>Terms of Service and Privacy Policy</small></span><span class="exofSettingChevron">›</span></button>
     </div></section>
     <section class="exofSettingsSection"><div class="exofSettingsCard">
       <button class="exofSettingRow exofDanger" data-setting-action="logout"><span class="exofSettingIcon">↪</span><span class="exofSettingText"><b>Log out</b></span></button>
@@ -1298,6 +1298,101 @@ body.exof-own-profile #exofProfileSettingsGear{
      if(settings) settings.hidden=false;
    }
  },true);
+})();
+</script>
+
+<style id="exofCompleteSettingsStyles">
+.exofLegalPanel{position:fixed;inset:0;z-index:9600;background:#050706;color:#f7f7f7;overflow:auto}
+.exofLegalHead{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:14px;padding:16px;background:#050706f7;border-bottom:1px solid #ffffff14}
+.exofLegalBack{width:42px;height:42px;border-radius:50%;border:1px solid #ffffff22;background:#0b0f0c;color:#fff;font-size:24px}
+.exofLegalWrap{max-width:620px;margin:auto;padding:24px 18px 70px}
+.exofLegalCard{border:1px solid #ffffff16;background:#090d0a;border-radius:18px;padding:18px;margin-bottom:14px}
+.exofLegalCard h2{margin:0 0 8px;font-size:22px}.exofLegalCard h3{margin:20px 0 7px;font-size:15px}
+.exofLegalCard p,.exofLegalCard li{color:#a7b0aa;line-height:1.55;font-size:13px}
+.exofLegalChoice{width:100%;display:flex;justify-content:space-between;align-items:center;padding:16px;border:0;border-bottom:1px solid #ffffff12;background:transparent;color:#fff;text-align:left}
+.exofLegalChoice:last-child{border-bottom:0}.exofLegalChoice span:last-child{color:#7f8981;font-size:22px}
+.exofAboutMark{font-size:34px;font-weight:900;letter-spacing:9px;margin-bottom:10px}.exofAboutMark i{font-style:normal;color:var(--accent)}
+</style>
+
+<div id="exofAboutPanel" class="exofLegalPanel" hidden>
+ <div class="exofLegalHead"><button class="exofLegalBack" data-legal-back>‹</button><b>ABOUT EXOF</b></div>
+ <div class="exofLegalWrap">
+  <div class="exofLegalCard">
+   <div class="exofAboutMark">E<i>X</i>OF</div>
+   <h2>Express. Connect. Drop.</h2>
+   <p>EXOF is a social experience built around Drops, profiles, loops, discovery and real-time interaction between people.</p>
+   <h3>Version</h3><p>EXOF V1.7.2</p>
+   <h3>Platform</h3><p>Web application / progressive social experience.</p>
+  </div>
+ </div>
+</div>
+
+<div id="exofTermsPrivacyPanel" class="exofLegalPanel" hidden>
+ <div class="exofLegalHead"><button class="exofLegalBack" data-legal-back>‹</button><b>TERMS & PRIVACY</b></div>
+ <div class="exofLegalWrap">
+  <div class="exofLegalCard" style="padding:0">
+   <button class="exofLegalChoice" id="exofOpenTerms"><span><b>Terms of Service</b><br><small style="color:#818983">Rules for using EXOF</small></span><span>›</span></button>
+   <button class="exofLegalChoice" id="exofOpenPrivacyPolicy"><span><b>Privacy Policy</b><br><small style="color:#818983">How information is handled</small></span><span>›</span></button>
+  </div>
+ </div>
+</div>
+
+<div id="exofTermsPanel" class="exofLegalPanel" hidden>
+ <div class="exofLegalHead"><button class="exofLegalBack" data-legal-parent="exofTermsPrivacyPanel">‹</button><b>TERMS OF SERVICE</b></div>
+ <div class="exofLegalWrap"><div class="exofLegalCard">
+  <p><b>Effective date:</b> August 25, 2026</p>
+  <h3>1. Using EXOF</h3><p>You may use EXOF only in compliance with applicable law and these Terms. You are responsible for activity performed through your account and for keeping your login credentials secure.</p>
+  <h3>2. Your content</h3><p>You retain ownership of content you post. By posting content, you give EXOF permission to host, display, process and distribute that content as needed to operate and improve the service, subject to your privacy settings.</p>
+  <h3>3. Community conduct</h3><p>Do not use EXOF to harass others, impersonate people, violate intellectual-property rights, distribute unlawful content, interfere with the service, or attempt unauthorized access to accounts or systems.</p>
+  <h3>4. Account actions</h3><p>Content or accounts may be restricted or removed when reasonably necessary to protect users, comply with law, enforce these Terms, or protect the service.</p>
+  <h3>5. Service availability</h3><p>Features may change as EXOF develops. Continuous or error-free availability is not guaranteed.</p>
+  <h3>6. Ending use</h3><p>You may stop using EXOF at any time. Additional account-deletion controls should be provided before a public production launch where required.</p>
+  <h3>7. Changes</h3><p>These Terms may be updated as EXOF evolves. Material updates should be communicated to users and the effective date updated.</p>
+ </div></div>
+</div>
+
+<div id="exofPrivacyPolicyPanel" class="exofLegalPanel" hidden>
+ <div class="exofLegalHead"><button class="exofLegalBack" data-legal-parent="exofTermsPrivacyPanel">‹</button><b>PRIVACY POLICY</b></div>
+ <div class="exofLegalWrap"><div class="exofLegalCard">
+  <p><b>Effective date:</b> August 25, 2026</p>
+  <h3>Information you provide</h3><p>EXOF may process account information, profile details, content you upload, follows, likes, comments, saved Drops and other interactions you choose to make through the service.</p>
+  <h3>How information is used</h3><p>Information is used to authenticate accounts, operate social features, display content, apply privacy preferences, maintain security and improve the service.</p>
+  <h3>Visibility</h3><p>Profile and content visibility depends on the features and privacy controls available in EXOF. Private-account settings can restrict Drops to approved followers.</p>
+  <h3>Service providers</h3><p>EXOF may rely on infrastructure and service providers to host, authenticate, store and deliver application data. Those providers process information as necessary to provide their services.</p>
+  <h3>Data retention</h3><p>Information may be retained while an account is active and as reasonably necessary for security, legal obligations, dispute resolution and operation of the service.</p>
+  <h3>Your choices</h3><p>You can use available account, privacy, blocking and content controls to manage parts of your EXOF experience. Additional deletion or privacy rights may apply depending on where you live.</p>
+  <h3>Updates</h3><p>This policy should be updated as EXOF adds new data practices, integrations or public-release features.</p>
+ </div></div>
+</div>
+
+<script id="exofCompleteSettingsLogic">
+(function(){
+ const $=id=>document.getElementById(id);
+ const settings=()=>$('exofSettingsPage');
+ const panels=['exofAboutPanel','exofTermsPrivacyPanel','exofTermsPanel','exofPrivacyPolicyPanel'];
+
+ function hideLegal(){panels.forEach(id=>{const x=$(id);if(x)x.hidden=true})}
+ function backSettings(){hideLegal();const x=settings();if(x)x.hidden=false}
+ function open(id){hideLegal();const x=settings();if(x)x.hidden=true;$(id).hidden=false}
+
+ // Bind by visible Settings row label so existing working Settings code is untouched.
+ function row(label){
+   return [...document.querySelectorAll('.exofSettingRow')].find(b=>{
+     const t=(b.textContent||'').replace(/\s+/g,' ').trim().toLowerCase();
+     return t.startsWith(label.toLowerCase());
+   });
+ }
+ const about=row('About EXOF'), legal=row('Terms & Privacy');
+ if(about) about.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();open('exofAboutPanel')},true);
+ if(legal) legal.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();open('exofTermsPrivacyPanel')},true);
+
+ $('exofOpenTerms').onclick=()=>open('exofTermsPanel');
+ $('exofOpenPrivacyPolicy').onclick=()=>open('exofPrivacyPolicyPanel');
+
+ document.querySelectorAll('[data-legal-back]').forEach(b=>b.onclick=()=>{
+   const parent=b.dataset.legalParent;
+   if(parent){hideLegal();$(parent).hidden=false}else backSettings();
+ });
 })();
 </script>
 </body></html>
