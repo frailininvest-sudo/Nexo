@@ -7,7 +7,7 @@
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
 #app{max-width:430px;margin:auto;min-height:100vh;background:#030604;position:relative;padding-bottom:82px}
-header{position:sticky;top:0;z-index:20;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:10px 15px;background:#030604f2;border-bottom:1px solid #111c16;min-height:58px}.brandLogo{grid-column:2;display:flex;align-items:center;justify-content:center}.brandLogo img{display:block;width:116px;height:auto;object-fit:contain}.headerActions{grid-column:3;justify-self:end;white-space:nowrap}.icon{width:39px;height:39px;border-radius:50%;border:1px solid var(--line);background:#080b09;color:#fff}
+header{position:sticky;top:0;z-index:20;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:10px 15px;background:#030604f2;border-bottom:1px solid #111c16;min-height:58px}.brandLogo{grid-column:2;display:flex;align-items:center;justify-content:center}.brandLogo img{display:block;width:116px;height:auto;object-fit:contain}.headerActions{grid-column:3;justify-self:end;white-space:nowrap}.icon{width:52px;height:52px;border-radius:50%;border:1px solid #2a342e;background:#080b09;color:#fff;font-size:30px;font-weight:800;display:inline-grid;place-items:center;line-height:1;padding:0;touch-action:manipulation}.headerActions{display:flex;gap:8px}
 .page{display:none;padding:8px 14px 98px}.page.active{display:block}.title{font-size:28px;font-weight:900;letter-spacing:-1.2px;margin:9px 0 3px}.sub{color:var(--muted);font-size:12px;line-height:1.45;margin:0 0 14px}.card,.row,.module{background:rgba(10,18,14,var(--cardAlpha));border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:10px}.mint{color:var(--accent)}
 .primary,.secondary{width:100%;min-height:46px;border-radius:13px;font-weight:900}.primary{border:0;background:var(--accent);color:#020402;box-shadow:0 0 18px color-mix(in srgb,var(--accent) 20%,transparent)}.secondary{border:1px solid #2b4235;background:#080b09;color:#fff}
 .tabs{display:flex;padding:3px;border:1px solid var(--line);background:#070a08;border-radius:14px;margin-bottom:12px}.tabs button{flex:1;border:0;background:transparent;color:#75857b;padding:10px 3px;border-radius:11px;font-size:11px}.tabs button.on{background:#121812;color:#fff}
@@ -65,14 +65,14 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 
 
 /* EXOF V1.4 */
-#searchBtn,.searchBtn,[aria-label*="Search"],[title*="Search"]{font-size:25px!important;min-width:44px!important;min-height:44px!important}
-#messagesBtn,.messagesBtn,[aria-label*="Message"],[title*="Message"]{font-size:25px!important;min-width:44px!important;min-height:44px!important}
+#searchBtn,.searchBtn,[aria-label*="Search"],[title*="Search"]{font-size:30px!important;min-width:52px!important;min-height:52px!important}
+#messagesBtn,.messagesBtn,[aria-label*="Message"],[title*="Message"]{font-size:30px!important;min-width:52px!important;min-height:52px!important}
 .exofDropActions{display:flex;gap:14px;align-items:center;margin-top:10px}
 .exofDropActions button{background:none;border:0;color:inherit;font:inherit;cursor:pointer;padding:7px}
 .exofComments{margin-top:10px;border-top:1px solid var(--line);padding-top:9px}
 .exofCommentRow{font-size:12px;margin:6px 0}
 .exofCommentForm{display:flex;gap:7px;margin-top:8px}.exofCommentForm input{flex:1}
-.exofDeleteDrop{margin-left:auto!important;color:#ff7474!important}
+.exofDeleteDrop{margin-left:auto!important;color:#ff7474!important}.exofDropActions button{font-size:18px;min-width:42px;min-height:42px}.exofDropActions button.liked{color:var(--accent)}.exofComments{padding:10px 12px 12px}.exofCommentForm button{width:auto;min-width:72px}.myDropCard{padding:0;overflow:hidden}.myDropCard .ownMedia{width:100%;max-height:500px;object-fit:cover;background:#050806}.myDropHead{display:flex;align-items:center;padding:10px 12px;gap:8px}.myDropHead b{flex:1}.emptyState{color:var(--muted);padding:16px;border:1px solid var(--line);border-radius:14px;background:#070a08;margin-bottom:10px}
 
 </style></head>
 <body>
@@ -112,7 +112,7 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
   </div>
 </div>
 <main id="app" style="display:none">
-<header><div></div><div class="brandLogo"><div class="exofWordmark" aria-label="EXOF"><span>E</span><span class="exofX">X</span><span>O</span><span>F</span></div></div><div class="headerActions"><button class="icon" data-go="search">⌕</button> <button class="icon" data-go="messages">↗</button></div></header>
+<header><div></div><div class="brandLogo"><div class="exofWordmark" aria-label="EXOF"><span>E</span><span class="exofX">X</span><span>O</span><span>F</span></div></div><div class="headerActions"><button id="searchBtn" class="icon searchBtn" aria-label="Search" data-go="search">⌕</button><button id="messagesBtn" class="icon messagesBtn" aria-label="Messages" data-go="messages">↗</button></div></header>
 
 <section id="home" class="page active"><div class="tabs"><button class="on">For You</button><button>Following</button><button data-go="drop">DROP ⚡</button></div><div class="card dropHero"><small class="mint"><b>EVERY DAY · 3:00 PM ET</b></small><h2>⚡ GLOBAL DROP</h2><p class="sub">The whole world in one daily window. No posting required to watch.</p><button class="primary" data-go="drop">ENTER WORLD DROP</button></div><div id="realFeed"></div></section>
 
@@ -131,7 +131,7 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 <div id="ytPlayer" style="width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#050806;border:1px solid var(--line)"></div>
 <div id="playerMsg" class="meta" style="margin-top:7px">Plays inside your EXOF profile.</div>
 </div></div></div><div class="module"><h4>◎ Favorite Loops</h4><div class="worldGrid"><div class="world"></div><div class="world"></div></div></div></div></div>
-<div class="accountBar"><small id="signedInAs">Signed in</small><button id="logoutBtn" class="secondary" style="width:auto;min-height:38px;padding:0 14px">LOG OUT</button></div><button class="primary" data-go="editprofile" style="margin-bottom:9px">EDIT PROFILE</button><button class="secondary" data-go="customize">🎨 CUSTOMIZE MY EXOF</button></section>
+<div class="title" style="font-size:20px;margin:14px 2px 8px">MY DROPS</div><div id="myDropsList"><div class="emptyState">Loading your Drops…</div></div><div class="accountBar"><small id="signedInAs">Signed in</small><button id="logoutBtn" class="secondary" style="width:auto;min-height:38px;padding:0 14px">LOG OUT</button></div><button class="primary" data-go="editprofile" style="margin-bottom:9px">EDIT PROFILE</button><button class="secondary" data-go="customize">🎨 CUSTOMIZE MY EXOF</button></section>
 
 
 <section id="editprofile" class="page"><div class="title">Edit Profile</div><p class="sub">Update the profile people see on EXOF.</p>
@@ -544,9 +544,9 @@ async function exofOwnDrops(){
 }
 
 const pages=[...document.querySelectorAll('.page')],nav=[...document.querySelectorAll('nav button')];
-function go(id){pages.forEach(p=>p.classList.toggle('active',p.id===id));nav.forEach(b=>b.classList.toggle('on',b.dataset.go===id));window.scrollTo(0,0)}
+function go(id){pages.forEach(p=>p.classList.toggle('active',p.id===id));nav.forEach(b=>b.classList.toggle('on',b.dataset.go===id));window.scrollTo(0,0);if(id==='profile')loadMyDrops();}
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
-document.querySelectorAll('.tabs').forEach(t=>t.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.go)return;t.querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on')})));
+document.querySelectorAll('.tabs').forEach(t=>t.querySelectorAll('button').forEach((b,i)=>b.addEventListener('click',()=>{if(b.dataset.go)return;t.querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');if(t.closest('#home'))loadDrops(i===1?'following':'all')})));
 document.querySelectorAll('.styleBtn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.styleBtn').forEach(x=>x.classList.remove('on'));b.classList.add('on')}));
 document.querySelectorAll('.sw').forEach(b=>b.addEventListener('click',()=>document.documentElement.style.setProperty('--accent',b.dataset.color)));
 const bg=document.getElementById('profileBg'),preview=document.getElementById('bgPreview'),upload=document.getElementById('bgUpload');
@@ -660,23 +660,52 @@ document.getElementById('playTrack').addEventListener('click',function(){
 let pendingDropFile=null;
 const dropMedia=document.getElementById('dropMedia');
 if(dropMedia) dropMedia.addEventListener('change',e=>{pendingDropFile=e.target.files&&e.target.files[0];const pv=document.getElementById('dropPreview');if(!pendingDropFile){pv.textContent='NO MEDIA SELECTED';return}const u=URL.createObjectURL(pendingDropFile);pv.innerHTML=pendingDropFile.type.startsWith('video/')?'<video controls playsinline style="width:100%;height:100%;object-fit:cover"></video>':'<img alt="Drop preview" style="width:100%;height:100%;object-fit:cover">';pv.firstChild.src=u;});
-async function loadDrops(){
+async function exofIsLiked(dropId){
+ if(!currentUser)return false;
+ const {data,error}=await sb.from('drop_likes').select('drop_id').eq('drop_id',dropId).eq('user_id',currentUser.id).maybeSingle();
+ if(error){console.error(error);return false} return !!data;
+}
+async function renderComments(dropId,box){
+ box.innerHTML='<div class="meta">Loading comments…</div>';
+ try{
+  const rows=await exofComments(dropId); const ids=[...new Set(rows.map(x=>x.user_id))]; let pm={};
+  if(ids.length){const pr=await sb.from('profiles').select('id,username,display_name').in('id',ids);if(!pr.error)(pr.data||[]).forEach(x=>pm[x.id]=x)}
+  box.innerHTML=(rows.length?rows.map(c=>'<div class="exofCommentRow"><b>'+escapeHtml((pm[c.user_id]?.display_name||pm[c.user_id]?.username||'EXOF'))+'</b> '+escapeHtml(c.body)+'</div>').join(''):'<div class="meta">No comments yet.</div>')+'<div class="exofCommentForm"><input type="text" maxlength="300" placeholder="Write a comment…"><button class="primary" type="button">POST</button></div>';
+  const input=box.querySelector('input'),btn=box.querySelector('button');
+  const post=async()=>{if(!input.value.trim())return;btn.disabled=true;const {error}=await sb.from('drop_comments').insert({drop_id:dropId,user_id:currentUser.id,body:input.value.trim()});btn.disabled=false;if(error){alert(error.message);return}await renderComments(dropId,box)};
+  btn.onclick=post; input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();post()}};
+ }catch(e){box.innerHTML='<div class="meta">'+escapeHtml(e.message||'Could not load comments.')+'</div>'}
+}
+async function buildDropCard(d,pr={},own=false){
+ const card=document.createElement('div');card.className='card post'+(own?' myDropCard':'');card.dataset.dropId=d.id;
+ const media=d.media_type==='video'?'<video controls playsinline preload="metadata" class="ownMedia" style="width:100%;max-height:520px;object-fit:cover;background:#050806" src="'+d.media_url+'"></video>':'<img alt="Drop" class="ownMedia" style="width:100%;max-height:520px;object-fit:cover;background:#050806" src="'+d.media_url+'">';
+ const liked=await exofIsLiked(d.id), count=await exofLikeCount(d.id);
+ card.innerHTML='<div class="postHead"><div class="ava" style="'+(pr.avatar_url?'background-image:url('+pr.avatar_url+');background-size:cover;background-position:center;color:transparent':'')+'">'+escapeHtml((pr.display_name||pr.username||'N').charAt(0).toUpperCase())+'</div><div class="who"><b>'+escapeHtml(pr.display_name||pr.username||'EXOF')+'</b><small>@'+escapeHtml(pr.username||'user')+'</small></div>'+(own?'<button class="exofDeleteDrop" type="button">DELETE</button>':'•••')+'</div><div>'+media+'</div>'+(d.caption?'<p style="padding:0 14px 4px">'+escapeHtml(d.caption)+'</p>':'')+'<div class="exofDropActions"><button class="likeBtn '+(liked?'liked':'')+'" type="button">'+(liked?'♥':'♡')+' <span>'+count+'</span></button><button class="commentBtn" type="button">◯ COMMENT</button><button type="button">↗</button><button type="button">⌑</button></div><div class="exofComments" style="display:none"></div>';
+ const lb=card.querySelector('.likeBtn');lb.onclick=async()=>{lb.disabled=true;try{await exofToggleLike(d.id);const now=await exofIsLiked(d.id),n=await exofLikeCount(d.id);lb.classList.toggle('liked',now);lb.innerHTML=(now?'♥':'♡')+' <span>'+n+'</span>'}catch(e){alert(e.message||'Could not update like.')}finally{lb.disabled=false}};
+ const cb=card.querySelector('.commentBtn'),comments=card.querySelector('.exofComments');cb.onclick=async()=>{const opening=comments.style.display==='none';comments.style.display=opening?'block':'none';if(opening)await renderComments(d.id,comments)};
+ const del=card.querySelector('.exofDeleteDrop');if(del)del.onclick=async()=>{if(!confirm('Delete this Drop?'))return;del.disabled=true;const ok=await exofDeleteOwnDrop(d.id);if(!ok){alert('Could not delete this Drop.');del.disabled=false;return}await loadDrops();await loadMyDrops()};
+ return card;
+}
+async function loadDrops(filter='all'){
  const feed=document.getElementById('realFeed'); if(!feed)return;
- const r=await sb.from('drops').select('id,user_id,caption,media_url,media_type,created_at').order('created_at',{ascending:false}).limit(30);
+ let r;
+ if(filter==='following'){const ids=await exofFollowingIds();if(!ids.length){feed.innerHTML='<div class="emptyState">Follow people to see their Drops here.</div>';return}r=await sb.from('drops').select('id,user_id,caption,media_url,media_type,created_at').in('user_id',ids).order('created_at',{ascending:false}).limit(30)}
+ else r=await sb.from('drops').select('id,user_id,caption,media_url,media_type,created_at').order('created_at',{ascending:false}).limit(30);
  if(r.error){console.error('EXOF feed error:',r.error);feed.innerHTML='<div class="meta">Could not load Drops yet.</div>';return}
- const drops=r.data||[];
- const userIds=[...new Set(drops.map(d=>d.user_id).filter(Boolean))];
- let profileMap={};
- if(userIds.length){
-   const pr=await sb.from('profiles').select('id,username,display_name,avatar_url').in('id',userIds);
-   if(!pr.error) (pr.data||[]).forEach(p=>profileMap[p.id]=p);
-   else console.error('EXOF profile lookup error:',pr.error);
- }
- feed.innerHTML='';
- if(!drops.length){feed.innerHTML='<div class="meta" style="padding:18px">No Drops yet. Be the first to post.</div>'}
- drops.forEach(d=>{const pr=profileMap[d.user_id]||{}, card=document.createElement('div');card.className='card post';const media=d.media_type==='video'?'<video controls playsinline preload="metadata" style="width:100%;max-height:520px;object-fit:cover;background:#050806" src="'+d.media_url+'"></video>':'<img alt="Drop" style="width:100%;max-height:520px;object-fit:cover;background:#050806" src="'+d.media_url+'">';card.innerHTML='<div class="postHead"><div class="ava" style="'+(pr.avatar_url?'background-image:url('+pr.avatar_url+');background-size:cover;background-position:center;color:transparent':'')+'">'+((pr.display_name||pr.username||'N')[0].toUpperCase())+'</div><div class="who"><b>'+(pr.display_name||pr.username||'EXOF')+'</b><small>@'+(pr.username||'user')+'</small></div>•••</div><div>'+media+'</div>'+(d.caption?'<p style="padding:0 14px 4px">'+d.caption.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))+'</p>':'')+'<div class="actions"><span>♡</span><span>◯</span><span>↗</span><span>⌑</span></div>';feed.appendChild(card)});
+ const drops=r.data||[],userIds=[...new Set(drops.map(d=>d.user_id).filter(Boolean))];let profileMap={};
+ if(userIds.length){const pr=await sb.from('profiles').select('id,username,display_name,avatar_url').in('id',userIds);if(!pr.error)(pr.data||[]).forEach(p=>profileMap[p.id]=p)}
+ feed.innerHTML='';if(!drops.length)feed.innerHTML='<div class="emptyState">No Drops yet.</div>';
+ for(const d of drops)feed.appendChild(await buildDropCard(d,profileMap[d.user_id]||{},false));
  if(currentUser){const c=await sb.from('drops').select('*',{count:'exact',head:true}).eq('user_id',currentUser.id);if(!c.error){const el=document.getElementById('dropCount');if(el)el.textContent=c.count||0}}
 }
+async function loadMyDrops(){
+ const list=document.getElementById('myDropsList');if(!list||!currentUser)return;list.innerHTML='<div class="emptyState">Loading your Drops…</div>';
+ const {data,error}=await sb.from('drops').select('id,user_id,caption,media_url,media_type,created_at').eq('user_id',currentUser.id).order('created_at',{ascending:false});
+ if(error){list.innerHTML='<div class="emptyState">'+escapeHtml(error.message)+'</div>';return}list.innerHTML='';
+ if(!data?.length){list.innerHTML='<div class="emptyState">You have not published any Drops yet.</div>';return}
+ const pr=currentProfile||{};for(const d of data)list.appendChild(await buildDropCard(d,pr,true));
+}
+
 const publishDropBtn=document.getElementById('publishDropBtn');
 if(publishDropBtn) publishDropBtn.addEventListener('click',async()=>{const msg=document.getElementById('createDropMsg');if(!currentUser){msg.textContent='Please log in again.';return}if(!pendingDropFile){msg.textContent='Choose a photo or video first.';return}if(pendingDropFile.size>50*1024*1024){msg.textContent='File is too large. Maximum 50 MB.';return}publishDropBtn.disabled=true;publishDropBtn.textContent='PUBLISHING...';msg.textContent='';try{const ext=(pendingDropFile.name.split('.').pop()||'bin').replace(/[^a-z0-9]/gi,'').toLowerCase();const path=currentUser.id+'/'+Date.now()+'.'+ext;const up=await sb.storage.from('drop-media').upload(path,pendingDropFile,{contentType:pendingDropFile.type||undefined});if(up.error)throw up.error;const url=sb.storage.from('drop-media').getPublicUrl(path).data.publicUrl;const ins=await sb.from('drops').insert({user_id:currentUser.id,caption:document.getElementById('dropCaption').value.trim().slice(0,500),media_url:url,media_type:pendingDropFile.type.startsWith('video/')?'video':'image'});if(ins.error)throw ins.error;pendingDropFile=null;dropMedia.value='';document.getElementById('dropCaption').value='';document.getElementById('dropPreview').textContent='NO MEDIA SELECTED';msg.textContent='✓ Drop published';await loadDrops();setTimeout(()=>go('home'),500)}catch(err){msg.textContent=err.message||'Could not publish Drop.'}finally{publishDropBtn.disabled=false;publishDropBtn.textContent='PUBLISH DROP'}});
 
