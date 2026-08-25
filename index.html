@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.8.6 — Mobile Profile Track</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.8.7 — Cross Device Track</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -286,9 +286,9 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 <script id="exofTrackMobileSyncV186">
 window.addEventListener('pageshow',function(){
   try{
-    var raw=localStorage.getItem('exofProfileTrack');
-    if(!raw)return;
-    var t=JSON.parse(raw);
+    var t=null;
+    try{t=JSON.parse(localStorage.getItem('exofProfileTrack')||'null')}catch(e){}
+    if((!t||!t.id) && window.currentUser && currentUser.user_metadata) t=currentUser.user_metadata.exof_profile_track||null;
     if(!t||!t.id)return;
     var title=document.getElementById('profileTrackTitle');
     var artist=document.getElementById('profileTrackArtist');
@@ -450,8 +450,22 @@ async function ensureProfile(user){
   return profile;
 }
 
+
+function exofHydrateTrackFromAccount(user){
+  try{
+    if(!user)return;
+    const cloud=user.user_metadata&&user.user_metadata.exof_profile_track;
+    if(cloud&&cloud.id){
+      localStorage.setItem('exofProfileTrack',JSON.stringify(cloud));
+      setTrackUI(cloud);
+      if(ytReady) buildPlayer(cloud.id);
+    }
+  }catch(e){console.warn('Track hydrate:',e)}
+}
+
 function paintProfile(user,profile){
   if(!user) return;
+  setTimeout(function(){exofHydrateTrackFromAccount(user)},0);
   const username=(profile&&profile.username)||(user.user_metadata&&user.user_metadata.username)||'exof';
   const display=(profile&&profile.display_name)||(user.user_metadata&&user.user_metadata.display_name)||username;
   const bio=(profile&&profile.bio)||'';
@@ -832,7 +846,20 @@ function youtubeId(value){
   return '';
 }
 let selectedVideo='', ytPlayer=null, ytReady=false;
-const savedTrack=()=>{try{return JSON.parse(localStorage.getItem('exofProfileTrack')||'null')}catch(e){return null}};
+const savedTrack=()=>{
+  try{
+    const local=JSON.parse(localStorage.getItem('exofProfileTrack')||'null');
+    if(local && local.id) return local;
+  }catch(e){}
+  try{
+    const cloud=currentUser && currentUser.user_metadata && currentUser.user_metadata.exof_profile_track;
+    if(cloud && cloud.id){
+      try{localStorage.setItem('exofProfileTrack',JSON.stringify(cloud));}catch(e){}
+      return cloud;
+    }
+  }catch(e){}
+  return null;
+};
 function setTrackUI(track){
   if(!track)return;
   selectedVideo=track.id;
@@ -875,12 +902,21 @@ function buildPlayer(id){
   const first=document.getElementsByTagName('script')[0];
   first.parentNode.insertBefore(tag,first);
 })();
-document.getElementById('saveTrack').addEventListener('click',function(){
+document.getElementById('saveTrack').addEventListener('click',async function(){
   const url=document.getElementById('ytUrl').value.trim();
   const id=youtubeId(url), msg=document.getElementById('musicMsg');
   if(!id){msg.textContent='Please paste a valid YouTube link.';return}
   const track={id,url:'https://www.youtube.com/watch?v='+id,title:document.getElementById('trackTitle').value.trim()||'My YouTube Track',artist:document.getElementById('trackArtist').value.trim()||'YouTube'};
   localStorage.setItem('exofProfileTrack',JSON.stringify(track));
+  // Sync Profile Track with the logged-in Supabase account so it follows the
+  // user across desktop, iPhone, PWA and other browsers.
+  try{
+    if(currentUser && sb && sb.auth){
+      const meta=Object.assign({}, currentUser.user_metadata||{}, {exof_profile_track:track});
+      const syncRes=await sb.auth.updateUser({data:meta});
+      if(syncRes && !syncRes.error && syncRes.data && syncRes.data.user) currentUser=syncRes.data.user;
+    }
+  }catch(syncErr){ console.warn('Profile Track cloud sync:',syncErr); }
   setTrackUI(track);
   document.getElementById('ytPlayerWrap').style.display='none';
   document.getElementById('playTrack').textContent='▶';
