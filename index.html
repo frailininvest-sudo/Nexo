@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.5.3 — Settings & Auth Fix</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.5.4 — Settings Stable</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -821,6 +821,39 @@ if(saveProfileBtn) saveProfileBtn.addEventListener('click',async()=>{
 });
 
 })();
+
+/* V1.5.4 Settings bridge — runs in EXOF's original Supabase scope */
+window.EXOF_SETTINGS_API={
+  async account(){
+    const {data:{user},error}=await sb.auth.getUser(); if(error)throw error;
+    if(!user)throw new Error('Please log in again.');
+    const {data:profile,error:pe}=await sb.from('profiles').select('username,display_name').eq('id',user.id).maybeSingle();
+    if(pe)throw pe;
+    return {email:user.email||'',username:profile?.username||'',created_at:user.created_at||''};
+  },
+  async saved(){
+    const {data:{user},error:ue}=await sb.auth.getUser(); if(ue)throw ue;
+    if(!user)throw new Error('Please log in again.');
+    const {data:saves,error}=await sb.from('saved_drops').select('drop_id,created_at').eq('user_id',user.id).order('created_at',{ascending:false});
+    if(error)throw error;
+    if(!saves?.length)return [];
+    const {data:drops,error:de}=await sb.from('drops').select('*').in('id',saves.map(x=>x.drop_id)); if(de)throw de;
+    const map=new Map((drops||[]).map(d=>[String(d.id),d]));
+    return saves.map(x=>map.get(String(x.drop_id))).filter(Boolean);
+  },
+  async resetPassword(){
+    const {data:{user},error}=await sb.auth.getUser(); if(error)throw error;
+    if(!user?.email)throw new Error('No email found for this account.');
+    const {error:re}=await sb.auth.resetPasswordForEmail(user.email,{redirectTo:'https://exofsocial.com/?recovery=1'});
+    if(re)throw re;
+    sessionStorage.setItem('nexo_password_recovery','1');
+    return user.email;
+  },
+  accent(color){ exofApplyAccent(color); },
+  customize(){ go('customize'); },
+  editProfile(){ go('editProfile'); },
+  logout(){ return sb.auth.signOut(); }
+};
 </script>
 <div id="exofSettingsPage" class="exofSettingsPage" hidden>
   <div class="exofSettingsHead"><button class="exofSettingsBack" id="exofSettingsBack">‹</button><b>SETTINGS</b></div>
@@ -855,46 +888,7 @@ if(saveProfileBtn) saveProfileBtn.addEventListener('click',async()=>{
 </div>
 
 
-<script>
-(function(){
- const pg=document.getElementById('exofSettingsPage');
- const back=document.getElementById('exofSettingsBack');
- function findButton(words){return [...document.querySelectorAll('button,a')].find(x=>words.some(w=>(x.textContent||'').toLowerCase().includes(w)))}
- window.openExofSettings=function(){
-   pg.hidden=false; document.body.style.overflow='hidden';
-   try{
-     const av=document.querySelector('#profileAvatar,.profileAvatar,[data-profile-avatar]');
-     const nm=document.querySelector('#profileName,.profileName,[data-profile-name]');
-     const un=document.querySelector('#profileUsername,.profileUsername,[data-profile-username]');
-     if(av?.src)document.getElementById('exofSettingsAvatar').src=av.src;
-     if(nm)document.getElementById('exofSettingsName').textContent=nm.textContent;
-     if(un)document.getElementById('exofSettingsUsername').textContent=un.textContent;
-   }catch(e){}
- };
- function close(){pg.hidden=true;document.body.style.overflow=''}
- back.onclick=close;
- document.addEventListener('click',async e=>{
-   const gear=e.target.closest('[aria-label*="etting"],[title*="etting"],.settingsBtn,#settingsBtn');
-   if(gear && !pg.contains(gear)){e.preventDefault();openExofSettings();return}
-   const row=e.target.closest('[data-setting-action]'); if(!row)return;
-   const a=row.dataset.settingAction;
-   if(a==='logout'){try{await window.exofSupabase.auth.signOut();location.reload()}catch(e){};return}
-   if(a==='password'){
-     try{const {data}=await window.exofSupabase.auth.getUser();if(data?.user?.email){await window.exofSupabase.auth.resetPasswordForEmail(data.user.email,{redirectTo:location.origin});alert('Password reset email sent.')}}catch(e){alert(e.message||'Unable to send reset email.')}return;
-   }
-   if(a==='about'){alert('EXOF\\nSocial platform\\nVersion 1.5');return}
-   if(a==='terms'){alert('Terms of Service and Privacy Policy will be added in the next legal update.');return}
-   close();
-   if(a==='edit-profile'){const b=findButton(['edit profile']);if(b)b.click();return}
-   if(a==='customize'){const b=findButton(['customize']);if(b)b.click();return}
-   if(a==='accent'){const b=findButton(['accent']);if(b)b.click();return}
-   if(a==='saved'){const b=findButton(['saved']);if(b)b.click();return}
-   alert('This control will be activated in the next Settings update.');
- });
- // Fallback: make any visible gear open Settings.
- [...document.querySelectorAll('button')].forEach(b=>{if((b.textContent||'').trim()==='⚙️'||(b.textContent||'').trim()==='⚙')b.addEventListener('click',e=>{e.preventDefault();openExofSettings()})});
-})();
-</script>
+
 
 <button id="exofProfileSettingsGear" type="button" aria-label="Settings" title="Settings">⚙</button>
 
@@ -920,15 +914,7 @@ if(saveProfileBtn) saveProfileBtn.addEventListener('click',async()=>{
 <div id="exofAccountInfo" class="exofFuncPanel" hidden><div class="exofFuncHead"><button class="exofFuncBack">‹</button><b>ACCOUNT INFORMATION</b></div><div class="exofFuncBody"><div class="exofFuncCard"><div class="exofFuncRow"><small>EMAIL</small><b id="fiEmail">—</b></div><div class="exofFuncRow"><small>USERNAME</small><b id="fiUser">—</b></div><div class="exofFuncRow"><small>ACCOUNT CREATED</small><b id="fiCreated">—</b></div></div></div></div>
 <div id="exofSavedView" class="exofFuncPanel" hidden><div class="exofFuncHead"><button class="exofFuncBack">‹</button><b>SAVED DROPS</b></div><div class="exofFuncBody"><div id="fiSavedGrid" class="exofSavedGrid"></div><p id="fiSavedMsg" style="text-align:center;color:#7f8981">Loading…</p></div></div>
 
-<script>
-(()=>{const q=x=>document.getElementById(x);
-function back(){q('exofAccountInfo').hidden=true;q('exofSavedView').hidden=true;if(window.openExofSettings)openExofSettings()}
-document.querySelectorAll('.exofFuncBack').forEach(x=>x.onclick=back);
-async function info(){const {data:{user}}=await window.exofSupabase.auth.getUser();if(!user)return;q('fiEmail').textContent=user.email||'—';q('fiCreated').textContent=user.created_at?new Date(user.created_at).toLocaleDateString():'—';const {data}=await window.exofSupabase.from('profiles').select('username').eq('id',user.id).maybeSingle();q('fiUser').textContent=data?.username?'@'+data.username:'—';q('exofSettingsPage').hidden=true;q('exofAccountInfo').hidden=false}
-async function saved(){q('exofSettingsPage').hidden=true;q('exofSavedView').hidden=false;const g=q('fiSavedGrid'),m=q('fiSavedMsg');g.innerHTML='';m.textContent='Loading…';try{const {data:{user}}=await window.exofSupabase.auth.getUser();const {data:a,error}=await window.exofSupabase.from('saved_drops').select('drop_id,created_at').eq('user_id',user.id).order('created_at',{ascending:false});if(error)throw error;if(!a?.length){m.textContent='No saved Drops yet.';return}const {data:d,error:e}=await window.exofSupabase.from('drops').select('*').in('id',a.map(x=>x.drop_id));if(e)throw e;const mp=new Map((d||[]).map(x=>[x.id,x]));m.textContent='';a.forEach(x=>{const z=mp.get(x.drop_id);if(!z)return;const el=document.createElement('div');el.className='exofSavedItem';const u=z.media_url||z.image_url||z.url||'';el.innerHTML=(u?`<img src="${u}">`:'')+'<div style="padding:9px;font-size:11px">SAVED DROP</div>';g.appendChild(el)})}catch(e){m.textContent=e.message}}
-document.addEventListener('click',async e=>{const r=e.target.closest('[data-setting-action]');if(!r)return;const a=r.dataset.settingAction;if(a==='account-info'){e.preventDefault();e.stopImmediatePropagation();info()}if(a==='saved'){e.preventDefault();e.stopImmediatePropagation();saved()}if(a==='password'){e.preventDefault();e.stopImmediatePropagation();try{const {data:{user}}=await window.exofSupabase.auth.getUser();const {error}=await window.exofSupabase.auth.resetPasswordForEmail(user.email,{redirectTo:location.origin});if(error)throw error;alert('Password reset email sent to '+user.email)}catch(x){alert(x.message)}}},true);
-})();
-</script>
+
 
 <div id="exofAccentSettingsPanel" class="exofFuncPanel" hidden>
   <div class="exofFuncHead"><button class="exofFuncBack" id="exofAccentBack">‹</button><b>ACCENT COLOR</b></div>
@@ -948,91 +934,67 @@ document.addEventListener('click',async e=>{const r=e.target.closest('[data-sett
 </div>
 
 
+
+
+
 <script>
 (function(){
-  const client=window.exofSupabase;
-  const $=id=>document.getElementById(id);
-  function closeSettings(){const x=$('exofSettingsPage');if(x)x.hidden=true}
-  function openSettings(){if(window.openExofSettings)window.openExofSettings()}
-  function hideFunctional(){['exofAccountInfo','exofSavedView','exofAccentSettingsPanel'].forEach(id=>{const e=$(id);if(e)e.hidden=true})}
+ const $=id=>document.getElementById(id);
+ const api=()=>window.EXOF_SETTINGS_API;
+ function settingsOpen(){const p=$('exofSettingsPage');if(p){p.hidden=false;document.body.style.overflow='hidden'}}
+ function settingsClose(){const p=$('exofSettingsPage');if(p)p.hidden=true}
+ window.openExofSettings=settingsOpen;
+ $('exofSettingsBack')?.addEventListener('click',()=>{settingsClose();document.body.style.overflow=''});
+ function hidePanels(){['exofAccountInfo','exofSavedView','exofAccentSettingsPanel'].forEach(id=>{const e=$(id);if(e)e.hidden=true})}
+ document.querySelectorAll('.exofFuncBack').forEach(b=>b.onclick=()=>{hidePanels();settingsOpen()});
 
-  async function showAccountInfo(){
-    if(!client) return alert('EXOF could not connect to account services.');
-    try{
-      const {data:{user},error}=await client.auth.getUser(); if(error)throw error;
-      if(!user)throw new Error('Please log in again.');
-      const {data:profile,error:pe}=await client.from('profiles').select('username').eq('id',user.id).maybeSingle();
-      if(pe)throw pe;
-      $('fiEmail').textContent=user.email||'—';
-      $('fiUser').textContent=profile?.username?'@'+profile.username:'—';
-      $('fiCreated').textContent=user.created_at?new Date(user.created_at).toLocaleString():'—';
-      closeSettings(); $('exofAccountInfo').hidden=false;
-    }catch(err){alert(err.message||'Unable to load account information.')}
-  }
+ async function account(){
+   try{
+     const d=await api().account();
+     $('fiEmail').textContent=d.email||'—';
+     $('fiUser').textContent=d.username?'@'+d.username:'—';
+     $('fiCreated').textContent=d.created_at?new Date(d.created_at).toLocaleString():'—';
+     settingsClose();$('exofAccountInfo').hidden=false;
+   }catch(e){alert(e.message||'Unable to load Account Information.')}
+ }
+ async function saved(){
+   settingsClose();$('exofSavedView').hidden=false;
+   const g=$('fiSavedGrid'),m=$('fiSavedMsg');g.innerHTML='';m.textContent='Loading…';
+   try{
+     const drops=await api().saved();
+     if(!drops.length){m.textContent='No saved Drops yet.';return}
+     m.textContent='';
+     drops.forEach(d=>{
+       const el=document.createElement('div');el.className='exofSavedItem';
+       const u=d.media_url||d.image_url||d.url||'';
+       el.innerHTML=(u?`<img src="${String(u).replace(/"/g,'&quot;')}" alt="">`:'')+
+         `<div style="padding:10px;font-size:11px">${d.caption?String(d.caption).replace(/</g,'&lt;').slice(0,70):'SAVED DROP'}</div>`;
+       g.appendChild(el);
+     });
+   }catch(e){m.textContent=e.message||'Unable to load Saved Drops.'}
+ }
+ function accent(){settingsClose();$('exofAccentSettingsPanel').hidden=false}
+ $('exofAccentBack')?.addEventListener('click',()=>{hidePanels();settingsOpen()});
+ document.querySelectorAll('#exofAccentSettingsPanel .exofSettingAccent').forEach(b=>b.onclick=()=>api().accent(b.dataset.color));
 
-  async function showSaved(){
-    if(!client) return alert('EXOF could not connect to Saved Drops.');
-    closeSettings(); $('exofSavedView').hidden=false;
-    const grid=$('fiSavedGrid'),msg=$('fiSavedMsg'); grid.innerHTML=''; msg.textContent='Loading…';
-    try{
-      const {data:{user},error:ue}=await client.auth.getUser(); if(ue)throw ue;
-      if(!user)throw new Error('Please log in again.');
-      const {data:saves,error}=await client.from('saved_drops').select('drop_id,created_at').eq('user_id',user.id).order('created_at',{ascending:false});
-      if(error)throw error;
-      if(!saves?.length){msg.textContent='No saved Drops yet.';return}
-      const {data:drops,error:de}=await client.from('drops').select('*').in('id',saves.map(x=>x.drop_id)); if(de)throw de;
-      const map=new Map((drops||[]).map(d=>[d.id,d])); msg.textContent='';
-      for(const save of saves){
-        const d=map.get(save.drop_id); if(!d)continue;
-        const card=document.createElement('div'); card.className='exofSavedItem';
-        const media=d.media_url||d.image_url||d.url||'';
-        card.innerHTML=(media?`<img src="${String(media).replace(/"/g,'&quot;')}" alt="">`:'')+
-          `<div style="padding:10px;font-size:11px">SAVED DROP</div>`;
-        card.onclick=()=>{ hideFunctional(); if(window.exofGo)window.exofGo('home'); };
-        grid.appendChild(card);
-      }
-      if(!grid.children.length)msg.textContent='No saved Drops yet.';
-    }catch(err){msg.textContent=err.message||'Unable to load Saved Drops.'}
-  }
-
-  function showAccent(){
-    closeSettings(); $('exofAccentSettingsPanel').hidden=false;
-  }
-
-  async function sendPasswordReset(){
-    if(!client) return alert('EXOF could not connect to account services.');
-    try{
-      const {data:{user},error}=await client.auth.getUser(); if(error)throw error;
-      if(!user?.email)throw new Error('No email found for this account.');
-      const {error:re}=await client.auth.resetPasswordForEmail(user.email,{redirectTo:'https://exofsocial.com/?recovery=1'});
-      if(re)throw re;
-      sessionStorage.setItem('nexo_password_recovery','1');
-      alert('EXOF sent a password reset email to '+user.email+'. Open the link to choose your new password.');
-    }catch(err){alert(err.message||'Unable to send password reset email.')}
-  }
-
-  document.addEventListener('click',function(e){
-    const row=e.target.closest('[data-setting-action]'); if(!row)return;
-    const a=row.dataset.settingAction;
-    if(!['account-info','saved','accent','password'].includes(a))return;
-    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
-    if(a==='account-info')showAccountInfo();
-    if(a==='saved')showSaved();
-    if(a==='accent')showAccent();
-    if(a==='password')sendPasswordReset();
-  },true);
-
-  $('exofAccentBack')?.addEventListener('click',()=>{hideFunctional();openSettings()});
-  document.querySelectorAll('#exofAccentSettingsPanel .exofSettingAccent').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      const c=btn.dataset.color;
-      if(window.exofApplyAccent)window.exofApplyAccent(c);
-      else{
-        document.documentElement.style.setProperty('--accent',c);
-        localStorage.setItem('exof_accent',c);
-      }
-    });
-  });
+ document.addEventListener('click',async e=>{
+   const row=e.target.closest('[data-setting-action]');if(!row)return;
+   const a=row.dataset.settingAction;
+   e.preventDefault();e.stopPropagation();
+   if(a==='account-info')return account();
+   if(a==='saved')return saved();
+   if(a==='accent')return accent();
+   if(a==='customize'){settingsClose();return api().customize()}
+   if(a==='edit-profile'){settingsClose();return api().editProfile()}
+   if(a==='password'){
+     try{const email=await api().resetPassword();alert('EXOF sent a password reset email to '+email+'. Open the link to choose your new password.')}
+     catch(err){alert(err.message||'Unable to send password reset email.')}return;
+   }
+   if(a==='logout'){await api().logout();location.reload();return}
+   if(a==='about')return alert('EXOF\\nSocial platform\\nVersion 1.5.4');
+   if(a==='terms')return alert('Terms of Service and Privacy Policy will be added in the legal update.');
+   alert('This setting will be activated in the next update.');
+ },true);
 })();
 </script>
 
