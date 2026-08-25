@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.6 — Privacy & Safety</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.6.1 — Privacy Fix</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -873,7 +873,10 @@ window.EXOF_SETTINGS_API={
 /* EXOF V1.6 privacy bridge */
 window.EXOF_PRIVACY_API={
  async ownSettings(){
-  if(!currentUser)throw new Error('Please log in again.');
+  const {data:{user},error:authError}=await sb.auth.getUser();
+  if(authError)throw authError;
+  if(!user)throw new Error('Please log in again.');
+  const currentUser=user;
   const {data,error}=await sb.from('profiles').select('is_private,comment_policy').eq('id',currentUser.id).single();if(error)throw error;
   const {count}=await sb.from('follow_requests').select('*',{count:'exact',head:true}).eq('target_id',currentUser.id).eq('status','pending');
   return {is_private:!!data?.is_private,comment_policy:data?.comment_policy||'everyone',requests:count||0};
@@ -895,12 +898,19 @@ window.EXOF_PRIVACY_API={
  },
  async unblock(uid){const {error}=await sb.from('user_blocks').delete().eq('blocker_id',currentUser.id).eq('blocked_id',uid);if(error)throw error;},
  async block(uid){
-  if(!currentUser||uid===currentUser.id)return;
+  const {data:{user},error:authError}=await sb.auth.getUser();
+  if(authError)throw authError;
+  if(!user||uid===user.id)return;
+  const currentUser=user;
   const {error}=await sb.from('user_blocks').upsert({blocker_id:currentUser.id,blocked_id:uid},{onConflict:'blocker_id,blocked_id'});if(error)throw error;
   await sb.from('follows').delete().or(`and(follower_id.eq.${currentUser.id},following_id.eq.${uid}),and(follower_id.eq.${uid},following_id.eq.${currentUser.id})`);
   await sb.from('follow_requests').delete().or(`and(requester_id.eq.${currentUser.id},target_id.eq.${uid}),and(requester_id.eq.${uid},target_id.eq.${currentUser.id})`);
  },
  async relation(uid){
+  const {data:{user},error:authError}=await sb.auth.getUser();
+  if(authError)throw authError;
+  if(!user)throw new Error('Please log in again.');
+  const currentUser=user;
   const [{data:p},{data:f},{data:r},{data:b1},{data:b2}]=await Promise.all([
    sb.from('profiles').select('is_private').eq('id',uid).single(),
    sb.from('follows').select('follower_id').eq('follower_id',currentUser.id).eq('following_id',uid).maybeSingle(),
@@ -918,9 +928,15 @@ window.EXOF_PRIVACY_API={
   if(rel.private){const {error}=await sb.from('follow_requests').insert({requester_id:currentUser.id,target_id:uid});if(error)throw error;return 'requested';}
   const {error}=await sb.from('follows').insert({follower_id:currentUser.id,following_id:uid});if(error)throw error;return 'following';
  },
- async canView(uid){if(!currentUser)return false;if(uid===currentUser.id)return true;const r=await this.relation(uid);return !r.blockedByMe&&!r.blockedByThem&&(!r.private||r.following);},
+ async canView(uid){const {data:{user},error:authError}=await sb.auth.getUser();
+  if(authError||!user)return false;
+  const currentUser=user;
+  if(uid===currentUser.id)return true;const r=await this.relation(uid);return !r.blockedByMe&&!r.blockedByThem&&(!r.private||r.following);},
  async canComment(ownerId){
-  if(!currentUser)return false;if(ownerId===currentUser.id)return true;
+  const {data:{user},error:authError}=await sb.auth.getUser();
+  if(authError||!user)return false;
+  const currentUser=user;
+  if(ownerId===currentUser.id)return true;
   const {data:p}=await sb.from('profiles').select('comment_policy').eq('id',ownerId).single();const pol=p?.comment_policy||'everyone';
   if(pol==='nobody')return false;if(pol==='everyone')return true;
   const {data:f}=await sb.from('follows').select('follower_id').eq('follower_id',ownerId).eq('following_id',currentUser.id).maybeSingle();return !!f;
@@ -1063,8 +1079,9 @@ window.EXOF_PRIVACY_API={
      catch(err){alert(err.message||'Unable to send password reset email.')}return;
    }
    if(a==='logout'){await api().logout();location.reload();return}
-   if(a==='about')return alert('EXOF\\nSocial platform\\nVersion 1.5.4');
+   if(a==='about')return alert('EXOF\\nSocial platform\\nVersion 1.6.1');
    if(a==='terms')return alert('Terms of Service and Privacy Policy will be added in the legal update.');
+   if(a==='privacy'||a==='blocked')return;
    alert('This setting will be activated in the next update.');
  },true);
 })();
