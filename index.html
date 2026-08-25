@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.8.8 — Track Database Sync</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.8.9 — Top Loops + Fast Count</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -297,6 +297,38 @@ window.addEventListener('pageshow',function(){
   }catch(e){}
 });
 </script>
+
+<style id="exofTopLoopsV189Styles">
+#profile .favoriteLoopsReference .worldGrid{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:7px!important;
+}
+#profile .favoriteLoopsReference .world{
+  position:relative!important;
+  min-height:76px!important;
+  aspect-ratio:1/1.15;
+  overflow:hidden!important;
+  cursor:pointer;
+  background:#050806!important;
+  border:1px solid rgba(255,255,255,.10)!important;
+}
+#profile .favoriteLoopsReference .world img,
+#profile .favoriteLoopsReference .world video{
+  width:100%;height:100%;object-fit:cover;display:block;
+}
+#profile .favoriteLoopsReference .world .topLoopLikes{
+  position:absolute;left:5px;bottom:5px;
+  padding:3px 5px;border-radius:999px;
+  background:rgba(0,0,0,.68);color:#fff;
+  font-size:8px;font-weight:900;line-height:1;
+  backdrop-filter:blur(4px);
+}
+#profile .favoriteLoopsReference .world.emptyTopLoop{
+  display:grid;place-items:center;
+  color:rgba(255,255,255,.28);font-size:18px;
+}
+</style>
 </head>
 <body>
 <div id="authGate">
@@ -1784,6 +1816,122 @@ window.addEventListener('load',function(){
     });
   },450);
 });
+</script>
+
+<script id="exofTopLoopsV189Logic">
+(function(){
+  function esc(v){
+    return String(v==null?'':v).replace(/[&<>"']/g,function(m){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+    });
+  }
+
+  async function fastProfileDropCount(){
+    if(!window.currentUser || !window.sb)return;
+    try{
+      var r=await sb.from('drops')
+        .select('id',{count:'exact',head:true})
+        .eq('user_id',currentUser.id);
+      if(r.error)throw r.error;
+      var el=document.getElementById('dropCount');
+      if(el)el.textContent=String(r.count||0);
+    }catch(e){console.warn('Fast Drop count:',e)}
+  }
+
+  async function loadTopFourLoops(){
+    if(!window.currentUser || !window.sb)return;
+    var root=document.getElementById('profile');
+    if(!root)return;
+    var module=[].slice.call(root.querySelectorAll('.module')).find(function(m){
+      return (m.textContent||'').toLowerCase().indexOf('favorite loops')>=0;
+    });
+    if(!module)return;
+    module.classList.add('favoriteLoopsReference');
+    var grid=module.querySelector('.worldGrid');
+    if(!grid)return;
+
+    try{
+      // Fetch this user's Drops, then count likes per Drop.
+      var dr=await sb.from('drops').select('*').eq('user_id',currentUser.id);
+      if(dr.error)throw dr.error;
+      var drops=dr.data||[];
+
+      // Update count immediately from the same lightweight user-specific result too.
+      var dc=document.getElementById('dropCount');
+      if(dc)dc.textContent=String(drops.length);
+
+      if(!drops.length){
+        grid.innerHTML='<div class="world emptyTopLoop">＋</div><div class="world emptyTopLoop">＋</div><div class="world emptyTopLoop">＋</div><div class="world emptyTopLoop">＋</div>';
+        return;
+      }
+
+      var ids=drops.map(function(d){return d.id});
+      var lr=await sb.from('drop_likes').select('drop_id').in('drop_id',ids);
+      if(lr.error)throw lr.error;
+      var counts={};
+      (lr.data||[]).forEach(function(x){counts[x.drop_id]=(counts[x.drop_id]||0)+1});
+
+      drops.forEach(function(d){d.__likes=counts[d.id]||0});
+      drops.sort(function(a,b){
+        if(b.__likes!==a.__likes)return b.__likes-a.__likes;
+        var ad=new Date(a.created_at||0).getTime(), bd=new Date(b.created_at||0).getTime();
+        return bd-ad;
+      });
+      var top=drops.slice(0,4);
+
+      grid.innerHTML=top.map(function(d){
+        var media=d.media_url||d.image_url||d.video_url||'';
+        var isVideo=(d.media_type||'').toLowerCase().indexOf('video')>=0 ||
+                    /\.(mp4|webm|mov)(\?|$)/i.test(media);
+        var visual=media
+          ? (isVideo?'<video muted playsinline preload="metadata" src="'+esc(media)+'"></video>'
+                    :'<img alt="Top Drop" src="'+esc(media)+'">')
+          : '<div style="display:grid;place-items:center;width:100%;height:100%;font-size:20px">⚡</div>';
+        return '<div class="world" data-top-drop="'+esc(d.id)+'">'+visual+
+               '<span class="topLoopLikes">♥ '+d.__likes+'</span></div>';
+      }).join('');
+
+      while(grid.children.length<4){
+        var empty=document.createElement('div');
+        empty.className='world emptyTopLoop'; empty.textContent='＋'; grid.appendChild(empty);
+      }
+
+      grid.querySelectorAll('[data-top-drop]').forEach(function(el){
+        el.addEventListener('click',function(){
+          var id=el.getAttribute('data-top-drop');
+          // Use the app's existing Drop deep-link behavior.
+          try{
+            var u=new URL(location.href);
+            u.searchParams.set('drop',id);
+            history.pushState({},'',u.pathname+u.search+u.hash);
+          }catch(e){}
+          if(typeof window.go==='function')go('home');
+          setTimeout(function(){
+            var target=document.querySelector('[data-drop-id="'+CSS.escape(id)+'"],#drop-'+CSS.escape(id));
+            if(target)target.scrollIntoView({behavior:'smooth',block:'center'});
+          },450);
+        });
+      });
+    }catch(e){
+      console.warn('Favorite Loops:',e);
+    }
+  }
+
+  async function refreshProfileSmart(){
+    await Promise.all([fastProfileDropCount(),loadTopFourLoops()]);
+  }
+
+  window.addEventListener('load',function(){
+    setTimeout(refreshProfileSmart,700);
+  });
+  document.addEventListener('click',function(e){
+    var goProfile=e.target.closest('[data-go="profile"]');
+    if(goProfile)setTimeout(refreshProfileSmart,250);
+  },true);
+
+  // Expose refresh so newly created/deleted/liked Drops can refresh it later.
+  window.exofRefreshProfileTopLoops=refreshProfileSmart;
+})();
 </script>
 </body></html>
 <style id="exofProfileBackgroundV184">
