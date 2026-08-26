@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.9.5 — Favorite Drops Fix</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.9.6 — Profile Single Source</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -368,13 +368,15 @@ window.addEventListener('pageshow',function(){
 </style>
 
 
-<style id="favDrops195">
-#profile .worldGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important}
-#profile .favDrop,#profile .favEmpty{position:relative!important;overflow:hidden!important;padding:0!important;aspect-ratio:1/1.15!important;border-radius:10px!important}
-#profile .favDrop img,#profile .favDrop video{width:100%!important;height:100%!important;object-fit:cover!important}
-#profile .favLikes{position:absolute;left:4px;bottom:4px;background:rgba(0,0,0,.75);color:#fff;border-radius:999px;padding:3px 5px;font-size:8px;font-weight:900}
-#profile .favEmpty{display:grid!important;place-items:center!important;color:#ffffff44}
-</style></head>
+
+<style id="exofProfileSingleSourceV196Style">
+#profile .worldGrid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important}
+#profile .exofFavoriteDrop,#profile .exofFavoriteEmpty{position:relative!important;overflow:hidden!important;padding:0!important;aspect-ratio:1/1.15!important;border-radius:10px!important}
+#profile .exofFavoriteDrop img,#profile .exofFavoriteDrop video{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important}
+#profile .exofFavoriteLikes{position:absolute;left:4px;bottom:4px;background:rgba(0,0,0,.75);color:#fff;border-radius:999px;padding:3px 5px;font-size:8px;font-weight:900}
+#profile .exofFavoriteEmpty{display:grid!important;place-items:center!important;color:#ffffff44}
+</style>
+</head>
 <body>
 <div id="authGate">
   <div class="authBox">
@@ -1197,11 +1199,84 @@ async function loadDrops(filter='all'){
  if(currentUser){const c=await sb.from('drops').select('*',{count:'exact',head:true}).eq('user_id',currentUser.id);if(!c.error){const el=document.getElementById('dropCount');if(el)el.textContent=c.count||0}}
 }
 async function loadMyDrops(){
- const list=document.getElementById('myDropsList');if(!list||!currentUser)return;list.innerHTML='<div class="emptyState">Loading your Drops…</div>';
- const {data,error}=await sb.from('drops').select('id,user_id,caption,media_url,media_type,created_at').eq('user_id',currentUser.id).order('created_at',{ascending:false});
- if(error){list.innerHTML='<div class="emptyState">'+escapeHtml(error.message)+'</div>';return}list.innerHTML='';
- if(!data?.length){list.innerHTML='<div class="emptyState">You have not published any Drops yet.</div>';return}
- const pr=currentProfile||{};for(const d of data)list.appendChild(await buildDropCard(d,pr,true));
+  const list=document.getElementById('myDropsList');
+  if(!list||!currentUser)return;
+  const requestOwner=currentUser.id;
+  list.innerHTML='<div class="emptyState">Loading your Drops…</div>';
+
+  const {data,error}=await sb.from('drops')
+    .select('id,user_id,caption,media_url,media_type,created_at')
+    .eq('user_id',requestOwner)
+    .order('created_at',{ascending:false});
+
+  if(error){
+    list.innerHTML='<div class="emptyState">'+escapeHtml(error.message)+'</div>';
+    return;
+  }
+  // Deduplicate by the database primary Drop ID before ANY profile rendering.
+  const seen=new Set();
+  const drops=(data||[]).filter(d=>{
+    const id=String(d.id);
+    if(seen.has(id))return false;
+    seen.add(id);return true;
+  });
+
+  // One authoritative count from the exact rows rendered below.
+  const count=document.getElementById('dropCount');
+  if(count)count.textContent=String(drops.length);
+
+  // Render MY DROPS once, after clearing it once.
+  list.innerHTML='';
+  if(!drops.length){
+    list.innerHTML='<div class="emptyState">No Drops yet.</div>';
+  }else{
+    for(const d of drops){
+      const card=await buildDropCard(d,currentProfile||{},true);
+      card.dataset.dropId=d.id;
+      list.appendChild(card);
+    }
+  }
+
+  // Favorite Drops derives from these SAME unique Drop IDs.
+  const module=[...document.querySelectorAll('#profile .module')]
+    .find(x=>(x.textContent||'').toLowerCase().includes('favorite drops'));
+  const grid=module&&module.querySelector('.worldGrid');
+  if(!grid)return;
+
+  const likeCounts={};
+  if(drops.length){
+    const lr=await sb.from('drop_likes').select('drop_id').in('drop_id',drops.map(d=>d.id));
+    if(!lr.error){
+      (lr.data||[]).forEach(row=>{
+        const id=String(row.drop_id);
+        likeCounts[id]=(likeCounts[id]||0)+1;
+      });
+    }else console.error('Favorite Drops likes:',lr.error);
+  }
+
+  const top=drops.map(d=>({...d,__likes:likeCounts[String(d.id)]||0}))
+    .sort((a,b)=>(b.__likes-a.__likes)||(new Date(b.created_at)-new Date(a.created_at)))
+    .slice(0,4);
+
+  grid.innerHTML='';
+  for(const d of top){
+    const tile=document.createElement('button');
+    tile.type='button';tile.className='world exofFavoriteDrop';
+    const safe=String(d.media_url||'').replace(/"/g,'&quot;');
+    const media=!safe?'':((d.media_type||'').toLowerCase()==='video'
+      ?'<video src="'+safe+'" muted playsinline preload="metadata"></video>'
+      :'<img src="'+safe+'" alt="Favorite Drop">');
+    tile.innerHTML=media+'<span class="exofFavoriteLikes">♥ '+d.__likes+'</span>';
+    tile.addEventListener('click',()=>{
+      const target=list.querySelector('[data-drop-id="'+CSS.escape(String(d.id))+'"]');
+      if(target)target.scrollIntoView({behavior:'smooth',block:'center'});
+    });
+    grid.appendChild(tile);
+  }
+  while(grid.children.length<4){
+    const e=document.createElement('div');
+    e.className='world exofFavoriteEmpty';e.textContent='＋';grid.appendChild(e);
+  }
 }
 
 const publishDropBtn=document.getElementById('publishDropBtn');
@@ -1928,41 +2003,27 @@ window.addEventListener('load',function(){
 
 
 
-<script id="favDrops195logic">
+
+<script id="exofProfileSingleSourceV196">
 (function(){
-async function refreshFavDrops(){
- if(typeof currentUser==='undefined'||!currentUser||typeof sb==='undefined')return;
- try{
-  const r=await sb.from('drops').select('id,user_id,caption,media_url,media_type,created_at').eq('user_id',currentUser.id).order('created_at',{ascending:false});
-  if(r.error)throw r.error; const drops=r.data||[];
-  const count=document.getElementById('dropCount'); if(count)count.textContent=String(drops.length);
-  const root=document.getElementById('profile');
-  const mod=[...root.querySelectorAll('.module')].find(m=>(m.textContent||'').toLowerCase().includes('favorite drops'));
-  const grid=mod&&mod.querySelector('.worldGrid'); if(!grid)return;
-  let likes={};
-  if(drops.length){
-   const lr=await sb.from('drop_likes').select('drop_id').in('drop_id',drops.map(d=>d.id));
-   if(lr.error)throw lr.error;
-   (lr.data||[]).forEach(x=>likes[x.drop_id]=(likes[x.drop_id]||0)+1);
+  let timer=null, running=false;
+  async function refresh(){
+    if(running)return;
+    if(typeof currentUser==='undefined'||!currentUser||typeof loadMyDrops!=='function')return;
+    running=true;
+    try{await loadMyDrops()}finally{running=false}
   }
-  const top=drops.map(d=>({...d,_likes:likes[d.id]||0})).sort((a,b)=>(b._likes-a._likes)||(new Date(b.created_at)-new Date(a.created_at))).slice(0,4);
-  grid.innerHTML='';
-  top.forEach(d=>{
-   const e=document.createElement('div');e.className='world favDrop';
-   const url=String(d.media_url||'').replace(/"/g,'&quot;');
-   e.innerHTML=(url?((d.media_type||'').toLowerCase()==='video'?'<video src="'+url+'" muted playsinline></video>':'<img src="'+url+'" alt="">'):'')+'<span class="favLikes">♥ '+d._likes+'</span>';
-   grid.appendChild(e);
-  });
-  while(grid.children.length<4){const e=document.createElement('div');e.className='world favEmpty';e.textContent='＋';grid.appendChild(e)}
- }catch(e){console.error('Favorite Drops:',e)}
-}
-window.exofRefreshFavoriteDrops=refreshFavDrops;
-window.addEventListener('load',()=>setTimeout(refreshFavDrops,600));
-window.addEventListener('pageshow',()=>setTimeout(refreshFavDrops,300));
-document.addEventListener('click',e=>{if(e.target.closest('[data-go="profile"]'))setTimeout(refreshFavDrops,200)},true);
-setInterval(()=>{const p=document.getElementById('profile');if(p&&getComputedStyle(p).display!=='none')refreshFavDrops()},3000);
+  function queue(){
+    clearTimeout(timer);timer=setTimeout(refresh,180);
+  }
+  window.exofRefreshProfileDrops=queue;
+  window.addEventListener('pageshow',queue);
+  document.addEventListener('click',function(e){
+    if(e.target.closest('[data-go="profile"]'))queue();
+  },true);
 })();
-</script></body></html>
+</script>
+</body></html>
 <style id="exofProfileBackgroundV184">
 #profile #profileShell.profileShell{
   background:transparent!important;
