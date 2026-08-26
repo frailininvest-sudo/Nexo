@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.12.11 — Activity User Only</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.12.7 — Public Official Role</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -619,8 +619,6 @@ header #messagesBtn.exofDmButton:active{
   white-space:nowrap!important;
 }
 #publicProfile .exofPublicOfficialRole[hidden]{display:none!important}
-</style><style id="exofActivityUserOnlyV1211">
-#exofActivityRecent .exofActivityUserLink{cursor:pointer}
 </style></head>
 <body>
 <div id="authGate">
@@ -2080,17 +2078,7 @@ window.EXOF_PRIVACY_API={
           ?`<video class="exofActivityThumb" src="${esc(d.media_url)}" muted playsinline preload="metadata"></video>`
           :`<img class="exofActivityThumb" src="${esc(d.media_url)}">`;
        }
-       el.innerHTML=`<img class="exofActivityAvatar exofActivityUserLink" src="${av(p)}"><div class="exofActivityText"><div><b class="exofActivityUserLink">${who(p)}</b> <span>${esc(action)}</span></div><small>${ago(n.created_at)}</small></div>${thumb}`;
-       el.querySelectorAll('.exofActivityUserLink').forEach(x=>x.addEventListener('click',e=>{
-         e.stopPropagation();
-         if(!n.actor_id)return;
-         if(n.actor_id===currentUser?.id){
-           closeActivity();
-           go('profile');
-         }else{
-           openPublicProfile(n.actor_id);
-         }
-       }));
+       el.innerHTML=`<img class="exofActivityAvatar" src="${av(p)}"><div class="exofActivityText"><div><b>${who(p)}</b> <span>${esc(action)}</span></div><small>${ago(n.created_at)}</small></div>${thumb}`;
        box.appendChild(el);
      });
      await sb().from('notifications').update({is_read:true}).eq('user_id',user.id).eq('is_read',false);
