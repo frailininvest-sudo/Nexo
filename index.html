@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.12.8 — Activity Navigation</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.12.9 — Activity Fast Navigation</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -1559,9 +1559,18 @@ async function buildDropCard(d,pr={},own=false){
 
 async function exofOpenActivityDrop(dropId){
   if(!dropId)return;
-  const {data:d,error}=await sb.from('drops').select('id,user_id,caption,media_url,media_type,created_at').eq('id',dropId).maybeSingle();
-  if(error||!d){alert('This Drop is no longer available.');return}
-  const {data:pr}=await sb.from('profiles').select('id,username,display_name,avatar_url,official_role').eq('id',d.user_id).maybeSingle();
+  let d=window.__exofActivityFullDropCache?.get?.(String(dropId))||null;
+  let pr=null;
+  if(!d){
+    const q=await sb.from('drops').select('id,user_id,caption,media_url,media_type,created_at').eq('id',dropId).maybeSingle();
+    if(q.error||!q.data){alert('This Drop is no longer available.');return}
+    d=q.data;
+  }
+  pr=window.__exofActivityProfileCache?.get?.(d.user_id)||null;
+  if(!pr){
+    const q=await sb.from('profiles').select('id,username,display_name,avatar_url,official_role').eq('id',d.user_id).maybeSingle();
+    pr=q.data||{};
+  }
   let overlay=document.getElementById('exofActivityDropViewer');
   if(!overlay){
     overlay=document.createElement('div');overlay.id='exofActivityDropViewer';
@@ -2085,12 +2094,20 @@ window.EXOF_PRIVACY_API={
      const user=await me();
      const {data,error}=await sb().from('notifications').select('*').eq('user_id',user.id).in('type',['like','comment','follow','follow_accepted']).order('created_at',{ascending:false}).limit(50);
      if(error)throw error;if(!data?.length){empty.hidden=false;return}
-     const pm=await profiles(data.map(n=>n.actor_id).filter(Boolean));
+     const actorIds=data.map(n=>n.actor_id).filter(Boolean);
      const dropIds=[...new Set(data.map(n=>n.drop_id).filter(Boolean))];
      const commentIds=[...new Set(data.map(n=>n.comment_id).filter(Boolean))];
      let drops=new Map(),comments=new Map();
-     if(dropIds.length){const q=await sb().from('drops').select('id,media_url,media_type').in('id',dropIds);if(!q.error)(q.data||[]).forEach(x=>drops.set(String(x.id),x))}
-     if(commentIds.length){const q=await sb().from('drop_comments').select('id,body').in('id',commentIds);if(!q.error)(q.data||[]).forEach(x=>comments.set(String(x.id),x.body||''))}
+     const [pm,dropQ,commentQ]=await Promise.all([
+       profiles(actorIds),
+       dropIds.length?sb().from('drops').select('id,user_id,caption,media_url,media_type,created_at').in('id',dropIds):Promise.resolve({data:[],error:null}),
+       commentIds.length?sb().from('drop_comments').select('id,body').in('id',commentIds):Promise.resolve({data:[],error:null})
+     ]);
+     if(!dropQ.error)(dropQ.data||[]).forEach(x=>drops.set(String(x.id),x));
+     window.__exofActivityFullDropCache=drops;
+     if(!commentQ.error)(commentQ.data||[]).forEach(x=>comments.set(String(x.id),x.body||''));
+     window.__exofActivityDropCache=drops;
+     window.__exofActivityProfileCache=pm;
      data.forEach(n=>{
        const p=pm.get(n.actor_id)||{},d=drops.get(String(n.drop_id))||{},el=document.createElement('div');el.className='exofActivityRow recent';
        let action=n.type==='like'?'liked your Drop':
@@ -2104,7 +2121,15 @@ window.EXOF_PRIVACY_API={
           :`<img class="exofActivityThumb" src="${esc(d.media_url)}">`;
        }
        el.innerHTML=`<img class="exofActivityAvatar exofActivityActor" src="${av(p)}" alt=""><div class="exofActivityText"><div><b class="exofActivityActor">${who(p)}</b> <span class="exofActivityAction">${esc(action)}</span></div><small>${ago(n.created_at)}</small></div>${thumb}`;
-       const openActor=e=>{e.stopPropagation();closeActivity();(n.actor_id===currentUser?.id?go('profile'):openPublicProfile(n.actor_id));};
+       const openActor=e=>{
+         e.stopPropagation();
+         if(n.actor_id===currentUser?.id){
+           closeActivity();
+           go('profile');
+         }else{
+           openPublicProfile(n.actor_id);
+         }
+       };
        el.querySelectorAll('.exofActivityActor').forEach(x=>x.addEventListener('click',openActor));
        el.addEventListener('click',e=>{
          if(e.target.closest('.exofActivityActor'))return;
