@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.11.3 — Accepted Request Activity</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.12.0 — Home Comments Fix</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -520,7 +520,17 @@ header #messagesBtn.exofDmButton:active{
   aspect-ratio:auto!important;
 }
 </style>
-</head>
+<style id="exofHomeCommentsV1120">
+/* Home: no decorative comment circle. */
+#home .commentBtn{gap:4px!important}
+#home .commentBtn::before{display:none!important;content:none!important}
+.exofCommentTop{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.exofCommentMenuBtn{margin-left:auto;border:0;background:transparent;color:#fff;font-weight:900;letter-spacing:2px;padding:6px 8px;cursor:pointer}
+.exofCommentMenu{display:flex;gap:7px;justify-content:flex-end;margin:7px 0 0}
+.exofCommentMenu[hidden]{display:none!important}
+.exofCommentMenu button{border:1px solid #263229;border-radius:8px;background:#080b09;color:#fff;font-size:9px;font-weight:900;padding:7px 10px}
+.exofCommentMenu button[data-comment-action="delete"]{color:#ff6464;border-color:#482525}
+</style></head>
 <body>
 <div id="authGate">
   <div class="authBox">
@@ -560,7 +570,7 @@ header #messagesBtn.exofDmButton:active{
 <main id="app" style="display:none">
 <header><div></div><div class="brandLogo"><div class="exofWordmark" aria-label="EXOF"><span>E</span><span class="exofX">X</span><span>O</span><span>F</span></div></div><div class="headerActions"><button id="searchBtn" class="icon searchBtn" aria-label="Search" data-go="search">⌕</button><button id="messagesBtn" class="icon messagesBtn exofDmButton" aria-label="EXOF DM" data-go="messages"><img src="exof-dm-icon.png" alt="EXOF DM"></button></div></header>
 
-<section id="home" class="page active"><div class="tabs"><button class="on">For You</button><button>Following</button><button data-go="drop">DROP ⚡</button></div><div class="card dropHero"><small class="mint"><b>EVERY DAY · 3:00 PM ET</b></small><h2>⚡ GLOBAL DROP</h2><p class="sub">The whole world in one daily window. No posting required to watch.</p><button class="primary" data-go="drop">ENTER WORLD DROP</button></div><div id="realFeed"></div></section>
+<section id="home" class="page active"><div class="tabs"><button class="on">For You</button><button>Following</button><button data-go="drop">DROP ⚡</button></div><div id="realFeed"></div></section>
 
 <section id="drop" class="page"><div class="title">⚡ World DROP</div><p class="sub">Everyone sees everyone. Today's window disappears tomorrow at 2:55 PM ET.</p><div class="card dropHero"><small class="mint"><b>NEXT DROP · 3:00 PM ET</b></small><div class="clock" id="clock">--:--:--</div><p class="sub" id="dropStatus">Today's World Drop is live.</p><button class="primary" id="postDrop">＋ POST MY DROP</button></div><div class="worldGrid"><div class="world"><b>Tokyo 🇯🇵</b><small>Today's moments</small></div><div class="world"><b>Puerto Rico 🇵🇷</b><small>Today's moments</small></div><div class="world"><b>Miami 🇺🇸</b><small>Today's moments</small></div><div class="world"><b>Madrid 🇪🇸</b><small>Today's moments</small></div></div></section>
 
@@ -1381,11 +1391,38 @@ async function exofShareDrop(dropId,caption){
 async function renderComments(dropId,box,onCountChange){
  box.innerHTML='<div class="meta">Loading comments…</div>';
  try{
-  const rows=await exofComments(dropId); const ids=[...new Set(rows.map(x=>x.user_id))]; let pm={};
+  const rows=await exofComments(dropId);
+  const ownerQ=await sb.from('drops').select('user_id').eq('id',dropId).maybeSingle();
+  const dropOwnerId=ownerQ.data?.user_id||null;
+  const ids=[...new Set(rows.map(x=>x.user_id))]; let pm={};
   if(ids.length){const pr=await sb.from('profiles').select('id,username,display_name,avatar_url').in('id',ids);if(!pr.error)(pr.data||[]).forEach(x=>pm[x.id]=x)}
-  box.innerHTML=(rows.length?rows.map(c=>{const cp=pm[c.user_id]||{},nm=cp.display_name||cp.username||'EXOF',av=cp.avatar_url||'';return '<div class="exofCommentRow"><div class="exofCommentAuthor" data-comment-user="'+escapeHtml(c.user_id)+'"><div class="exofCommentAvatar" style="'+(av?'background-image:url(&quot;'+escapeHtml(av)+'&quot;);color:transparent':'')+'">'+escapeHtml(nm.charAt(0).toUpperCase())+'</div><b>'+escapeHtml(nm)+'</b><small class="meta">@'+escapeHtml(cp.username||'user')+'</small></div><div class="exofCommentBody">'+escapeHtml(c.body)+'</div></div>'}).join(''):'<div class="meta">No comments yet.</div>')+'<div class="exofCommentForm"><input type="text" maxlength="300" placeholder="Write a comment…"><button class="primary" type="button">POST</button></div>';box.querySelectorAll('[data-comment-user]').forEach(el=>el.addEventListener('click',()=>(el.dataset.commentUser===currentUser?.id?go('profile'):openPublicProfile(el.dataset.commentUser))));
-  const input=box.querySelector('input'),btn=box.querySelector('button');
-  const post=async()=>{if(!input.value.trim())return;btn.disabled=true;const {error}=await sb.from('drop_comments').insert({drop_id:dropId,user_id:currentUser.id,body:input.value.trim()});btn.disabled=false;if(error){alert(error.message);return}await renderComments(dropId,box,onCountChange);if(onCountChange)onCountChange(await exofCommentCount(dropId))};
+  const html=rows.length?rows.map(c=>{
+    const cp=pm[c.user_id]||{},nm=cp.display_name||cp.username||'EXOF',av=cp.avatar_url||'';
+    const canManage=!!currentUser&&(currentUser.id===c.user_id||currentUser.id===dropOwnerId);
+    return '<div class="exofCommentRow" data-comment-id="'+escapeHtml(String(c.id))+'">'+
+      '<div class="exofCommentTop"><div class="exofCommentAuthor" data-comment-user="'+escapeHtml(c.user_id)+'"><div class="exofCommentAvatar" style="'+(av?'background-image:url(&quot;'+escapeHtml(av)+'&quot;);color:transparent':'')+'">'+escapeHtml(nm.charAt(0).toUpperCase())+'</div><b>'+escapeHtml(nm)+'</b><small class="meta">@'+escapeHtml(cp.username||'user')+'</small></div>'+
+      (canManage?'<button class="exofCommentMenuBtn" type="button" aria-label="Comment options">•••</button>':'')+'</div>'+
+      '<div class="exofCommentBody">'+escapeHtml(c.body)+'</div>'+
+      (canManage?'<div class="exofCommentMenu" hidden><button data-comment-action="edit" type="button">EDIT</button><button data-comment-action="delete" type="button">DELETE</button></div>':'')+
+      '</div>'
+  }).join(''):'<div class="meta">No comments yet.</div>';
+  box.innerHTML=html+'<div class="exofCommentForm"><input type="text" maxlength="300" placeholder="Write a comment…"><button class="primary" type="button">POST</button></div>';
+  box.querySelectorAll('[data-comment-user]').forEach(el=>el.addEventListener('click',()=>(el.dataset.commentUser===currentUser?.id?go('profile'):openPublicProfile(el.dataset.commentUser))));
+  box.querySelectorAll('.exofCommentMenuBtn').forEach(btn=>btn.onclick=e=>{e.stopPropagation();const menu=btn.closest('.exofCommentRow').querySelector('.exofCommentMenu');box.querySelectorAll('.exofCommentMenu').forEach(m=>{if(m!==menu)m.hidden=true});menu.hidden=!menu.hidden});
+  box.querySelectorAll('[data-comment-action="edit"]').forEach(btn=>btn.onclick=async()=>{
+    const row=btn.closest('.exofCommentRow'), body=row.querySelector('.exofCommentBody');
+    const next=prompt('Edit comment:',body.textContent||''); if(next===null)return;
+    const clean=next.trim().slice(0,300); if(!clean)return alert('Comment cannot be empty.');
+    const {error}=await sb.rpc('exof_edit_comment',{p_comment_id:row.dataset.commentId,p_body:clean});
+    if(error)return alert(error.message); await renderComments(dropId,box,onCountChange);
+  });
+  box.querySelectorAll('[data-comment-action="delete"]').forEach(btn=>btn.onclick=async()=>{
+    if(!confirm('Delete this comment?'))return;
+    const row=btn.closest('.exofCommentRow'); const {error}=await sb.rpc('exof_delete_comment',{p_comment_id:row.dataset.commentId});
+    if(error)return alert(error.message); await renderComments(dropId,box,onCountChange); if(onCountChange)onCountChange(await exofCommentCount(dropId));
+  });
+  const input=box.querySelector('.exofCommentForm input'),btn=box.querySelector('.exofCommentForm button');
+  const post=async()=>{if(!input.value.trim())return;btn.disabled=true;try{await exofAddComment(dropId,input.value.trim());await renderComments(dropId,box,onCountChange);if(onCountChange)onCountChange(await exofCommentCount(dropId))}catch(e){alert(e.message)}finally{btn.disabled=false}};
   btn.onclick=post; input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();post()}};
  }catch(e){box.innerHTML='<div class="meta">'+escapeHtml(e.message||'Could not load comments.')+'</div>'}
 }
@@ -1393,7 +1430,7 @@ async function buildDropCard(d,pr={},own=false){
  const card=document.createElement('div');card.className='card post'+(own?' myDropCard':'');card.dataset.dropId=d.id;
  const media=d.media_type==='video'?'<video controls playsinline preload="metadata" class="ownMedia" style="width:100%;max-height:520px;object-fit:cover;background:#050806" src="'+d.media_url+'"></video>':'<img alt="Drop" class="ownMedia" style="width:100%;max-height:520px;object-fit:cover;background:#050806" src="'+d.media_url+'">';
  const liked=await exofIsLiked(d.id), likeCount=await exofLikeCount(d.id), commentCount=await exofCommentCount(d.id), saved=await exofIsSaved(d.id);
- card.innerHTML='<div class="postHead"><div class="ava exofProfileLink" data-profile-user="'+escapeHtml(d.user_id)+'" style="'+(pr.avatar_url?'background-image:url('+pr.avatar_url+');background-size:cover;background-position:center;color:transparent':'')+'">'+escapeHtml((pr.display_name||pr.username||'N').charAt(0).toUpperCase())+'</div><div class="who exofProfileLink" data-profile-user="'+escapeHtml(d.user_id)+'"><b>'+escapeHtml(pr.display_name||pr.username||'EXOF')+'</b><small>@'+escapeHtml(pr.username||'user')+'</small></div>'+(own?'<button class="exofDeleteDrop" type="button">DELETE</button>':'•••')+'</div><div>'+media+'</div>'+(d.caption?'<p style="padding:0 14px 4px">'+escapeHtml(d.caption)+'</p>':'')+'<div class="exofDropActions"><button class="likeBtn '+(liked?'liked':'')+'" type="button"><i class="likeFx"></i><b class="heart">'+(liked?'♥':'♡')+'</b> <span>'+likeCount+'</span></button><button class="commentBtn" type="button">◯ <span>'+commentCount+'</span> COMMENT</button><button class="shareBtn" type="button" aria-label="Share Drop"><img class="exofDmMiniIcon" src="exof-dm-icon.png" alt="EXOF DM"></button><button class="saveBtn '+(saved?'saved':'')+'" type="button" aria-label="Save Drop">'+(saved?'◆':'◇')+'</button></div><div class="exofComments" style="display:none"></div>';
+ card.innerHTML='<div class="postHead"><div class="ava exofProfileLink" data-profile-user="'+escapeHtml(d.user_id)+'" style="'+(pr.avatar_url?'background-image:url('+pr.avatar_url+');background-size:cover;background-position:center;color:transparent':'')+'">'+escapeHtml((pr.display_name||pr.username||'N').charAt(0).toUpperCase())+'</div><div class="who exofProfileLink" data-profile-user="'+escapeHtml(d.user_id)+'"><b>'+escapeHtml(pr.display_name||pr.username||'EXOF')+'</b><small>@'+escapeHtml(pr.username||'user')+'</small></div>'+(own?'<button class="exofDeleteDrop" type="button">DELETE</button>':'•••')+'</div><div>'+media+'</div>'+(d.caption?'<p style="padding:0 14px 4px">'+escapeHtml(d.caption)+'</p>':'')+'<div class="exofDropActions"><button class="likeBtn '+(liked?'liked':'')+'" type="button"><i class="likeFx"></i><b class="heart">'+(liked?'♥':'♡')+'</b> <span>'+likeCount+'</span></button><button class="commentBtn" type="button"><span>'+commentCount+'</span> COMMENT</button><button class="shareBtn" type="button" aria-label="Share Drop"><img class="exofDmMiniIcon" src="exof-dm-icon.png" alt="EXOF DM"></button><button class="saveBtn '+(saved?'saved':'')+'" type="button" aria-label="Save Drop">'+(saved?'◆':'◇')+'</button></div><div class="exofComments" style="display:none"></div>';
  card.querySelectorAll('[data-profile-user]').forEach(el=>el.addEventListener('click',()=>(el.dataset.profileUser===currentUser?.id?go('profile'):openPublicProfile(el.dataset.profileUser))));
  const lb=card.querySelector('.likeBtn');lb.onclick=async()=>{lb.disabled=true;try{const wasLiked=await exofIsLiked(d.id);await exofToggleLike(d.id);const now=await exofIsLiked(d.id),n=await exofLikeCount(d.id);lb.classList.toggle('liked',now);lb.querySelector('.heart').textContent=now?'♥':'♡';lb.querySelector('span').textContent=n;if(!wasLiked&&now){lb.classList.remove('burst');void lb.offsetWidth;lb.classList.add('burst');setTimeout(()=>lb.classList.remove('burst'),700)}}catch(e){alert(e.message||'Could not update like.')}finally{lb.disabled=false}};
  const cb=card.querySelector('.commentBtn'),comments=card.querySelector('.exofComments');const setCC=n=>{const x=cb.querySelector('span');if(x)x.textContent=n};cb.onclick=async()=>{const opening=comments.style.display==='none';comments.style.display=opening?'block':'none';if(opening)await renderComments(d.id,comments,setCC)};
