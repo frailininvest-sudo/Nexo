@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.12.1 — Home Dedupe + Comment Permissions</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.12.2 — CEO Badge</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -530,6 +530,9 @@ header #messagesBtn.exofDmButton:active{
 .exofCommentMenu[hidden]{display:none!important}
 .exofCommentMenu button{border:1px solid #263229;border-radius:8px;background:#080b09;color:#fff;font-size:9px;font-weight:900;padding:7px 10px}
 .exofCommentMenu button[data-comment-action="delete"]{color:#ff6464;border-color:#482525}
+</style><style id="exofCeoBadgeV1122">
+.exofOfficialRole{display:inline-flex;align-items:center;gap:3px;margin-left:6px;padding:2px 6px;border:1px solid rgba(82,255,40,.45);border-radius:7px;color:#52ff28;background:rgba(82,255,40,.07);font-size:8px;font-weight:900;letter-spacing:.25px;white-space:nowrap;vertical-align:middle}
+@media(max-width:480px){.exofOfficialRole{font-size:7px;padding:2px 5px;margin-left:4px}}
 </style></head>
 <body>
 <div id="authGate">
@@ -1388,6 +1391,11 @@ async function exofShareDrop(dropId,caption){
  if(navigator.share){try{await navigator.share(data);return}catch(e){if(e.name==='AbortError')return}}
  try{await navigator.clipboard.writeText(url);alert('Drop link copied!')}catch(e){prompt('Copy this Drop link:',url)}
 }
+function exofOfficialRoleBadge(pr){
+ const role=(pr&&pr.official_role||'').trim();
+ if(!role)return '';
+ return '<span class="exofOfficialRole">⚡ '+escapeHtml(role)+'</span>';
+}
 async function renderComments(dropId,box,onCountChange){
  box.innerHTML='<div class="meta">Loading comments…</div>';
  try{
@@ -1395,14 +1403,14 @@ async function renderComments(dropId,box,onCountChange){
   const ownerQ=await sb.from('drops').select('user_id').eq('id',dropId).maybeSingle();
   const dropOwnerId=ownerQ.data?.user_id||null;
   const ids=[...new Set(rows.map(x=>x.user_id))]; let pm={};
-  if(ids.length){const pr=await sb.from('profiles').select('id,username,display_name,avatar_url').in('id',ids);if(!pr.error)(pr.data||[]).forEach(x=>pm[x.id]=x)}
+  if(ids.length){const pr=await sb.from('profiles').select('id,username,display_name,avatar_url,official_role').in('id',ids);if(!pr.error)(pr.data||[]).forEach(x=>pm[x.id]=x)}
   const html=rows.length?rows.map(c=>{
     const cp=pm[c.user_id]||{},nm=cp.display_name||cp.username||'EXOF',av=cp.avatar_url||'';
     const isCommentAuthor=!!currentUser&&currentUser.id===c.user_id;
     const isDropOwner=!!currentUser&&currentUser.id===dropOwnerId;
     const canDelete=isCommentAuthor||isDropOwner;
     return '<div class="exofCommentRow" data-comment-id="'+escapeHtml(String(c.id))+'">'+
-      '<div class="exofCommentTop"><div class="exofCommentAuthor" data-comment-user="'+escapeHtml(c.user_id)+'"><div class="exofCommentAvatar" style="'+(av?'background-image:url(&quot;'+escapeHtml(av)+'&quot;);color:transparent':'')+'">'+escapeHtml(nm.charAt(0).toUpperCase())+'</div><b>'+escapeHtml(nm)+'</b><small class="meta">@'+escapeHtml(cp.username||'user')+'</small></div>'+
+      '<div class="exofCommentTop"><div class="exofCommentAuthor" data-comment-user="'+escapeHtml(c.user_id)+'"><div class="exofCommentAvatar" style="'+(av?'background-image:url(&quot;'+escapeHtml(av)+'&quot;);color:transparent':'')+'">'+escapeHtml(nm.charAt(0).toUpperCase())+'</div><b>'+escapeHtml(nm)+'</b>'+exofOfficialRoleBadge(cp)+'<small class="meta">@'+escapeHtml(cp.username||'user')+'</small></div>'+
       (canDelete?'<button class="exofCommentMenuBtn" type="button" aria-label="Comment options">•••</button>':'')+'</div>'+
       '<div class="exofCommentBody">'+escapeHtml(c.body)+'</div>'+
       (canDelete?'<div class="exofCommentMenu" hidden>'+(isCommentAuthor?'<button data-comment-action="edit" type="button">EDIT</button>':'')+'<button data-comment-action="delete" type="button">DELETE</button></div>':'')+
@@ -1455,7 +1463,7 @@ async function loadDrops(filter='all'){
  const seenDropIds=new Set();
  const drops=rawDrops.filter(d=>{const key=String(d.id);if(seenDropIds.has(key))return false;seenDropIds.add(key);return true});
  const userIds=[...new Set(drops.map(d=>d.user_id).filter(Boolean))];let profileMap={};
- if(userIds.length){const pr=await sb.from('profiles').select('id,username,display_name,avatar_url').in('id',userIds);if(!pr.error)(pr.data||[]).forEach(p=>profileMap[p.id]=p)}
+ if(userIds.length){const pr=await sb.from('profiles').select('id,username,display_name,avatar_url,official_role').in('id',userIds);if(!pr.error)(pr.data||[]).forEach(p=>profileMap[p.id]=p)}
  if(renderToken!==exofHomeFeedRenderToken)return;
  const frag=document.createDocumentFragment();
  for(const d of drops){
@@ -1633,7 +1641,7 @@ window.EXOF_PRIVACY_API={
    const c=window.exofSupabase,u=await this._user();
    const {data,error}=await c.from('follow_requests').select('requester_id,created_at').eq('target_id',u.id).eq('status','pending').order('created_at',{ascending:false});if(error)throw error;
    if(!data?.length)return [];
-   const {data:p,error:pe}=await c.from('profiles').select('id,username,display_name,avatar_url').in('id',data.map(x=>x.requester_id));if(pe)throw pe;
+   const {data:p,error:pe}=await c.from('profiles').select('id,username,display_name,avatar_url,official_role').in('id',data.map(x=>x.requester_id));if(pe)throw pe;
    const mp=new Map((p||[]).map(x=>[x.id,x]));return data.map(x=>({...x,profile:mp.get(x.requester_id)}));
  },
  async resolveRequest(uid,accept){
@@ -1649,7 +1657,7 @@ window.EXOF_PRIVACY_API={
    const c=window.exofSupabase,u=await this._user();
    const {data,error}=await c.from('user_blocks').select('blocked_id,created_at').eq('blocker_id',u.id).order('created_at',{ascending:false});if(error)throw error;
    if(!data?.length)return [];
-   const {data:p,error:pe}=await c.from('profiles').select('id,username,display_name,avatar_url').in('id',data.map(x=>x.blocked_id));if(pe)throw pe;return p||[];
+   const {data:p,error:pe}=await c.from('profiles').select('id,username,display_name,avatar_url,official_role').in('id',data.map(x=>x.blocked_id));if(pe)throw pe;return p||[];
  },
  async unblock(uid){const c=window.exofSupabase,u=await this._user();const {error}=await c.from('user_blocks').delete().eq('blocker_id',u.id).eq('blocked_id',uid);if(error)throw error;},
  async block(uid){
@@ -1916,7 +1924,7 @@ window.EXOF_PRIVACY_API={
  const page=()=>document.getElementById('exofActivityPage');
  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
  async function me(){const {data:{user},error}=await sb().auth.getUser();if(error)throw error;if(!user)throw new Error('Please log in again.');return user}
- async function profiles(ids){if(!ids.length)return new Map();const {data,error}=await sb().from('profiles').select('id,username,display_name,avatar_url').in('id',[...new Set(ids)]);if(error)throw error;return new Map((data||[]).map(x=>[x.id,x]))}
+ async function profiles(ids){if(!ids.length)return new Map();const {data,error}=await sb().from('profiles').select('id,username,display_name,avatar_url,official_role').in('id',[...new Set(ids)]);if(error)throw error;return new Map((data||[]).map(x=>[x.id,x]))}
  function who(p){return esc(p?.username||p?.display_name||'EXOF user')}
  function av(p){return esc(p?.avatar_url||'')}
  function ago(v){
