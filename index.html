@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.11.0 — Create Camera Loop</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.11.1 — Real Preview Ratio</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -497,7 +497,30 @@ header #messagesBtn.exofDmButton:active{
 }
 </style><style id="exofCreateV1110Style">
 .exofCreateV1110{padding-top:18px!important}.exofCreateTitle{text-align:center;margin:4px 0 22px}.exofCreateTitle>span{font-size:30px;color:var(--accent);display:block;margin-bottom:5px}.exofCreateTitle .title{margin:0;font-size:25px}.exofCreateTitle em{font-style:normal;color:var(--accent)}.exofCreateTitle .sub{margin:5px 0 0}.exofChooseLabel,.exofPreviewHead,.exofCaptionHead{font-size:11px;color:#909a93;letter-spacing:.8px;font-weight:800;margin:0 2px 8px}.exofCreateChoices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}.exofMediaChoice{min-height:104px;border:1px solid #26342a;border-radius:17px;background:#050806;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}.exofMediaChoice:active{border-color:var(--accent);transform:scale(.98)}.exofChoiceIcon{font-size:29px;color:var(--accent)}.exofMediaChoice b{font-size:13px}.exofMediaChoice small{font-size:9px;color:#8e9791}.exofCreateCard{border:1px solid #1d2b21;border-radius:18px;background:#050806;padding:12px}.exofPreviewHead,.exofCaptionHead{display:flex;justify-content:space-between;align-items:center}.exofPreviewHead button{border:1px solid #314136;border-radius:9px;background:#090d0a;color:#fff;padding:6px 10px;font-size:9px;font-weight:800}.exofCreatePreview{height:220px!important;position:relative;overflow:hidden;border-radius:14px!important;margin-bottom:14px}.exofCreatePreview img,.exofCreatePreview video{width:100%;height:100%;object-fit:cover}.exofLoopBadge{position:absolute;left:10px;top:10px;background:#071107dd;border:1px solid var(--accent);color:var(--accent);border-radius:9px;padding:6px 9px;font-size:10px;font-weight:900}.exofCaptionHead{margin-top:4px}.exofCreateV1110 textarea{min-height:100px}.exofPublish{margin-top:10px}.exofPublish:disabled{opacity:.35;filter:saturate(.3)}.exofVisibility{text-align:center;color:#7f8882;font-size:10px;margin:10px 0 2px}.exofCameraMode{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:100020;width:min(390px,calc(100vw - 28px));background:#050806;border:1px solid #2b3a2f;border-radius:20px;padding:16px;box-shadow:0 20px 80px #000}.exofCameraMode[hidden]{display:none!important}.exofCameraModeHead{display:flex;justify-content:space-between;align-items:center}.exofCameraModeHead button{width:32px;height:32px;border-radius:50%;border:1px solid #334039;background:#090d0a;color:#fff;font-size:20px}.exofCameraMode p{color:#9aa39d;font-size:12px}.exofCameraModes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:15px 0 10px}.exofCameraModes button{min-height:58px;border:1px solid #28362c;border-radius:13px;background:#080c09;color:#fff;font-size:11px;font-weight:900}.exofCameraModes button:active{background:var(--accent);color:#031003}.exofCameraMode small{display:block;color:#7e8981;font-size:9px;text-align:center}
-</style></head>
+</style>
+<style id="exofCreateRealPreviewRatioV1111">
+/* V1.11.1 — Preview follows the selected media's real aspect ratio. */
+#dropPreview.exofCreatePreview{
+  height:auto!important;
+  min-height:0!important;
+  aspect-ratio:auto!important;
+  overflow:hidden!important;
+}
+#dropPreview.exofCreatePreview:has(img),
+#dropPreview.exofCreatePreview:has(video){
+  display:block!important;
+}
+#dropPreview.exofCreatePreview img,
+#dropPreview.exofCreatePreview video{
+  display:block!important;
+  width:100%!important;
+  height:auto!important;
+  max-height:none!important;
+  object-fit:contain!important;
+  aspect-ratio:auto!important;
+}
+</style>
+</head>
 <body>
 <div id="authGate">
   <div class="authBox">
