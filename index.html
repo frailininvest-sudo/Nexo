@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.11.1 — Real Preview Ratio</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.11.2 — Follow Confirm Fix</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -1584,7 +1584,11 @@ window.EXOF_PRIVACY_API={
  },
  async resolveRequest(uid,accept){
    const c=window.exofSupabase,u=await this._user();
-   if(accept){const {error}=await c.from('follows').upsert({follower_id:uid,following_id:u.id},{onConflict:'follower_id,following_id'});if(error)throw error;}
+   if(accept){
+     const {error}=await c.rpc('exof_accept_follow_request',{p_requester_id:uid});
+     if(error)throw error;
+     return;
+   }
    const {error}=await c.from('follow_requests').delete().eq('requester_id',uid).eq('target_id',u.id);if(error)throw error;
  },
  async blocked(){
@@ -1881,11 +1885,7 @@ window.EXOF_PRIVACY_API={
        yes.onclick=async()=>{
          yes.disabled=true;
          try{
-           const user=await me();
            await priv().resolveRequest(r.requester_id,true);
-           // Accepted private request becomes a real Recent "started following you" event.
-           const existing=await sb().from('notifications').select('id').eq('user_id',user.id).eq('actor_id',r.requester_id).eq('type','follow').maybeSingle();
-           if(!existing.data) await sb().from('notifications').insert({user_id:user.id,actor_id:r.requester_id,type:'follow'});
            await Promise.all([loadRequests(),loadRecent(),updateBadge()]);
          }catch(e){yes.disabled=false;alert(e.message)}
        };
