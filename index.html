@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.10.5 — Activity Tabs</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.11.0 — Create Camera Loop</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -495,6 +495,8 @@ header #messagesBtn.exofDmButton:active{
  .exofActivityActions{gap:5px!important}
  .exofActivityBtn{padding:7px 8px!important;font-size:9px!important}
 }
+</style><style id="exofCreateV1110Style">
+.exofCreateV1110{padding-top:18px!important}.exofCreateTitle{text-align:center;margin:4px 0 22px}.exofCreateTitle>span{font-size:30px;color:var(--accent);display:block;margin-bottom:5px}.exofCreateTitle .title{margin:0;font-size:25px}.exofCreateTitle em{font-style:normal;color:var(--accent)}.exofCreateTitle .sub{margin:5px 0 0}.exofChooseLabel,.exofPreviewHead,.exofCaptionHead{font-size:11px;color:#909a93;letter-spacing:.8px;font-weight:800;margin:0 2px 8px}.exofCreateChoices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}.exofMediaChoice{min-height:104px;border:1px solid #26342a;border-radius:17px;background:#050806;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}.exofMediaChoice:active{border-color:var(--accent);transform:scale(.98)}.exofChoiceIcon{font-size:29px;color:var(--accent)}.exofMediaChoice b{font-size:13px}.exofMediaChoice small{font-size:9px;color:#8e9791}.exofCreateCard{border:1px solid #1d2b21;border-radius:18px;background:#050806;padding:12px}.exofPreviewHead,.exofCaptionHead{display:flex;justify-content:space-between;align-items:center}.exofPreviewHead button{border:1px solid #314136;border-radius:9px;background:#090d0a;color:#fff;padding:6px 10px;font-size:9px;font-weight:800}.exofCreatePreview{height:220px!important;position:relative;overflow:hidden;border-radius:14px!important;margin-bottom:14px}.exofCreatePreview img,.exofCreatePreview video{width:100%;height:100%;object-fit:cover}.exofLoopBadge{position:absolute;left:10px;top:10px;background:#071107dd;border:1px solid var(--accent);color:var(--accent);border-radius:9px;padding:6px 9px;font-size:10px;font-weight:900}.exofCaptionHead{margin-top:4px}.exofCreateV1110 textarea{min-height:100px}.exofPublish{margin-top:10px}.exofPublish:disabled{opacity:.35;filter:saturate(.3)}.exofVisibility{text-align:center;color:#7f8882;font-size:10px;margin:10px 0 2px}.exofCameraMode{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:100020;width:min(390px,calc(100vw - 28px));background:#050806;border:1px solid #2b3a2f;border-radius:20px;padding:16px;box-shadow:0 20px 80px #000}.exofCameraMode[hidden]{display:none!important}.exofCameraModeHead{display:flex;justify-content:space-between;align-items:center}.exofCameraModeHead button{width:32px;height:32px;border-radius:50%;border:1px solid #334039;background:#090d0a;color:#fff;font-size:20px}.exofCameraMode p{color:#9aa39d;font-size:12px}.exofCameraModes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:15px 0 10px}.exofCameraModes button{min-height:58px;border:1px solid #28362c;border-radius:13px;background:#080c09;color:#fff;font-size:11px;font-weight:900}.exofCameraModes button:active{background:var(--accent);color:#031003}.exofCameraMode small{display:block;color:#7e8981;font-size:9px;text-align:center}
 </style></head>
 <body>
 <div id="authGate">
@@ -541,7 +543,36 @@ header #messagesBtn.exofDmButton:active{
 
 <section id="loops" class="page"><div class="title">◎ Loops</div><p class="sub">Living photos built around motion and replay.</p><div class="loopStage"><div class="loopDot"></div></div><div class="actions"><span>♡</span><span>◯</span><span>🔗 Chain</span></div></section>
 
-<section id="create" class="page"><div class="orb">＋</div><div class="title" style="text-align:center">Create Drop</div><p class="sub" style="text-align:center">Share a photo or video with EXOF.</p><div class="card"><label class="upload">📷 PHOTO OR VIDEO<input id="dropMedia" type="file" accept="image/*,video/*"></label><div id="dropPreview" class="preview" style="margin-top:10px">NO MEDIA SELECTED</div><textarea id="dropCaption" maxlength="500" placeholder="Write a caption..." style="margin-top:10px"></textarea><div id="createDropMsg" class="meta" style="margin-top:8px"></div><button id="publishDropBtn" class="primary" style="margin-top:10px">PUBLISH DROP</button></div></section>
+<section id="create" class="page exofCreateV1110">
+ <div class="exofCreateTitle"><span>⚡</span><div class="title">CREATE <em>DROP</em></div><p class="sub">Share a photo, video or Loop with EXOF.</p></div>
+ <div class="exofChooseLabel">CHOOSE MEDIA</div>
+ <div class="exofCreateChoices">
+  <button id="exofCameraBtn" class="exofMediaChoice" type="button"><span class="exofChoiceIcon">⌾</span><b>CAMERA</b><small>Photo · Video · Loop</small></button>
+  <button id="exofRollBtn" class="exofMediaChoice" type="button"><span class="exofChoiceIcon">▧</span><b>CAMERA ROLL</b><small>Choose from gallery</small></button>
+ </div>
+ <input id="dropMedia" type="file" accept="image/*,video/*" hidden>
+ <input id="exofCameraPhoto" type="file" accept="image/*" capture="environment" hidden>
+ <input id="exofCameraVideo" type="file" accept="video/*" capture="environment" hidden>
+ <div id="exofCameraMode" class="exofCameraMode" hidden>
+   <div class="exofCameraModeHead"><b>EXOF CAMERA</b><button id="exofCameraClose" type="button">×</button></div>
+   <p>What do you want to capture?</p>
+   <div class="exofCameraModes">
+    <button data-mode="photo" type="button">PHOTO</button>
+    <button data-mode="video" type="button">VIDEO</button>
+    <button data-mode="loop" type="button">LOOP ⚡</button>
+   </div>
+   <small id="exofLoopHint">LOOP records a short clip and publishes it as an EXOF Loop.</small>
+ </div>
+ <div class="exofCreateCard">
+  <div class="exofPreviewHead"><span>PREVIEW</span><button id="exofChangeMedia" type="button" hidden>CHANGE</button></div>
+  <div id="dropPreview" class="preview exofCreatePreview">NO MEDIA SELECTED</div>
+  <div class="exofCaptionHead"><b>CAPTION</b><span id="exofCaptionCount">0/300</span></div>
+  <textarea id="dropCaption" maxlength="300" placeholder="Write a caption..."></textarea>
+  <div id="createDropMsg" class="meta"></div>
+  <button id="publishDropBtn" class="primary exofPublish" disabled>PUBLISH DROP</button>
+  <div class="exofVisibility">▣ Your Drop will be visible to everyone.</div>
+ </div>
+</section>
 
 <section id="spaces" class="page"><div class="title">Spaces</div><p class="sub">Find your people.</p><div class="row"><b>🎮 After Hours Gaming</b><p>Clips, squads, tournaments and gaming culture.</p></div><div class="row"><b>💻 Build & Hustle</b><p>Apps, businesses and projects people are building.</p></div><div class="row"><b>🏎 Car Culture</b><p>Builds, meets and automotive culture.</p></div></section>
 
@@ -1268,8 +1299,39 @@ document.getElementById('playTrack').addEventListener('click',async function(){
   toggleWhenReady(0);
 });
 let pendingDropFile=null;
+let pendingDropMode='drop';
 const dropMedia=document.getElementById('dropMedia');
-if(dropMedia) dropMedia.addEventListener('change',e=>{pendingDropFile=e.target.files&&e.target.files[0];const pv=document.getElementById('dropPreview');if(!pendingDropFile){pv.textContent='NO MEDIA SELECTED';return}const u=URL.createObjectURL(pendingDropFile);pv.innerHTML=pendingDropFile.type.startsWith('video/')?'<video controls playsinline style="width:100%;height:100%;object-fit:cover"></video>':'<img alt="Drop preview" style="width:100%;height:100%;object-fit:cover">';pv.firstChild.src=u;});
+const exofCameraPhoto=document.getElementById('exofCameraPhoto');
+const exofCameraVideo=document.getElementById('exofCameraVideo');
+const exofCameraMode=document.getElementById('exofCameraMode');
+const exofPublishBtn=document.getElementById('publishDropBtn');
+
+function exofShowSelectedMedia(file,mode){
+ pendingDropFile=file||null;pendingDropMode=mode||'drop';
+ const pv=document.getElementById('dropPreview'),change=document.getElementById('exofChangeMedia');
+ if(!file){pv.textContent='NO MEDIA SELECTED';change.hidden=true;if(exofPublishBtn)exofPublishBtn.disabled=true;return}
+ const u=URL.createObjectURL(file);
+ if(file.type.startsWith('video/')){
+   pv.innerHTML='<video controls playsinline muted></video>'+(pendingDropMode==='loop'?'<span class="exofLoopBadge">LOOP ⚡</span>':'');
+ }else pv.innerHTML='<img alt="Drop preview">';
+ pv.querySelector('video,img').src=u;change.hidden=false;if(exofPublishBtn)exofPublishBtn.disabled=false;
+}
+function exofPickCamera(mode){
+ exofCameraMode.hidden=true;
+ if(mode==='photo'){pendingDropMode='drop';exofCameraPhoto.click()}
+ else if(mode==='video'){pendingDropMode='drop';exofCameraVideo.click()}
+ else {pendingDropMode='loop';exofCameraVideo.click()}
+}
+document.getElementById('exofCameraBtn')?.addEventListener('click',()=>{exofCameraMode.hidden=false});
+document.getElementById('exofCameraClose')?.addEventListener('click',()=>{exofCameraMode.hidden=true});
+document.querySelectorAll('#exofCameraMode [data-mode]').forEach(b=>b.addEventListener('click',()=>exofPickCamera(b.dataset.mode)));
+document.getElementById('exofRollBtn')?.addEventListener('click',()=>dropMedia.click());
+document.getElementById('exofChangeMedia')?.addEventListener('click',()=>{exofCameraMode.hidden=false});
+dropMedia?.addEventListener('change',e=>exofShowSelectedMedia(e.target.files&&e.target.files[0],'drop'));
+exofCameraPhoto?.addEventListener('change',e=>exofShowSelectedMedia(e.target.files&&e.target.files[0],'drop'));
+exofCameraVideo?.addEventListener('change',e=>exofShowSelectedMedia(e.target.files&&e.target.files[0],pendingDropMode));
+const exofCaption=document.getElementById('dropCaption');
+exofCaption?.addEventListener('input',()=>{document.getElementById('exofCaptionCount').textContent=exofCaption.value.length+'/300'});
 async function exofIsLiked(dropId){
  if(!currentUser)return false;
  const {data,error}=await sb.from('drop_likes').select('drop_id').eq('drop_id',dropId).eq('user_id',currentUser.id).maybeSingle();
@@ -1421,7 +1483,7 @@ async function loadMyDrops(){
 }
 
 const publishDropBtn=document.getElementById('publishDropBtn');
-if(publishDropBtn) publishDropBtn.addEventListener('click',async()=>{const msg=document.getElementById('createDropMsg');if(!currentUser){msg.textContent='Please log in again.';return}if(!pendingDropFile){msg.textContent='Choose a photo or video first.';return}if(pendingDropFile.size>50*1024*1024){msg.textContent='File is too large. Maximum 50 MB.';return}publishDropBtn.disabled=true;publishDropBtn.textContent='PUBLISHING...';msg.textContent='';try{const ext=(pendingDropFile.name.split('.').pop()||'bin').replace(/[^a-z0-9]/gi,'').toLowerCase();const path=currentUser.id+'/'+Date.now()+'.'+ext;const up=await sb.storage.from('drop-media').upload(path,pendingDropFile,{contentType:pendingDropFile.type||undefined});if(up.error)throw up.error;const url=sb.storage.from('drop-media').getPublicUrl(path).data.publicUrl;const ins=await sb.from('drops').insert({user_id:currentUser.id,caption:document.getElementById('dropCaption').value.trim().slice(0,500),media_url:url,media_type:pendingDropFile.type.startsWith('video/')?'video':'image'});if(ins.error)throw ins.error;pendingDropFile=null;dropMedia.value='';document.getElementById('dropCaption').value='';document.getElementById('dropPreview').textContent='NO MEDIA SELECTED';msg.textContent='✓ Drop published';await loadDrops();setTimeout(()=>go('home'),500)}catch(err){msg.textContent=err.message||'Could not publish Drop.'}finally{publishDropBtn.disabled=false;publishDropBtn.textContent='PUBLISH DROP'}});
+if(publishDropBtn) publishDropBtn.addEventListener('click',async()=>{const msg=document.getElementById('createDropMsg');if(!currentUser){msg.textContent='Please log in again.';return}if(!pendingDropFile){msg.textContent='Choose a photo or video first.';return}if(pendingDropFile.size>50*1024*1024){msg.textContent='File is too large. Maximum 50 MB.';return}publishDropBtn.disabled=true;publishDropBtn.textContent='PUBLISHING...';msg.textContent='';try{const ext=(pendingDropFile.name.split('.').pop()||'bin').replace(/[^a-z0-9]/gi,'').toLowerCase();const path=currentUser.id+'/'+Date.now()+'.'+ext;const up=await sb.storage.from('drop-media').upload(path,pendingDropFile,{contentType:pendingDropFile.type||undefined});if(up.error)throw up.error;const url=sb.storage.from('drop-media').getPublicUrl(path).data.publicUrl;const ins=await sb.from('drops').insert({user_id:currentUser.id,caption:document.getElementById('dropCaption').value.trim().slice(0,300),media_url:url,media_type:pendingDropFile.type.startsWith('video/')?'video':'image'});if(ins.error)throw ins.error;pendingDropFile=null;pendingDropMode='drop';dropMedia.value='';exofCameraPhoto.value='';exofCameraVideo.value='';document.getElementById('dropCaption').value='';document.getElementById('exofCaptionCount').textContent='0/300';exofShowSelectedMedia(null,'drop');msg.textContent='✓ Drop published';await loadDrops();setTimeout(()=>go('home'),500)}catch(err){msg.textContent=err.message||'Could not publish Drop.'}finally{publishDropBtn.disabled=false;publishDropBtn.textContent='PUBLISH DROP'}});
 
 document.getElementById('postDrop').addEventListener('click',function(){this.textContent='✓ DROP POSTED ⚡'});
 function tick(){const p=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).formatToParts(new Date()).reduce((a,x)=>(a[x.type]=x.value,a),{});const cur=(+p.hour)*3600+(+p.minute)*60+(+p.second);let d=54000-cur;if(d<=0)d+=86400;document.getElementById('clock').textContent=[Math.floor(d/3600),Math.floor((d%3600)/60),d%60].map(x=>String(x).padStart(2,'0')).join(':');document.getElementById('dropStatus').textContent=(cur>=53700&&cur<54000)?'⚡ RESET WINDOW · Yesterday is gone · New DROP at 3:00 PM ET':"Today's World Drop stays public until 2:55 PM ET tomorrow."}
