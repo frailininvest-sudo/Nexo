@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.12.10 — Activity Clean Navigation</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.12.11 — Activity User Only</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -619,10 +619,8 @@ header #messagesBtn.exofDmButton:active{
   white-space:nowrap!important;
 }
 #publicProfile .exofPublicOfficialRole[hidden]{display:none!important}
-</style><style id="exofActivityCleanNavV1210">
-#exofActivityRecent [data-exof-activity-user],
-#exofActivityRecent [data-exof-activity-drop],
-#exofActivityRecent .exofActivityThumb{cursor:pointer}
+</style><style id="exofActivityUserOnlyV1211">
+#exofActivityRecent .exofActivityUserLink{cursor:pointer}
 </style></head>
 <body>
 <div id="authGate">
@@ -2082,26 +2080,17 @@ window.EXOF_PRIVACY_API={
           ?`<video class="exofActivityThumb" src="${esc(d.media_url)}" muted playsinline preload="metadata"></video>`
           :`<img class="exofActivityThumb" src="${esc(d.media_url)}">`;
        }
-       el.innerHTML=`<img class="exofActivityAvatar" data-exof-activity-user="${esc(n.actor_id||'')}" src="${av(p)}"><div class="exofActivityText"><div><b data-exof-activity-user="${esc(n.actor_id||'')}">${who(p)}</b> <span data-exof-activity-drop="${esc(n.drop_id||'')}">${esc(action)}</span></div><small data-exof-activity-drop="${esc(n.drop_id||'')}">${ago(n.created_at)}</small></div>${thumb}`;
-       el.querySelectorAll('[data-exof-activity-user]').forEach(x=>x.onclick=e=>{
+       el.innerHTML=`<img class="exofActivityAvatar exofActivityUserLink" src="${av(p)}"><div class="exofActivityText"><div><b class="exofActivityUserLink">${who(p)}</b> <span>${esc(action)}</span></div><small>${ago(n.created_at)}</small></div>${thumb}`;
+       el.querySelectorAll('.exofActivityUserLink').forEach(x=>x.addEventListener('click',e=>{
          e.stopPropagation();
-         const uid=x.dataset.exofActivityUser;
-         if(!uid)return;
-         if(uid===currentUser?.id){closeActivity();go('profile')}
-         else openPublicProfile(uid);
-       });
-       const openExistingDrop=()=>{
-         if(!n.drop_id)return;
-         closeActivity();
-         go('home');
-         requestAnimationFrame(()=>requestAnimationFrame(()=>{
-           const target=document.querySelector('#realFeed [data-drop-id="'+CSS.escape(String(n.drop_id))+'"]');
-           if(target)target.scrollIntoView({behavior:'smooth',block:'center'});
-         }));
-       };
-       el.querySelectorAll('[data-exof-activity-drop]').forEach(x=>x.onclick=e=>{e.stopPropagation();openExistingDrop()});
-       const mediaEl=el.querySelector('.exofActivityThumb');
-       if(mediaEl)mediaEl.onclick=e=>{e.stopPropagation();openExistingDrop()};
+         if(!n.actor_id)return;
+         if(n.actor_id===currentUser?.id){
+           closeActivity();
+           go('profile');
+         }else{
+           openPublicProfile(n.actor_id);
+         }
+       }));
        box.appendChild(el);
      });
      await sb().from('notifications').update({is_read:true}).eq('user_id',user.id).eq('is_read',false);
