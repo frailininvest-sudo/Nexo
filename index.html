@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.12.5 — CEO Position</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.12.6 — CEO No Bolt</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -820,7 +820,7 @@ function paintProfile(user,profile){
   const roleEl=document.getElementById('realProfileOfficialRole');
   if(roleEl){
     roleEl.hidden=!officialRole;
-    roleEl.textContent=officialRole?'⚡ '+officialRole:'';
+    roleEl.textContent=officialRole?officialRole:'';
   }
   const ava=document.getElementById('realProfileAva'); if(ava){ava.textContent=(display||username).charAt(0).toUpperCase(); if(profile&&profile.avatar_url){ava.style.backgroundImage='url(\"'+profile.avatar_url+'\")';ava.style.backgroundSize='cover';ava.style.backgroundPosition='center';ava.textContent='';}else{ava.style.backgroundImage='none';}}
   const cover=document.getElementById('realProfileCover');
