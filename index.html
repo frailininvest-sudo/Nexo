@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.10.2 — EXOF DM Icon</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.10.3 — DM Icon Everywhere</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -423,6 +423,18 @@ header #messagesBtn.exofDmButton img{
 }
 header #messagesBtn.exofDmButton:active{
   transform:scale(.93)!important;
+}
+</style>
+
+<style id="exofDmMiniPostIconV1103">
+/* Small EXOF DM icon in Drop action bars; no layout/function changes. */
+.exofDmMiniIcon{
+  width:25px!important;height:25px!important;
+  object-fit:contain!important;
+  display:inline-block!important;
+  vertical-align:middle!important;
+  border-radius:6px!important;
+  pointer-events:none!important;
 }
 </style>
 </head>
@@ -1225,7 +1237,7 @@ async function buildDropCard(d,pr={},own=false){
  const card=document.createElement('div');card.className='card post'+(own?' myDropCard':'');card.dataset.dropId=d.id;
  const media=d.media_type==='video'?'<video controls playsinline preload="metadata" class="ownMedia" style="width:100%;max-height:520px;object-fit:cover;background:#050806" src="'+d.media_url+'"></video>':'<img alt="Drop" class="ownMedia" style="width:100%;max-height:520px;object-fit:cover;background:#050806" src="'+d.media_url+'">';
  const liked=await exofIsLiked(d.id), likeCount=await exofLikeCount(d.id), commentCount=await exofCommentCount(d.id), saved=await exofIsSaved(d.id);
- card.innerHTML='<div class="postHead"><div class="ava exofProfileLink" data-profile-user="'+escapeHtml(d.user_id)+'" style="'+(pr.avatar_url?'background-image:url('+pr.avatar_url+');background-size:cover;background-position:center;color:transparent':'')+'">'+escapeHtml((pr.display_name||pr.username||'N').charAt(0).toUpperCase())+'</div><div class="who exofProfileLink" data-profile-user="'+escapeHtml(d.user_id)+'"><b>'+escapeHtml(pr.display_name||pr.username||'EXOF')+'</b><small>@'+escapeHtml(pr.username||'user')+'</small></div>'+(own?'<button class="exofDeleteDrop" type="button">DELETE</button>':'•••')+'</div><div>'+media+'</div>'+(d.caption?'<p style="padding:0 14px 4px">'+escapeHtml(d.caption)+'</p>':'')+'<div class="exofDropActions"><button class="likeBtn '+(liked?'liked':'')+'" type="button"><i class="likeFx"></i><b class="heart">'+(liked?'♥':'♡')+'</b> <span>'+likeCount+'</span></button><button class="commentBtn" type="button">◯ <span>'+commentCount+'</span> COMMENT</button><button class="shareBtn" type="button" aria-label="Share Drop">↗</button><button class="saveBtn '+(saved?'saved':'')+'" type="button" aria-label="Save Drop">'+(saved?'◆':'◇')+'</button></div><div class="exofComments" style="display:none"></div>';
+ card.innerHTML='<div class="postHead"><div class="ava exofProfileLink" data-profile-user="'+escapeHtml(d.user_id)+'" style="'+(pr.avatar_url?'background-image:url('+pr.avatar_url+');background-size:cover;background-position:center;color:transparent':'')+'">'+escapeHtml((pr.display_name||pr.username||'N').charAt(0).toUpperCase())+'</div><div class="who exofProfileLink" data-profile-user="'+escapeHtml(d.user_id)+'"><b>'+escapeHtml(pr.display_name||pr.username||'EXOF')+'</b><small>@'+escapeHtml(pr.username||'user')+'</small></div>'+(own?'<button class="exofDeleteDrop" type="button">DELETE</button>':'•••')+'</div><div>'+media+'</div>'+(d.caption?'<p style="padding:0 14px 4px">'+escapeHtml(d.caption)+'</p>':'')+'<div class="exofDropActions"><button class="likeBtn '+(liked?'liked':'')+'" type="button"><i class="likeFx"></i><b class="heart">'+(liked?'♥':'♡')+'</b> <span>'+likeCount+'</span></button><button class="commentBtn" type="button">◯ <span>'+commentCount+'</span> COMMENT</button><button class="shareBtn" type="button" aria-label="Share Drop"><img class="exofDmMiniIcon" src="exof-dm-icon.png" alt="EXOF DM"></button><button class="saveBtn '+(saved?'saved':'')+'" type="button" aria-label="Save Drop">'+(saved?'◆':'◇')+'</button></div><div class="exofComments" style="display:none"></div>';
  card.querySelectorAll('[data-profile-user]').forEach(el=>el.addEventListener('click',()=>(el.dataset.profileUser===currentUser?.id?go('profile'):openPublicProfile(el.dataset.profileUser))));
  const lb=card.querySelector('.likeBtn');lb.onclick=async()=>{lb.disabled=true;try{const wasLiked=await exofIsLiked(d.id);await exofToggleLike(d.id);const now=await exofIsLiked(d.id),n=await exofLikeCount(d.id);lb.classList.toggle('liked',now);lb.querySelector('.heart').textContent=now?'♥':'♡';lb.querySelector('span').textContent=n;if(!wasLiked&&now){lb.classList.remove('burst');void lb.offsetWidth;lb.classList.add('burst');setTimeout(()=>lb.classList.remove('burst'),700)}}catch(e){alert(e.message||'Could not update like.')}finally{lb.disabled=false}};
  const cb=card.querySelector('.commentBtn'),comments=card.querySelector('.exofComments');const setCC=n=>{const x=cb.querySelector('span');if(x)x.textContent=n};cb.onclick=async()=>{const opening=comments.style.display==='none';comments.style.display=opening?'block':'none';if(opening)await renderComments(d.id,comments,setCC)};
