@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.10.0 — Settings Profile Sync</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.10.1 — Settings Name Fix</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -2124,9 +2124,11 @@ window.addEventListener('load',function(){
 
 
 
-<script id="exofSettingsProfileSyncV1100">
+
+
+<script id="exofSettingsProfileSyncV1101">
 (function(){
- function syncSettingsFromWorkingProfile(){
+ function syncSettingsFromProfile(){
    const a=document.getElementById('exofSettingsAvatar');
    const n=document.getElementById('exofSettingsName');
    const u=document.getElementById('exofSettingsUsername');
@@ -2134,47 +2136,59 @@ window.addEventListener('load',function(){
 
    const p=(typeof currentProfile!=='undefined'&&currentProfile)||{};
    const cu=(typeof currentUser!=='undefined'&&currentUser)||{};
-   // Same priority used by paintProfile()
-   const username=p.username||(cu.user_metadata&&cu.user_metadata.username)||
+
+   // FIRST SOURCE: the Profile UI that is already showing the correct Frai / @frai.
+   const profileNameEl=document.getElementById('realProfileName');
+   const profileBioEl=document.getElementById('realProfileBio');
+   const renderedName=(profileNameEl&&profileNameEl.textContent||'').trim();
+   const renderedBio=(profileBioEl&&profileBioEl.textContent||'').trim();
+   const renderedHandleMatch=renderedBio.match(/@([A-Za-z0-9._-]+)/);
+
+   const username=
+     (renderedHandleMatch&&renderedHandleMatch[1]) ||
+     p.username ||
+     (cu.user_metadata&&cu.user_metadata.username) ||
      (cu.email?cu.email.split('@')[0]:'user');
-   const display=p.display_name||(cu.user_metadata&&cu.user_metadata.display_name)||username||'EXOF User';
+
+   const display=
+     (renderedName && renderedName.toLowerCase()!=='exof' ? renderedName : '') ||
+     p.display_name ||
+     (cu.user_metadata&&cu.user_metadata.display_name) ||
+     username ||
+     'EXOF User';
 
    n.textContent=display;
    u.textContent='@'+String(username).replace(/^@/,'');
 
+   // Avatar: use current profile URL, otherwise copy the working Profile avatar.
    if(p.avatar_url){
      a.src=p.avatar_url;
      a.alt=display;
      a.style.display='block';
    }else{
-     // Copy the already-rendered Profile avatar background if available.
      const pa=document.getElementById('realProfileAva');
-     const bg=pa&&pa.style.backgroundImage;
-     if(bg&&bg!=='none'){
-       const match=bg.match(/url\(["']?(.*?)["']?\)/);
-       if(match&&match[1]){
-         a.src=match[1]; a.alt=display; a.style.display='block'; return;
-       }
+     const bg=pa&&getComputedStyle(pa).backgroundImage;
+     const match=bg&&bg.match(/url\(["']?(.*?)["']?\)/);
+     if(match&&match[1]&&match[1]!=='none'){
+       a.src=match[1];
+       a.alt=display;
+       a.style.display='block';
      }
-     a.removeAttribute('src');
-     a.style.display='none';
    }
  }
- window.exofSyncSettingsProfile=syncSettingsFromWorkingProfile;
 
- // Hook the existing Settings opener itself, so sync happens every single time.
- const oldOpen=window.openExofSettings;
- if(typeof oldOpen==='function'){
-   window.openExofSettings=function(){
-     const r=oldOpen.apply(this,arguments);
-     setTimeout(syncSettingsFromWorkingProfile,0);
-     return r;
-   };
- }
- window.addEventListener('load',()=>setTimeout(syncSettingsFromWorkingProfile,900));
- document.addEventListener('click',e=>{
-   if(e.target.closest('#exofProfileSettingsGear'))setTimeout(syncSettingsFromWorkingProfile,40);
+ window.exofSyncSettingsProfile=syncSettingsFromProfile;
+
+ // Capture every route/open click that can lead to Settings.
+ document.addEventListener('click',function(e){
+   if(e.target.closest('#exofProfileSettingsGear,[data-go="settings"],[onclick*="settings"]')){
+     setTimeout(syncSettingsFromProfile,0);
+     setTimeout(syncSettingsFromProfile,120);
+   }
  },true);
+
+ window.addEventListener('load',()=>setTimeout(syncSettingsFromProfile,800));
+ window.addEventListener('pageshow',()=>setTimeout(syncSettingsFromProfile,250));
 })();
 </script>
 </body></html>
