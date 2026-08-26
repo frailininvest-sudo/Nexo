@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.12.7 — Public Official Role</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.12.8 — Activity Navigation</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -619,6 +619,15 @@ header #messagesBtn.exofDmButton:active{
   white-space:nowrap!important;
 }
 #publicProfile .exofPublicOfficialRole[hidden]{display:none!important}
+</style><style id="exofActivityNavigationV1128">
+.exofActivityRow.recent{cursor:pointer}
+.exofActivityRow .exofActivityActor{cursor:pointer}
+.exofActivityRow .exofActivityActor:hover{text-decoration:underline}
+#exofActivityDropViewer{position:fixed;inset:0;z-index:10080;background:#010604;overflow:auto;padding-bottom:90px}
+#exofActivityDropViewer[hidden]{display:none!important}
+.exofActivityDropTop{position:sticky;top:0;z-index:3;height:54px;display:flex;align-items:center;gap:12px;padding:0 14px;background:rgba(1,6,4,.96);border-bottom:1px solid #193022}
+.exofActivityDropTop button{width:34px;height:34px;border-radius:50%;border:1px solid #2a3a30;background:#07100b;color:white;font-size:24px;line-height:1}
+#exofActivityDropBody{width:min(100%,430px);margin:14px auto}
 </style></head>
 <body>
 <div id="authGate">
@@ -1548,6 +1557,22 @@ async function buildDropCard(d,pr={},own=false){
  return card;
 }
 
+async function exofOpenActivityDrop(dropId){
+  if(!dropId)return;
+  const {data:d,error}=await sb.from('drops').select('id,user_id,caption,media_url,media_type,created_at').eq('id',dropId).maybeSingle();
+  if(error||!d){alert('This Drop is no longer available.');return}
+  const {data:pr}=await sb.from('profiles').select('id,username,display_name,avatar_url,official_role').eq('id',d.user_id).maybeSingle();
+  let overlay=document.getElementById('exofActivityDropViewer');
+  if(!overlay){
+    overlay=document.createElement('div');overlay.id='exofActivityDropViewer';
+    overlay.innerHTML='<div class="exofActivityDropTop"><button type="button" id="exofActivityDropBack">‹</button><b>DROP</b></div><div id="exofActivityDropBody"></div>';
+    document.body.appendChild(overlay);
+    overlay.querySelector('#exofActivityDropBack').onclick=()=>{overlay.hidden=true};
+  }
+  const body=overlay.querySelector('#exofActivityDropBody');body.innerHTML='';
+  body.appendChild(await buildDropCard(d,pr||{},currentUser?.id===d.user_id));
+  overlay.hidden=false;
+}
 let exofHomeFeedRenderToken=0;
 async function loadDrops(filter='all'){
  const renderToken=++exofHomeFeedRenderToken;
@@ -2078,7 +2103,14 @@ window.EXOF_PRIVACY_API={
           ?`<video class="exofActivityThumb" src="${esc(d.media_url)}" muted playsinline preload="metadata"></video>`
           :`<img class="exofActivityThumb" src="${esc(d.media_url)}">`;
        }
-       el.innerHTML=`<img class="exofActivityAvatar" src="${av(p)}"><div class="exofActivityText"><div><b>${who(p)}</b> <span>${esc(action)}</span></div><small>${ago(n.created_at)}</small></div>${thumb}`;
+       el.innerHTML=`<img class="exofActivityAvatar exofActivityActor" src="${av(p)}" alt=""><div class="exofActivityText"><div><b class="exofActivityActor">${who(p)}</b> <span class="exofActivityAction">${esc(action)}</span></div><small>${ago(n.created_at)}</small></div>${thumb}`;
+       const openActor=e=>{e.stopPropagation();closeActivity();(n.actor_id===currentUser?.id?go('profile'):openPublicProfile(n.actor_id));};
+       el.querySelectorAll('.exofActivityActor').forEach(x=>x.addEventListener('click',openActor));
+       el.addEventListener('click',e=>{
+         if(e.target.closest('.exofActivityActor'))return;
+         if(n.drop_id)exofOpenActivityDrop(n.drop_id);
+         else openActor(e);
+       });
        box.appendChild(el);
      });
      await sb().from('notifications').update({is_read:true}).eq('user_id',user.id).eq('is_read',false);
