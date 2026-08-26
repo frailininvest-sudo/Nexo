@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.10.3 — DM Icon Everywhere</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.10.4 — Activity Center</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -437,7 +437,19 @@ header #messagesBtn.exofDmButton:active{
   pointer-events:none!important;
 }
 </style>
-</head>
+<style id="exofActivityStyleV1104">
+#exofActivityPage{position:fixed!important;inset:0!important;z-index:99990!important;background:#020604!important;color:#fff!important;overflow:auto!important}
+#exofActivityPage[hidden]{display:none!important}
+.exofActivityHead{height:74px;display:flex;align-items:center;gap:14px;padding:0 18px;border-bottom:1px solid #172019;position:sticky;top:0;background:#020604;z-index:3}
+.exofActivityHead b{font-size:22px}.exofActivityBody{width:min(760px,calc(100% - 30px));margin:0 auto;padding:28px 0 90px}
+.exofActivitySection{display:flex;align-items:center;gap:8px;color:#a7afa9;font-size:12px;letter-spacing:1.4px;padding:12px 5px 10px;border-bottom:1px solid #213025;margin-bottom:12px}
+.exofActivitySection.recentTitle{margin-top:24px}.exofActivityCount{display:inline-grid;place-items:center;background:var(--accent);color:#041003;border-radius:999px;min-width:20px;height:20px;font-weight:900;letter-spacing:0}
+.exofActivityList{display:flex;flex-direction:column;gap:10px}.exofActivityRow{display:flex;align-items:center;gap:12px;min-height:78px;padding:12px 14px;border:1px solid #1b2b20;border-radius:18px;background:linear-gradient(110deg,#08100b,#050806)}
+.exofActivityAvatar{width:52px;height:52px;min-width:52px;border-radius:50%;object-fit:cover;background:#101610}.exofActivityText{flex:1;min-width:0}.exofActivityText b{font-size:14px}.exofActivityText span{font-size:14px}.exofActivityText small{display:block;color:#9aa39c;margin-top:5px;font-size:12px}
+.exofActivityActions{display:flex;gap:8px}.exofActivityBtn{border:1px solid #31543a;border-radius:12px;background:#060a07;color:#fff;padding:10px 14px;font-weight:800}.exofActivityBtn.accept{background:var(--accent);color:#031003;border-color:var(--accent)}
+.exofActivityThumb{width:62px;height:52px;min-width:62px;border-radius:10px;object-fit:cover;background:#111}.exofActivityEmpty{text-align:center;color:#7f8a82;padding:24px 10px}
+@media(max-width:560px){.exofActivityBody{width:calc(100% - 20px);padding-top:18px}.exofActivityRow.request{align-items:flex-start;flex-wrap:wrap}.exofActivityRow.request .exofActivityActions{width:100%;padding-left:64px}.exofActivityBtn{padding:9px 12px}.exofActivityAvatar{width:46px;height:46px;min-width:46px}.exofActivityThumb{width:54px;height:48px;min-width:54px}}
+</style></head>
 <body>
 <div id="authGate">
   <div class="authBox">
@@ -955,17 +967,30 @@ async function exofFollowingDrops(){
   if(error)throw error; return data||[];
 }
 async function exofToggleLike(dropId){
-  if(!currentUser)return;
-  const {data}=await sb.from('drop_likes').select('drop_id').eq('drop_id',dropId).eq('user_id',currentUser.id).maybeSingle();
-  if(data) await sb.from('drop_likes').delete().eq('drop_id',dropId).eq('user_id',currentUser.id);
-  else await sb.from('drop_likes').insert({drop_id:dropId,user_id:currentUser.id});
+ if(!currentUser)return;
+ const liked=await exofIsLiked(dropId);
+ if(liked){
+   await sb.from('drop_likes').delete().eq('drop_id',dropId).eq('user_id',currentUser.id);
+   const dr=await sb.from('drops').select('user_id').eq('id',dropId).maybeSingle();
+   if(dr.data?.user_id && dr.data.user_id!==currentUser.id)
+     await sb.from('notifications').delete().eq('user_id',dr.data.user_id).eq('actor_id',currentUser.id).eq('type','like').eq('drop_id',dropId);
+ }else{
+   await sb.from('drop_likes').insert({drop_id:dropId,user_id:currentUser.id});
+   const dr=await sb.from('drops').select('user_id').eq('id',dropId).maybeSingle();
+   if(dr.data?.user_id && dr.data.user_id!==currentUser.id)
+     await sb.from('notifications').insert({user_id:dr.data.user_id,actor_id:currentUser.id,type:'like',drop_id:dropId});
+ }
 }
 async function exofLikeCount(dropId){
   const {count}=await sb.from('drop_likes').select('*',{count:'exact',head:true}).eq('drop_id',dropId); return count||0;
 }
 async function exofAddComment(dropId,body){
-  body=(body||'').trim(); if(!currentUser||!body)return;
-  await sb.from('drop_comments').insert({drop_id:dropId,user_id:currentUser.id,body});
+ body=(body||'').trim(); if(!currentUser||!body)return;
+ const cr=await sb.from('drop_comments').insert({drop_id:dropId,user_id:currentUser.id,body}).select('id').single();
+ if(cr.error)throw cr.error;
+ const dr=await sb.from('drops').select('user_id').eq('id',dropId).maybeSingle();
+ if(dr.data?.user_id && dr.data.user_id!==currentUser.id)
+   await sb.from('notifications').insert({user_id:dr.data.user_id,actor_id:currentUser.id,type:'comment',drop_id:dropId,comment_id:cr.data?.id||null});
 }
 async function exofComments(dropId){
   const {data,error}=await sb.from('drop_comments').select('id,user_id,body,created_at').eq('drop_id',dropId).order('created_at',{ascending:true});
@@ -1461,7 +1486,9 @@ window.EXOF_PRIVACY_API={
    if(rel.following){const {error}=await c.from('follows').delete().eq('follower_id',u.id).eq('following_id',uid);if(error)throw error;return 'follow';}
    if(rel.requested){const {error}=await c.from('follow_requests').delete().eq('requester_id',u.id).eq('target_id',uid);if(error)throw error;return 'follow';}
    if(rel.private){const {error}=await c.from('follow_requests').insert({requester_id:u.id,target_id:uid});if(error)throw error;return 'requested';}
-   const {error}=await c.from('follows').insert({follower_id:u.id,following_id:uid});if(error)throw error;return 'following';
+   const {error}=await c.from('follows').insert({follower_id:u.id,following_id:uid});if(error)throw error;
+   await c.from('notifications').insert({user_id:uid,actor_id:u.id,type:'follow'});
+   return 'following';
  },
  async canView(uid){const u=await this._user();if(uid===u.id)return true;const r=await this.relation(uid);return !r.blockedByMe&&!r.blockedByThem&&(!r.private||r.following);},
  async canComment(ownerId){
@@ -1680,55 +1707,83 @@ window.EXOF_PRIVACY_API={
 <section id="exofActivityPage" class="exofActivityPage" hidden>
  <div class="exofActivityHead"><button id="exofActivityBack" class="exofFuncBack">‹</button><b>ACTIVITY</b></div>
  <div class="exofActivityBody">
-  <div class="exofActivitySection">FOLLOW REQUESTS</div>
-  <div id="exofActivityRequests" class="exofActivityCard"></div>
+  <div class="exofActivitySection"><span>FOLLOW REQUESTS</span><span id="exofActivityRequestCount" class="exofActivityCount" hidden></span></div>
+  <div id="exofActivityRequests" class="exofActivityList"></div>
   <div id="exofActivityRequestsEmpty" class="exofActivityEmpty">No pending follow requests.</div>
-  <div class="exofActivitySection">RECENT</div>
-  <div id="exofActivityRecent" class="exofActivityCard"></div>
+  <div class="exofActivitySection recentTitle">RECENT</div>
+  <div id="exofActivityRecent" class="exofActivityList"></div>
   <div id="exofActivityRecentEmpty" class="exofActivityEmpty">Your EXOF activity will appear here.</div>
  </div>
 </section>
-
-<script>
+<script id="exofActivityV1104">
 (function(){
- const $=id=>document.getElementById(id);
- const sb=()=>window.exofSupabase;
- const priv=()=>window.EXOF_PRIVACY_API;
+ const $=id=>document.getElementById(id), sb=()=>window.exofSupabase, priv=()=>window.EXOF_PRIVACY_API;
  const page=()=>document.getElementById('exofActivityPage');
- function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
- function avatar(p){return esc(p?.avatar_url||'')}
+ const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
  async function me(){const {data:{user},error}=await sb().auth.getUser();if(error)throw error;if(!user)throw new Error('Please log in again.');return user}
  async function profiles(ids){if(!ids.length)return new Map();const {data,error}=await sb().from('profiles').select('id,username,display_name,avatar_url').in('id',[...new Set(ids)]);if(error)throw error;return new Map((data||[]).map(x=>[x.id,x]))}
+ function who(p){return esc(p?.username||p?.display_name||'EXOF user')}
+ function av(p){return esc(p?.avatar_url||'')}
+ function ago(v){
+   const d=new Date(v),sec=Math.max(0,(Date.now()-d)/1000);
+   if(sec<60)return 'Now'; if(sec<3600)return Math.floor(sec/60)+'m'; if(sec<86400)return Math.floor(sec/3600)+'h';
+   if(sec<172800)return 'Yesterday'; if(sec<604800)return Math.floor(sec/86400)+'d';
+   return d.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+ }
  async function loadRequests(){
-   const box=$('exofActivityRequests'),empty=$('exofActivityRequestsEmpty');box.innerHTML='';empty.hidden=true;
+   const box=$('exofActivityRequests'),empty=$('exofActivityRequestsEmpty'),count=$('exofActivityRequestCount');
+   box.innerHTML='';empty.hidden=true;
    try{
      const rows=await priv().requests();
+     count.textContent=rows.length;count.hidden=!rows.length;
      if(!rows.length){empty.hidden=false;return}
      rows.forEach(r=>{
-       const p=r.profile||{},el=document.createElement('div');el.className='exofActivityRow';
-       el.innerHTML=`<img class="exofActivityAvatar" src="${avatar(p)}"><div class="exofActivityText"><b>${esc(p.display_name||p.username||'EXOF user')}</b><small>@${esc(p.username||'user')} requested to follow you</small></div><div class="exofActivityActions"><button class="exofActivityBtn accept">ACCEPT</button><button class="exofActivityBtn">DELETE</button></div>`;
+       const p=r.profile||{},el=document.createElement('div');el.className='exofActivityRow request';
+       el.innerHTML=`<img class="exofActivityAvatar" src="${av(p)}"><div class="exofActivityText"><b>${esc(p.display_name||p.username||'EXOF user')}</b><small>@${who(p)}</small></div><div class="exofActivityActions"><button class="exofActivityBtn accept">CONFIRM</button><button class="exofActivityBtn">DELETE</button></div>`;
        const [yes,no]=el.querySelectorAll('button');
-       yes.onclick=async()=>{yes.disabled=true;try{await priv().resolveRequest(r.requester_id,true);await loadRequests();await updateBadge()}catch(e){alert(e.message)}};
-       no.onclick=async()=>{no.disabled=true;try{await priv().resolveRequest(r.requester_id,false);await loadRequests();await updateBadge()}catch(e){alert(e.message)}};
+       yes.onclick=async()=>{
+         yes.disabled=true;
+         try{
+           const user=await me();
+           await priv().resolveRequest(r.requester_id,true);
+           // Accepted private request becomes a real Recent "started following you" event.
+           const existing=await sb().from('notifications').select('id').eq('user_id',user.id).eq('actor_id',r.requester_id).eq('type','follow').maybeSingle();
+           if(!existing.data) await sb().from('notifications').insert({user_id:user.id,actor_id:r.requester_id,type:'follow'});
+           await Promise.all([loadRequests(),loadRecent(),updateBadge()]);
+         }catch(e){yes.disabled=false;alert(e.message)}
+       };
+       no.onclick=async()=>{no.disabled=true;try{await priv().resolveRequest(r.requester_id,false);await Promise.all([loadRequests(),updateBadge()])}catch(e){no.disabled=false;alert(e.message)}};
        box.appendChild(el);
      });
-   }catch(e){empty.hidden=false;empty.textContent=e.message||'Unable to load follow requests.'}
+   }catch(e){count.hidden=true;empty.hidden=false;empty.textContent=e.message||'Unable to load follow requests.'}
  }
  async function loadRecent(){
    const box=$('exofActivityRecent'),empty=$('exofActivityRecentEmpty');box.innerHTML='';empty.hidden=true;
    try{
      const user=await me();
-     const {data,error}=await sb().from('notifications').select('*').eq('user_id',user.id).order('created_at',{ascending:false}).limit(50);
+     const {data,error}=await sb().from('notifications').select('*').eq('user_id',user.id).in('type',['like','comment','follow']).order('created_at',{ascending:false}).limit(50);
      if(error)throw error;if(!data?.length){empty.hidden=false;return}
      const pm=await profiles(data.map(n=>n.actor_id).filter(Boolean));
+     const dropIds=[...new Set(data.map(n=>n.drop_id).filter(Boolean))];
+     const commentIds=[...new Set(data.map(n=>n.comment_id).filter(Boolean))];
+     let drops=new Map(),comments=new Map();
+     if(dropIds.length){const q=await sb().from('drops').select('id,media_url,media_type').in('id',dropIds);if(!q.error)(q.data||[]).forEach(x=>drops.set(String(x.id),x))}
+     if(commentIds.length){const q=await sb().from('drop_comments').select('id,body').in('id',commentIds);if(!q.error)(q.data||[]).forEach(x=>comments.set(String(x.id),x.body||''))}
      data.forEach(n=>{
-       const p=pm.get(n.actor_id)||{},el=document.createElement('div');el.className='exofActivityRow';
-       const verb=n.type==='like'?'liked your Drop':n.type==='comment'?'commented on your Drop':'started following you';
-       el.innerHTML=`<img class="exofActivityAvatar" src="${avatar(p)}"><div class="exofActivityText"><b>${esc(p.display_name||p.username||'EXOF user')}</b><small>${esc(verb)} · ${new Date(n.created_at).toLocaleDateString()}</small></div>`;
+       const p=pm.get(n.actor_id)||{},d=drops.get(String(n.drop_id))||{},el=document.createElement('div');el.className='exofActivityRow recent';
+       let action=n.type==='like'?'liked your Drop':n.type==='follow'?'started following you':'commented';
+       if(n.type==='comment'){const body=comments.get(String(n.comment_id));if(body)action+=': '+body}
+       let thumb='';
+       if(n.type!=='follow'&&d.media_url){
+         thumb=(d.media_type||'').toLowerCase()==='video'
+          ?`<video class="exofActivityThumb" src="${esc(d.media_url)}" muted playsinline preload="metadata"></video>`
+          :`<img class="exofActivityThumb" src="${esc(d.media_url)}">`;
+       }
+       el.innerHTML=`<img class="exofActivityAvatar" src="${av(p)}"><div class="exofActivityText"><div><b>${who(p)}</b> <span>${esc(action)}</span></div><small>${ago(n.created_at)}</small></div>${thumb}`;
        box.appendChild(el);
      });
      await sb().from('notifications').update({is_read:true}).eq('user_id',user.id).eq('is_read',false);
-   }catch(e){empty.hidden=false;empty.textContent='Activity is ready after the V1.7 SQL setup.'}
+   }catch(e){empty.hidden=false;empty.textContent='Could not load recent activity.';console.error(e)}
  }
  async function updateBadge(){
    try{
@@ -1743,8 +1798,6 @@ window.EXOF_PRIVACY_API={
  async function openActivity(){page().hidden=false;document.body.style.overflow='hidden';await Promise.all([loadRequests(),loadRecent()]);await updateBadge()}
  function closeActivity(){page().hidden=true;document.body.style.overflow=''}
  $('exofActivityBack')?.addEventListener('click',closeActivity);
-
- // Transform the existing Spaces bottom-nav button into Activity without changing the rest of navigation.
  function installNav(){
    const candidates=[...document.querySelectorAll('button,a')].filter(x=>(x.textContent||'').trim().toLowerCase().includes('spaces'));
    candidates.forEach(btn=>{
@@ -1754,23 +1807,6 @@ window.EXOF_PRIVACY_API={
    });
  }
  installNav();setTimeout(installNav,400);setTimeout(updateBadge,700);
-
- // Move Search control to the left side of EXOF header where possible.
- const searchButtons=[...document.querySelectorAll('button')].filter(b=>['⌕','⌕︎','🔍'].includes((b.textContent||'').trim()) || (b.getAttribute('aria-label')||'').toLowerCase().includes('search'));
- const logo=[...document.querySelectorAll('header *, .topbar *, .brand, .logo')].find(x=>(x.textContent||'').replace(/\s/g,'')==='EXOF');
- if(searchButtons[0]&&logo?.parentElement){const b=searchButtons[0];logo.parentElement.insertBefore(b,logo);}
-
- // Put Spaces access inside Explore/Search: add a Spaces card if Explore's two-card area exists.
- function addSpacesExplore(){
-   const exp=document.getElementById('search')||document.querySelector('[data-page="search"]')||document.querySelector('.searchPage');
-   if(!exp||exp.querySelector('[data-exof-spaces-card]'))return;
-   const cards=[...exp.querySelectorAll('button,.card')].filter(x=>/Now|Chains/i.test(x.textContent||''));
-   const host=cards[0]?.parentElement;if(!host)return;
-   const b=document.createElement('button');b.dataset.exofSpacesCard='1';b.className=cards[0].className;b.innerHTML='<b>⌘ Spaces</b><small style="display:block;color:#818983;margin-top:6px">Communities & conversations</small>';
-   b.onclick=()=>{if(window.exofGo)window.exofGo('spaces')};host.appendChild(b);
- }
- setTimeout(addSpacesExplore,500);
-
  window.EXOF_ACTIVITY={open:openActivity,refresh:updateBadge};
 })();
 </script>
