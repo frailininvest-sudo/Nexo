@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.12.2 — CEO Badge</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.12.3 — CEO Profile Header</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -533,6 +533,27 @@ header #messagesBtn.exofDmButton:active{
 </style><style id="exofCeoBadgeV1122">
 .exofOfficialRole{display:inline-flex;align-items:center;gap:3px;margin-left:6px;padding:2px 6px;border:1px solid rgba(82,255,40,.45);border-radius:7px;color:#52ff28;background:rgba(82,255,40,.07);font-size:8px;font-weight:900;letter-spacing:.25px;white-space:nowrap;vertical-align:middle}
 @media(max-width:480px){.exofOfficialRole{font-size:7px;padding:2px 5px;margin-left:4px}}
+</style><style id="exofCeoProfileHeaderV1123">
+#profile #realProfileOfficialRole.exofProfileOfficialRole{
+  position:relative!important;
+  z-index:4!important;
+  width:max-content!important;
+  max-width:calc(100% - 105px)!important;
+  margin:4px 0 0 91px!important;
+  padding:3px 7px!important;
+  border:1px solid rgba(82,255,40,.48)!important;
+  border-radius:7px!important;
+  background:rgba(5,14,7,.82)!important;
+  color:#52ff28!important;
+  font-size:8px!important;
+  line-height:1.2!important;
+  font-weight:900!important;
+  letter-spacing:.35px!important;
+  text-transform:uppercase!important;
+  white-space:nowrap!important;
+}
+#profile #realProfileOfficialRole[hidden]{display:none!important}
+#profile #realProfileOfficialRole:not([hidden]) + .stats{margin-top:9px!important}
 </style></head>
 <body>
 <div id="authGate">
@@ -613,7 +634,7 @@ header #messagesBtn.exofDmButton:active{
 <section id="spaces" class="page"><div class="title">Spaces</div><p class="sub">Find your people.</p><div class="row"><b>🎮 After Hours Gaming</b><p>Clips, squads, tournaments and gaming culture.</p></div><div class="row"><b>💻 Build & Hustle</b><p>Apps, businesses and projects people are building.</p></div><div class="row"><b>🏎 Car Culture</b><p>Builds, meets and automotive culture.</p></div></section>
 
 <section id="profile" class="page">
-<div id="profileShell" class="profileShell"><div id="profileBg" class="profileBg"></div><div class="profileShade"></div><div class="profileContent"><div id="realProfileCover" class="cover"></div><div id="realProfileAva" class="profileAva">N</div><div id="realProfileName" class="name">exof</div><p id="realProfileBio" class="bio">@exof</p><div class="stats"><div><b>0</b><small>FOLLOWERS</small></div><div><b>0</b><small>FOLLOWING</small></div><div><b id="dropCount">0</b><small>DROPS</small></div></div><div class="module" id="profileTrackModule">
+<div id="profileShell" class="profileShell"><div id="profileBg" class="profileBg"></div><div class="profileShade"></div><div class="profileContent"><div id="realProfileCover" class="cover"></div><div id="realProfileAva" class="profileAva">N</div><div id="realProfileName" class="name">exof</div><p id="realProfileBio" class="bio">@exof</p><div id="realProfileOfficialRole" class="exofProfileOfficialRole" hidden></div><div class="stats"><div><b>0</b><small>FOLLOWERS</small></div><div><b>0</b><small>FOLLOWING</small></div><div><b id="dropCount">0</b><small>DROPS</small></div></div><div class="module" id="profileTrackModule">
 <div class="track"><div><small class="mint">PROFILE TRACK</small><h4 id="profileTrackTitle">No track selected</h4><span class="meta" id="profileTrackArtist">Customize your profile to add YouTube music</span></div><button class="play" id="playTrack" type="button">▶</button></div>
 <div id="ytPlayerWrap" style="display:none;margin-top:10px">
 <div id="ytPlayer" style="width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#050806;border:1px solid var(--line)"></div>
@@ -743,6 +764,12 @@ function paintProfile(user,profile){
 
   setText('realProfileName',display);
   setText('realProfileBio','@'+username+(bio?' · '+bio:''));
+  const officialRole=(profile&&profile.official_role||'').trim();
+  const roleEl=document.getElementById('realProfileOfficialRole');
+  if(roleEl){
+    roleEl.hidden=!officialRole;
+    roleEl.textContent=officialRole?'⚡ '+officialRole:'';
+  }
   const ava=document.getElementById('realProfileAva'); if(ava){ava.textContent=(display||username).charAt(0).toUpperCase(); if(profile&&profile.avatar_url){ava.style.backgroundImage='url(\"'+profile.avatar_url+'\")';ava.style.backgroundSize='cover';ava.style.backgroundPosition='center';ava.textContent='';}else{ava.style.backgroundImage='none';}}
   const cover=document.getElementById('realProfileCover');
   const profileBgEl=document.getElementById('profileBg');
