@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.9.7 — No Duplicate Refresh</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.9.8 — Profile Final Polish</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -375,6 +375,28 @@ window.addEventListener('pageshow',function(){
 #profile .exofFavoriteDrop img,#profile .exofFavoriteDrop video{width:100%!important;height:100%!important;object-fit:cover!important;display:block!important}
 #profile .exofFavoriteLikes{position:absolute;left:4px;bottom:4px;background:rgba(0,0,0,.75);color:#fff;border-radius:999px;padding:3px 5px;font-size:8px;font-weight:900}
 #profile .exofFavoriteEmpty{display:grid!important;place-items:center!important;color:#ffffff44}
+</style>
+
+<style id="exofProfileFinalPolishV198">
+/* Remove only the hollow comment icon/circle; keep count + COMMENT clickable. */
+.commentBtn .commentIcon,
+.commentBtn .icon,
+.commentBtn svg,
+.commentBtn > span:first-child:empty,
+[data-action="comment"] svg,
+[data-action="comments"] svg{
+  display:none!important;
+}
+/* Settings account card: real avatar + account info */
+#settings .exofSettingsRealAvatar{
+  width:52px;height:52px;border-radius:50%;object-fit:cover;display:block;
+  background:#111;border:1px solid rgba(255,255,255,.12);
+}
+#settings .exofSettingsRealAvatarFallback{
+  width:52px;height:52px;border-radius:50%;display:grid;place-items:center;
+  background:#101610;border:1px solid rgba(255,255,255,.12);
+  color:#52ff2d;font-weight:900;font-size:18px;
+}
 </style>
 </head>
 <body>
@@ -2014,6 +2036,83 @@ window.addEventListener('load',function(){
 
 
 
+
+<script id="exofProfileFinalPolishV198Logic">
+(function(){
+  function removeCommentCircle(){
+    document.querySelectorAll('#profile button, #myDropsList button, #profile .action').forEach(el=>{
+      const txt=(el.textContent||'').trim().toUpperCase();
+      if(txt.includes('COMMENT')){
+        // Remove common decorative hollow-circle characters while preserving count/text.
+        [...el.childNodes].forEach(n=>{
+          if(n.nodeType===3) n.nodeValue=n.nodeValue.replace(/[○◯◌]/g,'');
+        });
+        el.querySelectorAll('svg,.commentIcon').forEach(x=>x.remove());
+      }
+    });
+  }
+
+  function fillSettingsAccount(){
+    const root=document.getElementById('settings');
+    if(!root)return;
+    const candidates=[...root.querySelectorAll('div,button,a')];
+    const row=candidates.find(el=>{
+      const t=(el.textContent||'').replace(/\s+/g,' ').trim();
+      return /EXOF USER/i.test(t) && /@user/i.test(t) && el.children.length>0;
+    });
+    if(!row)return;
+
+    const profile=(typeof currentProfile!=='undefined' && currentProfile) ? currentProfile : {};
+    const user=(typeof currentUser!=='undefined' && currentUser) ? currentUser : {};
+    const name=profile.display_name||profile.name||profile.full_name||profile.username||'EXOF User';
+    const username=profile.username ? '@'+String(profile.username).replace(/^@/,'') : (user.email ? '@'+user.email.split('@')[0] : '@user');
+    const avatar=profile.avatar_url||profile.avatar||profile.photo_url||profile.profile_image_url||'';
+
+    // Replace placeholder text nodes anywhere inside the detected account row.
+    row.querySelectorAll('*').forEach(el=>{
+      if(el.children.length===0){
+        const t=(el.textContent||'').trim();
+        if(/^EXOF USER$/i.test(t)) el.textContent=name;
+        else if(/^@user$/i.test(t)) el.textContent=username;
+      }
+    });
+
+    // Replace the placeholder avatar/circle with the real profile photo.
+    const img=row.querySelector('img');
+    if(avatar){
+      if(img){
+        img.src=avatar; img.alt=name; img.classList.add('exofSettingsRealAvatar');
+      }else{
+        const visual=[...row.children].find(x=>{
+          const r=x.getBoundingClientRect();
+          return r.width>=35 && r.width<=80 && r.height>=35 && r.height<=80;
+        });
+        if(visual){
+          const real=document.createElement('img');
+          real.src=avatar; real.alt=name; real.className='exofSettingsRealAvatar';
+          visual.replaceWith(real);
+        }
+      }
+    }else if(img){
+      img.removeAttribute('src');
+    }
+  }
+
+  function polish(){
+    removeCommentCircle();
+    fillSettingsAccount();
+  }
+  window.exofFinalProfilePolish=polish;
+  window.addEventListener('load',()=>setTimeout(polish,700));
+  window.addEventListener('pageshow',()=>setTimeout(polish,300));
+  document.addEventListener('click',e=>{
+    if(e.target.closest('[data-go="profile"],[data-go="settings"],#exofProfileSettingsGear'))
+      setTimeout(polish,250);
+  },true);
+  const mo=new MutationObserver(()=>{clearTimeout(window.__exofPolishTimer);window.__exofPolishTimer=setTimeout(polish,80)});
+  window.addEventListener('load',()=>{if(document.body)mo.observe(document.body,{childList:true,subtree:true})});
+})();
+</script>
 </body></html>
 <style id="exofProfileBackgroundV184">
 #profile #profileShell.profileShell{
