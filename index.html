@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.12.0 — Home Comments Fix</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.12.1 — Home Dedupe + Comment Permissions</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -1398,12 +1398,14 @@ async function renderComments(dropId,box,onCountChange){
   if(ids.length){const pr=await sb.from('profiles').select('id,username,display_name,avatar_url').in('id',ids);if(!pr.error)(pr.data||[]).forEach(x=>pm[x.id]=x)}
   const html=rows.length?rows.map(c=>{
     const cp=pm[c.user_id]||{},nm=cp.display_name||cp.username||'EXOF',av=cp.avatar_url||'';
-    const canManage=!!currentUser&&(currentUser.id===c.user_id||currentUser.id===dropOwnerId);
+    const isCommentAuthor=!!currentUser&&currentUser.id===c.user_id;
+    const isDropOwner=!!currentUser&&currentUser.id===dropOwnerId;
+    const canDelete=isCommentAuthor||isDropOwner;
     return '<div class="exofCommentRow" data-comment-id="'+escapeHtml(String(c.id))+'">'+
       '<div class="exofCommentTop"><div class="exofCommentAuthor" data-comment-user="'+escapeHtml(c.user_id)+'"><div class="exofCommentAvatar" style="'+(av?'background-image:url(&quot;'+escapeHtml(av)+'&quot;);color:transparent':'')+'">'+escapeHtml(nm.charAt(0).toUpperCase())+'</div><b>'+escapeHtml(nm)+'</b><small class="meta">@'+escapeHtml(cp.username||'user')+'</small></div>'+
-      (canManage?'<button class="exofCommentMenuBtn" type="button" aria-label="Comment options">•••</button>':'')+'</div>'+
+      (canDelete?'<button class="exofCommentMenuBtn" type="button" aria-label="Comment options">•••</button>':'')+'</div>'+
       '<div class="exofCommentBody">'+escapeHtml(c.body)+'</div>'+
-      (canManage?'<div class="exofCommentMenu" hidden><button data-comment-action="edit" type="button">EDIT</button><button data-comment-action="delete" type="button">DELETE</button></div>':'')+
+      (canDelete?'<div class="exofCommentMenu" hidden>'+(isCommentAuthor?'<button data-comment-action="edit" type="button">EDIT</button>':'')+'<button data-comment-action="delete" type="button">DELETE</button></div>':'')+
       '</div>'
   }).join(''):'<div class="meta">No comments yet.</div>';
   box.innerHTML=html+'<div class="exofCommentForm"><input type="text" maxlength="300" placeholder="Write a comment…"><button class="primary" type="button">POST</button></div>';
@@ -1440,16 +1442,31 @@ async function buildDropCard(d,pr={},own=false){
  return card;
 }
 
+let exofHomeFeedRenderToken=0;
 async function loadDrops(filter='all'){
+ const renderToken=++exofHomeFeedRenderToken;
  const feed=document.getElementById('realFeed'); if(!feed)return;
  let r;
  if(filter==='following'){const ids=await exofFollowingIds();if(!ids.length){feed.innerHTML='<div class="emptyState">Follow people to see their Drops here.</div>';return}r=await sb.from('drops').select('id,user_id,caption,media_url,media_type,created_at').in('user_id',ids).order('created_at',{ascending:false}).limit(30)}
  else r=await sb.from('drops').select('id,user_id,caption,media_url,media_type,created_at').order('created_at',{ascending:false}).limit(30);
  if(r.error){console.error('EXOF feed error:',r.error);feed.innerHTML='<div class="meta">Could not load Drops yet.</div>';return}
- const drops=r.data||[],userIds=[...new Set(drops.map(d=>d.user_id).filter(Boolean))];let profileMap={};
+ if(renderToken!==exofHomeFeedRenderToken)return;
+ const rawDrops=r.data||[];
+ const seenDropIds=new Set();
+ const drops=rawDrops.filter(d=>{const key=String(d.id);if(seenDropIds.has(key))return false;seenDropIds.add(key);return true});
+ const userIds=[...new Set(drops.map(d=>d.user_id).filter(Boolean))];let profileMap={};
  if(userIds.length){const pr=await sb.from('profiles').select('id,username,display_name,avatar_url').in('id',userIds);if(!pr.error)(pr.data||[]).forEach(p=>profileMap[p.id]=p)}
- feed.innerHTML='';if(!drops.length)feed.innerHTML='<div class="emptyState">No Drops yet.</div>';
- for(const d of drops)feed.appendChild(await buildDropCard(d,profileMap[d.user_id]||{},false));
+ if(renderToken!==exofHomeFeedRenderToken)return;
+ const frag=document.createDocumentFragment();
+ for(const d of drops){
+   if(renderToken!==exofHomeFeedRenderToken)return;
+   if(frag.querySelector?.('[data-drop-id="'+CSS.escape(String(d.id))+'"]'))continue;
+   frag.appendChild(await buildDropCard(d,profileMap[d.user_id]||{},false));
+ }
+ if(renderToken!==exofHomeFeedRenderToken)return;
+ feed.replaceChildren();
+ if(!drops.length)feed.innerHTML='<div class="emptyState">No Drops yet.</div>';
+ else feed.appendChild(frag);
  if(currentUser){const c=await sb.from('drops').select('*',{count:'exact',head:true}).eq('user_id',currentUser.id);if(!c.error){const el=document.getElementById('dropCount');if(el)el.textContent=c.count||0}}
 }
 let exofMyDropsRenderToken=0;
