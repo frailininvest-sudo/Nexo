@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.9.4 — Drops + Favorite Loops</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.9.5 — Favorite Drops Fix</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -367,25 +367,14 @@ window.addEventListener('pageshow',function(){
 }
 </style>
 
-<style id="exofProfileDropsFavoriteLoopsV194Style">
-#profile .favoriteLoopsReference .worldGrid{
- display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important;
-}
-#profile .favoriteLoopsReference .world{
- position:relative!important;overflow:hidden!important;padding:0!important;aspect-ratio:1/1.15!important;
- background:rgba(2,8,4,.78)!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:10px!important;
-}
-#profile .favoriteLoopsReference .world img,#profile .favoriteLoopsReference .world video{
- width:100%!important;height:100%!important;object-fit:cover!important;display:block!important;
-}
-#profile .favLikeBadge{
- position:absolute;left:4px;bottom:4px;background:rgba(0,0,0,.72);color:#fff;border-radius:999px;
- padding:3px 5px;font-size:8px;font-weight:900;line-height:1;
-}
-#profile .favEmptyMark{color:rgba(255,255,255,.28);font-size:16px}
-#profile .emptyTopLoop{display:grid!important;place-items:center!important}
-</style>
-</head>
+
+<style id="favDrops195">
+#profile .worldGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important}
+#profile .favDrop,#profile .favEmpty{position:relative!important;overflow:hidden!important;padding:0!important;aspect-ratio:1/1.15!important;border-radius:10px!important}
+#profile .favDrop img,#profile .favDrop video{width:100%!important;height:100%!important;object-fit:cover!important}
+#profile .favLikes{position:absolute;left:4px;bottom:4px;background:rgba(0,0,0,.75);color:#fff;border-radius:999px;padding:3px 5px;font-size:8px;font-weight:900}
+#profile .favEmpty{display:grid!important;place-items:center!important;color:#ffffff44}
+</style></head>
 <body>
 <div id="authGate">
   <div class="authBox">
@@ -441,7 +430,7 @@ window.addEventListener('pageshow',function(){
 <div id="ytPlayerWrap" style="display:none;margin-top:10px">
 <div id="ytPlayer" style="width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#050806;border:1px solid var(--line)"></div>
 <div id="playerMsg" class="meta" style="margin-top:7px">Plays inside your EXOF profile.</div>
-</div></div></div><div class="module"><h4>◎ Favorite Loops</h4><div class="worldGrid"><div class="world emptyTopLoop">＋</div><div class="world emptyTopLoop">＋</div><div class="world emptyTopLoop">＋</div><div class="world emptyTopLoop">＋</div></div></div></div></div>
+</div></div></div><div class="module"><h4>♥ Favorite Drops</h4><div class="worldGrid"><div class="world emptyTopLoop">＋</div><div class="world emptyTopLoop">＋</div><div class="world emptyTopLoop">＋</div><div class="world emptyTopLoop">＋</div></div></div></div></div>
 <div class="title" style="font-size:20px;margin:14px 2px 8px">MY DROPS</div><div id="myDropsList"><div class="emptyState">Loading your Drops…</div></div><div class="accountBar"><small id="signedInAs">Signed in</small><button id="logoutBtn" class="secondary" style="width:auto;min-height:38px;padding:0 14px">LOG OUT</button></div><button class="primary" data-go="editprofile" style="margin-bottom:9px">EDIT PROFILE</button><button class="secondary" data-go="customize">🎨 CUSTOMIZE MY EXOF</button></section>
 
 
@@ -465,11 +454,11 @@ window.addEventListener('pageshow',function(){
 <div class="card"><b>Background controls</b><div class="control"><label><span>Dark overlay</span><span id="overlayVal">55%</span></label><input id="overlay" type="range" min="0" max="90" value="55"></div><div class="control"><label><span>Background blur</span><span id="blurVal">0px</span></label><input id="blur" type="range" min="0" max="20" value="0"></div><div class="control"><label><span>Card transparency</span><span id="cardVal">88%</span></label><input id="cards" type="range" min="30" max="100" value="88"></div></div>
 <div class="card"><b>Accent color</b><div class="swatches" style="margin-top:12px"><button class="sw sw1" data-color="#62ff32"></button><button class="sw sw2" data-color="#62b7ff"></button><button class="sw sw3" data-color="#ffad5c"></button><button class="sw sw4" data-color="#ff79ad"></button><button class="sw sw5" data-color="#ffffff"></button><button class="sw sw6" data-color="#9c7cff"></button></div></div>
 <div class="card"><b>Profile style</b><div class="styleGrid" style="margin-top:10px"><button class="styleBtn on">Minimal</button><button class="styleBtn">Y2K</button><button class="styleBtn">Neon</button><button class="styleBtn">Editorial</button></div></div>
-<div class="card"><b>Modules</b><p class="sub">These will be draggable in the full app.</p><div class="drag">☰ About Me</div><div class="drag">☰ Profile Track</div><div class="drag">☰ Favorite Loops</div><div class="drag">☰ Spaces I'm In</div></div><button id="customSaveBtn" class="primary">SAVE & VIEW PROFILE</button><div id="customSaveMsg" class="authMsg"></div></section>
+<div class="card"><b>Modules</b><p class="sub">These will be draggable in the full app.</p><div class="drag">☰ About Me</div><div class="drag">☰ Profile Track</div><div class="drag">☰ Favorite Drops</div><div class="drag">☰ Spaces I'm In</div></div><button id="customSaveBtn" class="primary">SAVE & VIEW PROFILE</button><div id="customSaveMsg" class="authMsg"></div></section>
 
 <section id="search" class="page"><div class="searchPanel"><div class="title">Explore</div><div class="searchBox"><input id="userSearchInput" type="text" placeholder="Search @username or name..." autocomplete="off"><button id="userSearchBtn" class="primary" style="width:auto;padding:0 18px">SEARCH</button></div><div id="searchResults"><div class="emptyState">Search for people on EXOF.</div></div><div class="worldGrid"><div class="world"><b>🌎 Now</b><small>What's happening</small></div><div class="world"><b>🔗 Chains</b><small>Continue a story</small></div></div></div></section>
 <section id="publicProfile" class="page publicProfile">
-<div id="publicProfileShell" class="profileShell"><div id="publicProfileBg" class="profileBg"></div><div class="profileShade"></div><div class="profileContent"><div id="publicCover" class="cover"></div><div id="publicAvatar" class="profileAva">E</div><div id="publicName" class="name">EXOF user</div><p id="publicHandle" class="bio">@user</p><p id="publicBio" class="bio" style="margin-top:4px"></p><button id="publicFollowBtn" class="followBtn" type="button" style="display:none">FOLLOW</button><button id="publicBlockBtn" type="button" style="display:none">BLOCK USER</button><div class="stats"><div><b id="publicFollowers">0</b><small>FOLLOWERS</small></div><div><b id="publicFollowing">0</b><small>FOLLOWING</small></div><div><b id="publicDropCount">0</b><small>DROPS</small></div></div><div class="module" id="publicProfileTrackModule"><div class="track"><div><small class="mint">PROFILE TRACK</small><h4 id="publicProfileTrackTitle">No track selected</h4><span class="meta" id="publicProfileTrackArtist">No public track selected</span></div><button class="play" id="publicProfileTrackPlay" type="button">▶</button></div><div id="publicProfileTrackPlayer" style="display:none"></div></div><div class="module"><h4>◎ Favorite Loops</h4><div class="worldGrid"><div class="world"></div><div class="world"></div></div></div></div></div>
+<div id="publicProfileShell" class="profileShell"><div id="publicProfileBg" class="profileBg"></div><div class="profileShade"></div><div class="profileContent"><div id="publicCover" class="cover"></div><div id="publicAvatar" class="profileAva">E</div><div id="publicName" class="name">EXOF user</div><p id="publicHandle" class="bio">@user</p><p id="publicBio" class="bio" style="margin-top:4px"></p><button id="publicFollowBtn" class="followBtn" type="button" style="display:none">FOLLOW</button><button id="publicBlockBtn" type="button" style="display:none">BLOCK USER</button><div class="stats"><div><b id="publicFollowers">0</b><small>FOLLOWERS</small></div><div><b id="publicFollowing">0</b><small>FOLLOWING</small></div><div><b id="publicDropCount">0</b><small>DROPS</small></div></div><div class="module" id="publicProfileTrackModule"><div class="track"><div><small class="mint">PROFILE TRACK</small><h4 id="publicProfileTrackTitle">No track selected</h4><span class="meta" id="publicProfileTrackArtist">No public track selected</span></div><button class="play" id="publicProfileTrackPlay" type="button">▶</button></div><div id="publicProfileTrackPlayer" style="display:none"></div></div><div class="module"><h4>♥ Favorite Drops</h4><div class="worldGrid"><div class="world"></div><div class="world"></div></div></div></div></div>
 <div style="padding:10px 16px 110px"><button class="secondary" data-go="search" style="margin-bottom:12px">← BACK TO SEARCH</button><div id="publicDropsList"><div class="emptyState">No Drops yet.</div></div></div></section>
 <section id="messages" class="page"><div class="title">Messages</div><div class="row"><b>Maya</b><p>that DROP was crazy 😂</p></div><div class="row"><b>Gaming Crew</b><p>Jared sent a Loop ◎</p></div></section>
 
@@ -1908,7 +1897,7 @@ window.addEventListener('load',function(){
       custom.textContent='✦ CUSTOMIZE MY EXOF';
     }
 
-    // Identify Favorite Loops module without changing its data/functionality.
+    // Identify Favorite Drops module without changing its data/functionality.
     var modules=root.querySelectorAll('.module');
     Array.prototype.forEach.call(modules,function(m){
       if((m.textContent||'').toLowerCase().indexOf('favorite loops')>=0){
@@ -1938,92 +1927,42 @@ window.addEventListener('load',function(){
 
 
 
-<script id="exofProfileDropsFavoriteLoopsV194">
+
+<script id="favDrops195logic">
 (function(){
-  const $=s=>document.querySelector(s);
-  function mediaHTML(d){
-    const u=d.media_url||'';
-    if(!u)return '<span class="favEmptyMark">＋</span>';
-    if((d.media_type||'').toLowerCase()==='video')
-      return '<video src="'+u.replace(/"/g,'&quot;')+'" muted playsinline preload="metadata"></video>';
-    return '<img src="'+u.replace(/"/g,'&quot;')+'" alt="Favorite Loop">';
+async function refreshFavDrops(){
+ if(typeof currentUser==='undefined'||!currentUser||typeof sb==='undefined')return;
+ try{
+  const r=await sb.from('drops').select('id,user_id,caption,media_url,media_type,created_at').eq('user_id',currentUser.id).order('created_at',{ascending:false});
+  if(r.error)throw r.error; const drops=r.data||[];
+  const count=document.getElementById('dropCount'); if(count)count.textContent=String(drops.length);
+  const root=document.getElementById('profile');
+  const mod=[...root.querySelectorAll('.module')].find(m=>(m.textContent||'').toLowerCase().includes('favorite drops'));
+  const grid=mod&&mod.querySelector('.worldGrid'); if(!grid)return;
+  let likes={};
+  if(drops.length){
+   const lr=await sb.from('drop_likes').select('drop_id').in('drop_id',drops.map(d=>d.id));
+   if(lr.error)throw lr.error;
+   (lr.data||[]).forEach(x=>likes[x.drop_id]=(likes[x.drop_id]||0)+1);
   }
-  async function refreshProfileDropsAndFavorites(){
-    if(typeof currentUser==='undefined'||!currentUser||typeof sb==='undefined'||!sb)return;
-    const profile=document.getElementById('profile'); if(!profile)return;
-    const grid=[...profile.querySelectorAll('.module')].find(m=>(m.textContent||'').toLowerCase().includes('favorite loops'))?.querySelector('.worldGrid');
-    try{
-      // One owner-specific Drops query drives BOTH the stat and Favorite Loops.
-      const dr=await sb.from('drops')
-        .select('id,user_id,caption,media_url,media_type,created_at')
-        .eq('user_id',currentUser.id)
-        .order('created_at',{ascending:false});
-      if(dr.error)throw dr.error;
-      const drops=dr.data||[];
-      const countEl=document.getElementById('dropCount');
-      if(countEl)countEl.textContent=String(drops.length);
-      if(!grid)return;
-
-      let counts={};
-      if(drops.length){
-        const ids=drops.map(d=>d.id);
-        const lr=await sb.from('drop_likes').select('drop_id').in('drop_id',ids);
-        if(lr.error)throw lr.error;
-        for(const row of (lr.data||[])) counts[row.drop_id]=(counts[row.drop_id]||0)+1;
-      }
-      const ranked=drops.map(d=>({...d,__likes:counts[d.id]||0}))
-        .sort((a,b)=>(b.__likes-a.__likes)||(new Date(b.created_at)-new Date(a.created_at)))
-        .slice(0,4);
-
-      grid.innerHTML='';
-      ranked.forEach(d=>{
-        const el=document.createElement('button');
-        el.type='button'; el.className='world exofRankedLoop';
-        el.dataset.dropId=d.id;
-        el.innerHTML=mediaHTML(d)+'<span class="favLikeBadge">♥ '+d.__likes+'</span>';
-        el.addEventListener('click',()=>{
-          // Open/highlight the real Drop using the existing MY DROPS cards when available.
-          const own=document.querySelector('#myDropsList [data-drop-id="'+CSS.escape(String(d.id))+'"]');
-          if(own)own.scrollIntoView({behavior:'smooth',block:'center'});
-          else {
-            const u=new URL(location.href); u.searchParams.set('drop',d.id);
-            history.replaceState({},'',u.pathname+u.search+u.hash);
-            if(typeof loadMyDrops==='function')loadMyDrops();
-          }
-        });
-        grid.appendChild(el);
-      });
-      while(grid.children.length<4){
-        const e=document.createElement('div');
-        e.className='world emptyTopLoop';
-        e.innerHTML='<span class="favEmptyMark">＋</span>';
-        grid.appendChild(e);
-      }
-    }catch(err){
-      console.error('EXOF profile Drops/Favorite Loops:',err);
-    }
-  }
-
-  window.exofRefreshProfileDropsAndFavorites=refreshProfileDropsAndFavorites;
-  window.addEventListener('load',()=>setTimeout(refreshProfileDropsAndFavorites,500));
-  window.addEventListener('pageshow',()=>setTimeout(refreshProfileDropsAndFavorites,250));
-  document.addEventListener('click',e=>{
-    if(e.target.closest('nav button[data-go="profile"],[data-go="profile"]'))
-      setTimeout(refreshProfileDropsAndFavorites,180);
-  },true);
-
-  // Refresh after likes change, so rankings don't require a new login/session.
-  if(typeof exofToggleLike==='function'){
-    const original=exofToggleLike;
-    exofToggleLike=async function(dropId){
-      const result=await original(dropId);
-      setTimeout(refreshProfileDropsAndFavorites,100);
-      return result;
-    };
-  }
+  const top=drops.map(d=>({...d,_likes:likes[d.id]||0})).sort((a,b)=>(b._likes-a._likes)||(new Date(b.created_at)-new Date(a.created_at))).slice(0,4);
+  grid.innerHTML='';
+  top.forEach(d=>{
+   const e=document.createElement('div');e.className='world favDrop';
+   const url=String(d.media_url||'').replace(/"/g,'&quot;');
+   e.innerHTML=(url?((d.media_type||'').toLowerCase()==='video'?'<video src="'+url+'" muted playsinline></video>':'<img src="'+url+'" alt="">'):'')+'<span class="favLikes">♥ '+d._likes+'</span>';
+   grid.appendChild(e);
+  });
+  while(grid.children.length<4){const e=document.createElement('div');e.className='world favEmpty';e.textContent='＋';grid.appendChild(e)}
+ }catch(e){console.error('Favorite Drops:',e)}
+}
+window.exofRefreshFavoriteDrops=refreshFavDrops;
+window.addEventListener('load',()=>setTimeout(refreshFavDrops,600));
+window.addEventListener('pageshow',()=>setTimeout(refreshFavDrops,300));
+document.addEventListener('click',e=>{if(e.target.closest('[data-go="profile"]'))setTimeout(refreshFavDrops,200)},true);
+setInterval(()=>{const p=document.getElementById('profile');if(p&&getComputedStyle(p).display!=='none')refreshFavDrops()},3000);
 })();
-</script>
-</body></html>
+</script></body></html>
 <style id="exofProfileBackgroundV184">
 #profile #profileShell.profileShell{
   background:transparent!important;
