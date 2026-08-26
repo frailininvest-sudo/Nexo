@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.10.4 — Activity Center</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.10.5 — Activity Tabs</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -449,6 +449,52 @@ header #messagesBtn.exofDmButton:active{
 .exofActivityActions{display:flex;gap:8px}.exofActivityBtn{border:1px solid #31543a;border-radius:12px;background:#060a07;color:#fff;padding:10px 14px;font-weight:800}.exofActivityBtn.accept{background:var(--accent);color:#031003;border-color:var(--accent)}
 .exofActivityThumb{width:62px;height:52px;min-width:62px;border-radius:10px;object-fit:cover;background:#111}.exofActivityEmpty{text-align:center;color:#7f8a82;padding:24px 10px}
 @media(max-width:560px){.exofActivityBody{width:calc(100% - 20px);padding-top:18px}.exofActivityRow.request{align-items:flex-start;flex-wrap:wrap}.exofActivityRow.request .exofActivityActions{width:100%;padding-left:64px}.exofActivityBtn{padding:9px 12px}.exofActivityAvatar{width:46px;height:46px;min-width:46px}.exofActivityThumb{width:54px;height:48px;min-width:54px}}
+</style><style id="exofActivityTabsV1105">
+.exofActivityBody{padding-top:18px!important}
+.exofActivityTabs{
+ display:grid!important;grid-template-columns:1fr 1fr!important;
+ width:100%!important;height:48px!important;
+ margin:0 0 16px!important;border:1px solid #1b2b20!important;
+ border-radius:15px!important;background:#050906!important;overflow:hidden!important;
+ position:sticky!important;top:74px!important;z-index:2!important;
+}
+.exofActivityTab{
+ position:relative!important;border:0!important;background:transparent!important;
+ color:#737d76!important;font-size:11px!important;font-weight:800!important;
+ letter-spacing:.7px!important;cursor:pointer!important;
+}
+.exofActivityTab.active{color:#fff!important}
+.exofActivityTab.active:after{
+ content:""!important;position:absolute!important;left:22%!important;right:22%!important;
+ bottom:0!important;height:3px!important;border-radius:10px 10px 0 0!important;
+ background:var(--accent)!important;box-shadow:0 0 10px color-mix(in srgb,var(--accent) 65%,transparent)!important;
+}
+.exofActivityTabCount{
+ display:inline-grid!important;place-items:center!important;min-width:18px!important;height:18px!important;
+ margin-left:5px!important;padding:0 5px!important;border-radius:999px!important;
+ background:var(--accent)!important;color:#041003!important;font-size:10px!important;font-weight:900!important;
+}
+.exofActivityTabCount[hidden]{display:none!important}
+.exofActivityPanel[hidden]{display:none!important}
+.exofActivityList{gap:7px!important}
+.exofActivityRow{
+ min-height:64px!important;padding:8px 10px!important;border-radius:15px!important;
+ background:#050a07!important;
+}
+.exofActivityAvatar{width:42px!important;height:42px!important;min-width:42px!important}
+.exofActivityText b,.exofActivityText span{font-size:13px!important}
+.exofActivityText small{font-size:10px!important;margin-top:3px!important}
+.exofActivityThumb{width:58px!important;height:44px!important;min-width:58px!important;border-radius:9px!important}
+.exofActivityBtn{font-size:10px!important;padding:8px 11px!important;border-radius:9px!important}
+.exofActivityEmpty{padding:35px 10px!important}
+@media(max-width:560px){
+ .exofActivityBody{width:calc(100% - 14px)!important}
+ .exofActivityTabs{height:43px!important;margin-bottom:10px!important}
+ .exofActivityRow.request{flex-wrap:nowrap!important;align-items:center!important}
+ .exofActivityRow.request .exofActivityActions{width:auto!important;padding-left:0!important}
+ .exofActivityActions{gap:5px!important}
+ .exofActivityBtn{padding:7px 8px!important;font-size:9px!important}
+}
 </style></head>
 <body>
 <div id="authGate">
@@ -1707,15 +1753,21 @@ window.EXOF_PRIVACY_API={
 <section id="exofActivityPage" class="exofActivityPage" hidden>
  <div class="exofActivityHead"><button id="exofActivityBack" class="exofFuncBack">‹</button><b>ACTIVITY</b></div>
  <div class="exofActivityBody">
-  <div class="exofActivitySection"><span>FOLLOW REQUESTS</span><span id="exofActivityRequestCount" class="exofActivityCount" hidden></span></div>
-  <div id="exofActivityRequests" class="exofActivityList"></div>
-  <div id="exofActivityRequestsEmpty" class="exofActivityEmpty">No pending follow requests.</div>
-  <div class="exofActivitySection recentTitle">RECENT</div>
-  <div id="exofActivityRecent" class="exofActivityList"></div>
-  <div id="exofActivityRecentEmpty" class="exofActivityEmpty">Your EXOF activity will appear here.</div>
+  <div class="exofActivityTabs">
+   <button id="exofActivityTabRequests" class="exofActivityTab">FOLLOW REQUESTS <span id="exofActivityRequestCount" class="exofActivityTabCount" hidden></span></button>
+   <button id="exofActivityTabRecent" class="exofActivityTab active">RECENT</button>
+  </div>
+  <div id="exofActivityRequestsPanel" class="exofActivityPanel" hidden>
+   <div id="exofActivityRequests" class="exofActivityList"></div>
+   <div id="exofActivityRequestsEmpty" class="exofActivityEmpty">No pending follow requests.</div>
+  </div>
+  <div id="exofActivityRecentPanel" class="exofActivityPanel">
+   <div id="exofActivityRecent" class="exofActivityList"></div>
+   <div id="exofActivityRecentEmpty" class="exofActivityEmpty">Your EXOF activity will appear here.</div>
+  </div>
  </div>
 </section>
-<script id="exofActivityV1104">
+<script id="exofActivityV1105">
 (function(){
  const $=id=>document.getElementById(id), sb=()=>window.exofSupabase, priv=()=>window.EXOF_PRIVACY_API;
  const page=()=>document.getElementById('exofActivityPage');
@@ -1795,7 +1847,21 @@ window.EXOF_PRIVACY_API={
      const n=(req||0)+(notif||0);document.querySelectorAll('.exofActivityBadge').forEach(b=>{b.textContent=n>99?'99+':n;b.style.display=n?'flex':'none'});
    }catch(e){}
  }
- async function openActivity(){page().hidden=false;document.body.style.overflow='hidden';await Promise.all([loadRequests(),loadRecent()]);await updateBadge()}
+ function setActivityTab(tab){
+ const req=tab==='requests';
+ $('exofActivityTabRequests')?.classList.toggle('active',req);
+ $('exofActivityTabRecent')?.classList.toggle('active',!req);
+ if($('exofActivityRequestsPanel'))$('exofActivityRequestsPanel').hidden=!req;
+ if($('exofActivityRecentPanel'))$('exofActivityRecentPanel').hidden=req;
+}
+$('exofActivityTabRequests')?.addEventListener('click',()=>setActivityTab('requests'));
+$('exofActivityTabRecent')?.addEventListener('click',()=>setActivityTab('recent'));
+async function openActivity(){
+ page().hidden=false;document.body.style.overflow='hidden';
+ setActivityTab('recent');
+ await Promise.all([loadRequests(),loadRecent()]);
+ await updateBadge();
+}
  function closeActivity(){page().hidden=true;document.body.style.overflow=''}
  $('exofActivityBack')?.addEventListener('click',closeActivity);
  function installNav(){
