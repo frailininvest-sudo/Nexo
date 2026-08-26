@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.9.6 — Profile Single Source</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.9.7 — No Duplicate Refresh</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -1198,7 +1198,9 @@ async function loadDrops(filter='all'){
  for(const d of drops)feed.appendChild(await buildDropCard(d,profileMap[d.user_id]||{},false));
  if(currentUser){const c=await sb.from('drops').select('*',{count:'exact',head:true}).eq('user_id',currentUser.id);if(!c.error){const el=document.getElementById('dropCount');if(el)el.textContent=c.count||0}}
 }
+let exofMyDropsRenderToken=0;
 async function loadMyDrops(){
+  const renderToken=++exofMyDropsRenderToken;
   const list=document.getElementById('myDropsList');
   if(!list||!currentUser)return;
   const requestOwner=currentUser.id;
@@ -1209,6 +1211,7 @@ async function loadMyDrops(){
     .eq('user_id',requestOwner)
     .order('created_at',{ascending:false});
 
+  if(renderToken!==exofMyDropsRenderToken)return;
   if(error){
     list.innerHTML='<div class="emptyState">'+escapeHtml(error.message)+'</div>';
     return;
@@ -1232,10 +1235,16 @@ async function loadMyDrops(){
   }else{
     for(const d of drops){
       const card=await buildDropCard(d,currentProfile||{},true);
+      if(renderToken!==exofMyDropsRenderToken)return;
       card.dataset.dropId=d.id;
-      list.appendChild(card);
+      // Final DOM guard: never append the same database Drop ID twice.
+      if(!list.querySelector('[data-drop-id="'+CSS.escape(String(d.id))+'"]')){
+        list.appendChild(card);
+      }
     }
   }
+
+  if(renderToken!==exofMyDropsRenderToken)return;
 
   // Favorite Drops derives from these SAME unique Drop IDs.
   const module=[...document.querySelectorAll('#profile .module')]
@@ -2004,25 +2013,7 @@ window.addEventListener('load',function(){
 
 
 
-<script id="exofProfileSingleSourceV196">
-(function(){
-  let timer=null, running=false;
-  async function refresh(){
-    if(running)return;
-    if(typeof currentUser==='undefined'||!currentUser||typeof loadMyDrops!=='function')return;
-    running=true;
-    try{await loadMyDrops()}finally{running=false}
-  }
-  function queue(){
-    clearTimeout(timer);timer=setTimeout(refresh,180);
-  }
-  window.exofRefreshProfileDrops=queue;
-  window.addEventListener('pageshow',queue);
-  document.addEventListener('click',function(e){
-    if(e.target.closest('[data-go="profile"]'))queue();
-  },true);
-})();
-</script>
+
 </body></html>
 <style id="exofProfileBackgroundV184">
 #profile #profileShell.profileShell{
