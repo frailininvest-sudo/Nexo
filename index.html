@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.12.4 — CEO Text Polish</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.12.5 — CEO Position</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -575,6 +575,37 @@ header #messagesBtn.exofDmButton:active{
   white-space:nowrap!important;
 }
 #profile #realProfileOfficialRole[hidden]{display:none!important}
+</style><style id="exofCeoPositionV1125">
+#profile .exofProfileMetaLine{
+  margin:3px 0 0 91px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:5px!important;
+  position:relative!important;
+  z-index:4!important;
+  min-height:12px!important;
+}
+#profile .exofProfileMetaLine #realProfileBio{
+  margin:0!important;
+  min-height:0!important;
+  font-size:8px!important;
+  line-height:1.15!important;
+  width:auto!important;
+}
+#profile .exofProfileMetaLine #realProfileOfficialRole.exofProfileOfficialRole{
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:#52ff28!important;
+  font-size:8px!important;
+  line-height:1.15!important;
+  font-weight:900!important;
+  letter-spacing:.25px!important;
+  white-space:nowrap!important;
+}
+#profile #realProfileOfficialRole[hidden]{display:none!important}
 </style></head>
 <body>
 <div id="authGate">
@@ -655,7 +686,7 @@ header #messagesBtn.exofDmButton:active{
 <section id="spaces" class="page"><div class="title">Spaces</div><p class="sub">Find your people.</p><div class="row"><b>🎮 After Hours Gaming</b><p>Clips, squads, tournaments and gaming culture.</p></div><div class="row"><b>💻 Build & Hustle</b><p>Apps, businesses and projects people are building.</p></div><div class="row"><b>🏎 Car Culture</b><p>Builds, meets and automotive culture.</p></div></section>
 
 <section id="profile" class="page">
-<div id="profileShell" class="profileShell"><div id="profileBg" class="profileBg"></div><div class="profileShade"></div><div class="profileContent"><div id="realProfileCover" class="cover"></div><div id="realProfileAva" class="profileAva">N</div><div id="realProfileName" class="name">exof</div><p id="realProfileBio" class="bio">@exof</p><div id="realProfileOfficialRole" class="exofProfileOfficialRole" hidden></div><div class="stats"><div><b>0</b><small>FOLLOWERS</small></div><div><b>0</b><small>FOLLOWING</small></div><div><b id="dropCount">0</b><small>DROPS</small></div></div><div class="module" id="profileTrackModule">
+<div id="profileShell" class="profileShell"><div id="profileBg" class="profileBg"></div><div class="profileShade"></div><div class="profileContent"><div id="realProfileCover" class="cover"></div><div id="realProfileAva" class="profileAva">N</div><div id="realProfileName" class="name">exof</div><div class="exofProfileMetaLine"><p id="realProfileBio" class="bio">@exof</p><span id="realProfileOfficialRole" class="exofProfileOfficialRole" hidden></span></div><div class="stats"><div><b>0</b><small>FOLLOWERS</small></div><div><b>0</b><small>FOLLOWING</small></div><div><b id="dropCount">0</b><small>DROPS</small></div></div><div class="module" id="profileTrackModule">
 <div class="track"><div><small class="mint">PROFILE TRACK</small><h4 id="profileTrackTitle">No track selected</h4><span class="meta" id="profileTrackArtist">Customize your profile to add YouTube music</span></div><button class="play" id="playTrack" type="button">▶</button></div>
 <div id="ytPlayerWrap" style="display:none;margin-top:10px">
 <div id="ytPlayer" style="width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#050806;border:1px solid var(--line)"></div>
