@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.12.19 — Activity Actor Profile</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.12.20 — Activity Click Test</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -2084,33 +2084,11 @@ window.EXOF_PRIVACY_API={
           :`<img class="exofActivityThumb" src="${esc(d.media_url)}">`;
        }
        el.innerHTML=`<img class="exofActivityAvatar exofProfileLink" data-profile-user="${esc(n.actor_id||'')}" src="${av(p)}"><div class="exofActivityText"><div><b class="exofProfileLink" data-profile-user="${esc(n.actor_id||'')}">${who(p)}</b> <span>${esc(action)}</span></div><small>${ago(n.created_at)}</small></div>${thumb}`;
-       el.querySelectorAll('[data-profile-user]').forEach(link=>link.addEventListener('click',async e=>{
+       el.querySelectorAll('[data-profile-user]').forEach(link=>link.addEventListener('click',e=>{
          e.preventDefault();
          e.stopPropagation();
-
-         // Use notifications.actor_id directly. Supabase confirms this is profiles.id.
-         const actorId=n.actor_id;
-         if(!actorId)return;
-
-         if(actorId===currentUser?.id){
-           page().hidden=true;
-           document.body.style.overflow='';
-           go('profile');
-           return;
-         }
-
-         // Verify the actor against profiles.id before leaving Activity.
-         const {data:actor,error:actorError}=await sb().from('profiles')
-           .select('id,username')
-           .eq('id',actorId)
-           .maybeSingle();
-         if(actorError||!actor)return;
-
-         page().hidden=true;
-         document.body.style.overflow='';
-
-         // Let EXOF's existing public-profile loader receive the confirmed profiles.id.
-         await openPublicProfile(actor.id);
+         const uid=n.actor_id||link.dataset.profileUser||'NO ACTOR ID';
+         alert('CLICK OK — actor_id: '+uid);
        }));
        box.appendChild(el);
      });
