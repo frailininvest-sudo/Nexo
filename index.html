@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.16.0 — EXOF DM</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.16.1 — DM Compose Search Fix</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -653,6 +653,10 @@ header #messagesBtn.exofDmButton:active{
 .dmBack{border:1px solid #26332a;background:#060806;color:#fff;width:36px;height:36px;border-radius:50%;font-size:25px}.dmChatPerson{flex:1;display:flex;align-items:center;gap:8px}.dmChatPerson img{width:38px;height:38px;border-radius:50%;object-fit:cover}.dmBuzzTop,.dmBuzz{border:0;background:#10240f;color:var(--accent);font-size:25px;border-radius:50%;width:39px;height:39px}
 .dmMessages{height:calc(100vh - 215px);overflow:auto;padding:12px 0;display:flex;flex-direction:column;gap:8px}.dmBubble{max-width:78%;padding:10px 12px;border-radius:17px;background:#171a18;align-self:flex-start;word-break:break-word}.dmBubble.mine{align-self:flex-end;background:var(--accent);color:#041004}.dmBubble img,.dmBubble video{max-width:100%;border-radius:12px;display:block}.dmMsgMeta{font-size:9px;opacity:.65;margin-top:4px}.dmComposer{position:sticky;bottom:72px;display:flex;align-items:center;gap:7px;background:#0b0e0c;border:1px solid #26332a;border-radius:22px;padding:6px}.dmComposer input{flex:1;min-width:0;border:0;background:#151917;color:#fff;border-radius:16px;padding:10px}.dmComposer button{border:0;background:none;color:var(--accent);font-size:20px}.dmComposer .dmSend{background:var(--accent);color:#061006;width:38px;height:38px;border-radius:50%}.dmVoiceStatus{font-size:11px;color:var(--accent);text-align:center;margin-top:5px}.dmRequestActions{display:flex;gap:6px}.dmRequestActions button{border:1px solid #34513a;background:#080b09;color:#fff;border-radius:9px;padding:6px 9px}.dmRequestActions .accept{border-color:var(--accent);color:var(--accent)}
 .dmBuzzShake{animation:dmBuzzShake .55s linear 2}@keyframes dmBuzzShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+</style><style id="exofDmComposeFixV161">
+.dmNewHint{margin:16px 0 2px;font-size:13px;color:#a5ada7}
+.dmSearchEmpty{padding:18px 4px;color:#778079;font-size:12px}
+#dmUserResults .dmThread{border:1px solid #1d2d21;border-radius:14px;padding:10px;margin:8px 0}
 </style></head>
 <body>
 <div id="authGate">
@@ -811,7 +815,9 @@ header #messagesBtn.exofDmButton:active{
 <div id="dmConversationList"></div>
 </section>
 
-<section id="dmNew" class="page exofDmPage"><div class="dmChatHead"><button class="dmBack" data-go="messages">‹</button><b>NEW MESSAGE</b></div><input id="dmUserSearch" class="dmSearch" placeholder="Search @username"><div id="dmUserResults"></div></section>
+<section id="dmNew" class="page exofDmPage"><div class="dmChatHead"><button class="dmBack" id="dmNewBack">‹</button><b>NEW MESSAGE</b></div><div class="dmNewHint">Who do you want to message?</div>
+<input id="dmUserSearch" class="dmSearch" placeholder="Search @username" autocomplete="off">
+<div id="dmUserResults"><div class="dmSearchEmpty">Type at least 2 letters of a username.</div></div></section>
 
 <section id="dmChat" class="page exofDmPage">
 <div class="dmChatHead"><button id="dmChatBack" class="dmBack">‹</button><div id="dmChatPerson" class="dmChatPerson"></div><button id="dmBuzzTop" class="dmBuzzTop" title="Buzz">〽</button></div>
@@ -2861,7 +2867,18 @@ async function dmSend(body='',file=null,type='text'){
  if(!currentUser||!dmActiveUser)return;let url=null;if(file){const ext=(file.name?.split('.').pop()||'webm').replace(/[^a-z0-9]/gi,'');const path=`${currentUser.id}/dm-${Date.now()}.${ext}`;const up=await sb.storage.from('drop-media').upload(path,file,{contentType:file.type});if(up.error)throw up.error;url=sb.storage.from('drop-media').getPublicUrl(path).data.publicUrl}
  const follows=await dmIsFollowing(dmActiveUser);const {error}=await sb.from('direct_messages').insert({sender_id:currentUser.id,recipient_id:dmActiveUser,body:body||null,media_url:url,media_type:type,read:false,is_request:!follows});if(error)throw error;await dmLoadMessages()
 }
-document.getElementById('dmComposeBtn')?.addEventListener('click',()=>go('dmNew'));
+document.getElementById('dmComposeBtn')?.addEventListener('click',()=>{
+ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+ const page=document.getElementById('dmNew');
+ if(page)page.classList.add('active');
+ const q=document.getElementById('dmUserSearch');
+ if(q){q.value='';setTimeout(()=>q.focus(),80)}
+});
+document.getElementById('dmNewBack')?.addEventListener('click',()=>{
+ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+ document.getElementById('messages')?.classList.add('active');
+ dmLoadList('primary');
+});
 document.getElementById('dmChatBack')?.addEventListener('click',()=>{go('messages');dmLoadList('primary')});
 document.querySelectorAll('.dmTabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.dmTabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');dmLoadList(b.dataset.dmTab)});
 document.getElementById('dmUserSearch')?.addEventListener('input',async e=>{const q=e.target.value.trim().replace(/^@/,'');const box=document.getElementById('dmUserResults');if(q.length<2){box.innerHTML='';return}const {data}=await sb.from('profiles').select('id,username,display_name,avatar_url').ilike('username',`%${q}%`).neq('id',currentUser.id).limit(20);box.innerHTML='';for(const pr of data||[]){const r=document.createElement('div');r.className='dmThread';r.innerHTML=`${pr.avatar_url?`<img class="dmAvatar" src="${pr.avatar_url}">`:'<div class="dmAvatar"></div>'}<div><b>${dmEsc(pr.display_name||pr.username)}</b><div class="dmHandle">@${dmEsc(pr.username)}</div></div>`;r.onclick=()=>dmOpen(pr.id);box.appendChild(r)}});
