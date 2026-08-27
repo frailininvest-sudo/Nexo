@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.13.0 — World DROP</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.13.1 — World DROP Test Open</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -1695,13 +1695,26 @@ async function loadMyDrops(){
 const publishDropBtn=document.getElementById('publishDropBtn');
 if(publishDropBtn) publishDropBtn.addEventListener('click',async()=>{const msg=document.getElementById('createDropMsg');if(!currentUser){msg.textContent='Please log in again.';return}if(!pendingDropFile){msg.textContent='Choose a photo or video first.';return}if(pendingDropFile.size>50*1024*1024){msg.textContent='File is too large. Maximum 50 MB.';return}publishDropBtn.disabled=true;publishDropBtn.textContent='PUBLISHING...';msg.textContent='';try{const ext=(pendingDropFile.name.split('.').pop()||'bin').replace(/[^a-z0-9]/gi,'').toLowerCase();const path=currentUser.id+'/'+Date.now()+'.'+ext;const up=await sb.storage.from('drop-media').upload(path,pendingDropFile,{contentType:pendingDropFile.type||undefined});if(up.error)throw up.error;const url=sb.storage.from('drop-media').getPublicUrl(path).data.publicUrl;const ins=await sb.from('drops').insert({user_id:currentUser.id,caption:document.getElementById('dropCaption').value.trim().slice(0,300),media_url:url,media_type:pendingDropFile.type.startsWith('video/')?'video':'image'});if(ins.error)throw ins.error;pendingDropFile=null;pendingDropMode='drop';dropMedia.value='';exofCameraPhoto.value='';exofCameraVideo.value='';document.getElementById('dropCaption').value='';document.getElementById('exofCaptionCount').textContent='0/300';exofShowSelectedMedia(null,'drop');msg.textContent='✓ Drop published';await loadDrops();setTimeout(()=>go('home'),500)}catch(err){msg.textContent=err.message||'Could not publish Drop.'}finally{publishDropBtn.disabled=false;publishDropBtn.textContent='PUBLISH DROP'}});
 
+const EXOF_WORLD_DROP_TEST_MODE=true; // TEMPORARY: lets us test posting before 3:00 PM
 const worldDropBtn=document.getElementById('postDrop');
 worldDropBtn?.addEventListener('click',()=>{
  const state=window.exofWorldDropState;
  if(state!=='open')return;
+ sessionStorage.setItem('exof_world_drop_post','1');
  go('create');
 });
 function tick(){
+ if(EXOF_WORLD_DROP_TEST_MODE){
+   window.exofWorldDropState='open';
+   const clock=document.getElementById('clock'),status=document.getElementById('dropStatus'),label=document.getElementById('worldDropLabel'),hint=document.getElementById('worldDropHint');
+   label.textContent='⚡ WORLD DROP · TEST LIVE';
+   clock.textContent='03:00';
+   status.textContent='TEST MODE · Posting is open so we can test today’s World DROP.';
+   worldDropBtn.disabled=false;
+   worldDropBtn.textContent='＋ POST MY DROP · TEST OPEN';
+   hint.textContent='Test mode only — the real launch window will be 3:00 PM – 3:03 PM ET.';
+   return;
+ }
  const p=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).formatToParts(new Date()).reduce((a,x)=>(a[x.type]=x.value,a),{});
  const cur=(+p.hour)*3600+(+p.minute)*60+(+p.second),open=54000,close=54180,reset=53700;
  const clock=document.getElementById('clock'),status=document.getElementById('dropStatus'),label=document.getElementById('worldDropLabel'),hint=document.getElementById('worldDropHint');
