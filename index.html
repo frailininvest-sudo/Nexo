@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.13.1 — World DROP Test Open</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.13.2 — World DROP Gallery Test</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -623,6 +623,15 @@ header #messagesBtn.exofDmButton:active{
 .exofWorldDropV13 .dropHero{padding:18px}.worldDropHint{display:block;margin-top:10px;color:#929b94}
 .worldPulseHead{display:flex;justify-content:space-between;align-items:end;margin:18px 2px 10px}.worldPulseHead div{display:flex;flex-direction:column;gap:4px}.worldPulseHead b{font-size:16px}.worldPulseHead b span,.worldPulseHead>small{color:var(--accent)}.worldPulseHead div small{color:#8e9790}
 .exofWorldDropV13 .worldGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.exofWorldDropV13 .world{min-height:132px;padding:14px;border:1px solid #29412d;border-radius:17px;background:linear-gradient(145deg,#0a120c,#050806);display:flex;flex-direction:column;align-items:flex-start;justify-content:center}.exofWorldDropV13 .world b{font-size:15px}.exofWorldDropV13 .world small{color:#a8b0aa}.exofWorldDropV13 .world strong{font-size:31px;color:var(--accent);margin-top:10px}.exofWorldDropV13 .world em{font-style:normal;color:#d5dad6}.worldPulseNote{font-size:11px;color:#89918b;margin:12px 4px 0}.exofWorldDropV13 #postDrop:disabled{opacity:.82;cursor:default}
+</style><style id="worldDropGalleryTestStyle">
+.worldDropTestFeed{margin-top:18px;padding-bottom:85px}
+.worldDropPostCard{border:1px solid #24382a;border-radius:17px;overflow:hidden;background:#030604;margin:0 0 14px}
+.worldDropPostHead{display:flex;justify-content:space-between;align-items:center;padding:10px}
+.worldDropWho{display:flex;align-items:center;gap:9px}.worldDropWho img,.worldDropAvatarFallback{width:34px;height:34px;border-radius:50%;object-fit:cover}
+.worldDropWho div{display:flex;flex-direction:column}.worldDropWho small{color:#8f9991;font-size:10px;margin-top:2px}
+.worldDropLocation{font-size:10px;border:1px solid #36543d;border-radius:9px;padding:7px 9px;color:#f3f6f3}
+.worldDropMedia{display:block;width:100%;height:auto;max-height:520px;object-fit:contain;background:#000}
+.worldDropLikeRow{display:flex;align-items:center;gap:7px;padding:10px 12px}.worldDropLikeBtn{border:0;background:none;color:#4cff2e;font-size:27px;padding:0;line-height:1}.worldDropLikeCount{font-size:13px}
 </style></head>
 <body>
 <div id="authGate">
@@ -683,6 +692,8 @@ header #messagesBtn.exofDmButton:active{
  <div class="world"><b>SPAIN</b><small>ES</small><strong>—</strong><em>moments</em></div>
 </div>
 <p class="worldPulseNote">Locations rotate automatically based on World DROP activity. Everyone still sees the same global feed.</p>
+<input id="worldDropGalleryInput" type="file" accept="image/*" hidden>
+<div id="worldDropTestFeed" class="worldDropTestFeed"></div>
 </section>
 
 <section id="loops" class="page"><div class="title">◎ Loops</div><p class="sub">Living photos built around motion and replay.</p><div class="loopStage"><div class="loopDot"></div></div><div class="actions"><span>♡</span><span>◯</span><span>🔗 Chain</span></div></section>
@@ -1700,8 +1711,35 @@ const worldDropBtn=document.getElementById('postDrop');
 worldDropBtn?.addEventListener('click',()=>{
  const state=window.exofWorldDropState;
  if(state!=='open')return;
- sessionStorage.setItem('exof_world_drop_post','1');
- go('create');
+ document.getElementById('worldDropGalleryInput')?.click();
+});
+const worldDropGalleryInput=document.getElementById('worldDropGalleryInput');
+worldDropGalleryInput?.addEventListener('change',e=>{
+ const file=e.target.files&&e.target.files[0]; if(!file)return;
+ const reader=new FileReader();
+ reader.onload=ev=>{
+   const feed=document.getElementById('worldDropTestFeed');
+   const profile=currentProfile||{};
+   const avatar=profile.avatar_url||'';
+   const username=profile.username||'frai';
+   const location='MARYLAND US';
+   feed.innerHTML=`<article class="worldDropPostCard">
+     <div class="worldDropPostHead">
+       <div class="worldDropWho">${avatar?`<img src="${avatar}" alt="">`:'<span class="worldDropAvatarFallback">●</span>'}<div><b>@${username}</b><small>just now</small></div></div>
+       <span class="worldDropLocation">⌖ ${location}</span>
+     </div>
+     <img class="worldDropMedia" src="${ev.target.result}" alt="World Drop">
+     <div class="worldDropLikeRow"><button type="button" class="worldDropLikeBtn">♡</button><b class="worldDropLikeCount">0</b></div>
+   </article>`+feed.innerHTML;
+   const card=feed.querySelector('.worldDropPostCard');
+   card.querySelector('.worldDropLikeBtn').addEventListener('click',function(){
+     const on=this.textContent==='♥'; this.textContent=on?'♡':'♥';
+     card.querySelector('.worldDropLikeCount').textContent=on?'0':'1';
+   });
+   feed.scrollIntoView({behavior:'smooth',block:'start'});
+ };
+ reader.readAsDataURL(file);
+ e.target.value='';
 });
 function tick(){
  if(EXOF_WORLD_DROP_TEST_MODE){
