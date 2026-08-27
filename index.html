@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.12.16 — Activity Direct Profile</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.12.17 — Activity Profile Final</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -2092,20 +2092,19 @@ window.EXOF_PRIVACY_API={
            document.body.style.overflow='';
            go('profile');
          }else{
-           // Open the existing public-profile screen directly after this Activity
-           // click finishes. This avoids any Home/Search route being activated by
-           // the same click event.
-           const activityPage=page();
-           setTimeout(()=>{
-             activityPage.hidden=true;
-             document.body.style.overflow='';
-             document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='publicProfile'));
-             document.querySelectorAll('nav button').forEach(b=>b.classList.remove('on'));
-             activePublicUserId=uid;
-             exofSetRoute('publicProfile',uid);
-             openPublicProfile(uid,{restoring:true});
-             window.scrollTo(0,0);
-           },0);
+           // Reuse EXOF's already-proven Explore result click path instead of
+           // creating another public-profile navigation path inside Activity.
+           const username=(p?.username||'').trim();
+           page().hidden=true;
+           document.body.style.overflow='';
+           go('search',{noRoute:true});
+           const input=document.getElementById('userSearchInput');
+           if(input&&username)input.value=username;
+           Promise.resolve(searchUsers()).then(()=>{
+             const result=document.querySelector('#searchResults [data-public-user="'+CSS.escape(String(uid))+'"]');
+             if(result)result.click();
+             else openPublicProfile(uid);
+           });
          }
        }));
        box.appendChild(el);
