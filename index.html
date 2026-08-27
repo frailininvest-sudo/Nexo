@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.16.1 — DM Compose Search Fix</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.16.2 — DM User Search Fix</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -657,6 +657,12 @@ header #messagesBtn.exofDmButton:active{
 .dmNewHint{margin:16px 0 2px;font-size:13px;color:#a5ada7}
 .dmSearchEmpty{padding:18px 4px;color:#778079;font-size:12px}
 #dmUserResults .dmThread{border:1px solid #1d2d21;border-radius:14px;padding:10px;margin:8px 0}
+</style><style id="exofDmSearchFixV162">
+.dmUserResult{width:100%;text-align:left;background:#050806;color:#fff}
+.dmResultArrow{font-size:25px;color:var(--accent);padding-right:7px}
+.dmSearchError{border:1px solid #5b2b2b;background:#140909;border-radius:13px;padding:12px;margin-top:8px;color:#fff}
+.dmSearchError b,.dmSearchError small{display:block}.dmSearchError small{margin-top:5px;color:#d4a5a5;word-break:break-word}
+.dmSearchEmpty b{color:#fff}
 </style></head>
 <body>
 <div id="authGate">
@@ -2881,7 +2887,38 @@ document.getElementById('dmNewBack')?.addEventListener('click',()=>{
 });
 document.getElementById('dmChatBack')?.addEventListener('click',()=>{go('messages');dmLoadList('primary')});
 document.querySelectorAll('.dmTabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.dmTabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');dmLoadList(b.dataset.dmTab)});
-document.getElementById('dmUserSearch')?.addEventListener('input',async e=>{const q=e.target.value.trim().replace(/^@/,'');const box=document.getElementById('dmUserResults');if(q.length<2){box.innerHTML='';return}const {data}=await sb.from('profiles').select('id,username,display_name,avatar_url').ilike('username',`%${q}%`).neq('id',currentUser.id).limit(20);box.innerHTML='';for(const pr of data||[]){const r=document.createElement('div');r.className='dmThread';r.innerHTML=`${pr.avatar_url?`<img class="dmAvatar" src="${pr.avatar_url}">`:'<div class="dmAvatar"></div>'}<div><b>${dmEsc(pr.display_name||pr.username)}</b><div class="dmHandle">@${dmEsc(pr.username)}</div></div>`;r.onclick=()=>dmOpen(pr.id);box.appendChild(r)}});
+document.getElementById('dmUserSearch')?.addEventListener('input',async e=>{
+ const raw=e.target.value.trim(),q=raw.replace(/^@/,'').trim();
+ const box=document.getElementById('dmUserResults');
+ if(!box)return;
+ if(q.length<2){box.innerHTML='<div class="dmSearchEmpty">Type at least 2 letters of a username.</div>';return}
+ box.innerHTML='<div class="dmSearchEmpty">Searching users…</div>';
+ try{
+   let query=sb.from('profiles').select('id,username,display_name,avatar_url').ilike('username',`%${q}%`).limit(20);
+   if(currentUser?.id)query=query.neq('id',currentUser.id);
+   const {data,error}=await query;
+   if(error){
+     console.error('EXOF DM profile search:',error);
+     box.innerHTML=`<div class="dmSearchError"><b>Search error</b><small>${dmEsc(error.message||'Supabase could not search profiles.')}</small></div>`;
+     return;
+   }
+   if(!data?.length){
+     box.innerHTML=`<div class="dmSearchEmpty">No users found for <b>@${dmEsc(q)}</b>.</div>`;
+     return;
+   }
+   box.innerHTML='';
+   for(const pr of data){
+     const r=document.createElement('button');
+     r.type='button';r.className='dmThread dmUserResult';
+     r.innerHTML=`${pr.avatar_url?`<img class="dmAvatar" src="${pr.avatar_url}" alt="">`:'<div class="dmAvatar"></div>'}<div class="dmThreadMain"><div class="dmThreadTop"><b>${dmEsc(pr.display_name||pr.username)}</b></div><div class="dmHandle">@${dmEsc(pr.username)}</div></div><span class="dmResultArrow">›</span>`;
+     r.addEventListener('click',()=>dmOpen(pr.id));
+     box.appendChild(r);
+   }
+ }catch(err){
+   console.error('EXOF DM search exception:',err);
+   box.innerHTML=`<div class="dmSearchError"><b>Search error</b><small>${dmEsc(err?.message||String(err))}</small></div>`;
+ }
+});
 document.getElementById('dmSendBtn')?.addEventListener('click',async()=>{const i=document.getElementById('dmText'),v=i.value.trim();if(!v)return;await dmSend(v);i.value=''});
 document.getElementById('dmText')?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();document.getElementById('dmSendBtn').click()}});
 document.getElementById('dmPhotoBtn')?.addEventListener('click',()=>document.getElementById('dmPhotoInput').click());
