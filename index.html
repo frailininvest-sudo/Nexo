@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.16.3 — DM Search Diagnostic</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.16.4 — DM Native User Search</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -2897,29 +2897,27 @@ document.getElementById('dmChatBack')?.addEventListener('click',()=>{go('message
 document.querySelectorAll('.dmTabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.dmTabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');dmLoadList(b.dataset.dmTab)});
 async function dmRunUserSearch(){
  const input=document.getElementById('dmUserSearch'),box=document.getElementById('dmUserResults'),btn=document.getElementById('dmUserSearchBtn');
- const q=(input?.value||'').trim().replace(/^@/,'').trim();
- if(!box)return;
- if(q.length<2){box.innerHTML='<div class="dmSearchEmpty">Enter at least 2 letters.</div>';return}
- btn.disabled=true;btn.textContent='SEARCHING…';
- box.innerHTML='<div class="dmSearchEmpty">Connecting to profiles…</div>';
- const timeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error('TIMEOUT: Supabase did not answer the profiles search within 8 seconds.')),8000));
+ const q=(input?.value||'').trim().replace(/^@/,'');
+ if(!q){box.innerHTML='<div class="dmSearchEmpty">Type a name or @username.</div>';return}
+ btn.disabled=true;btn.textContent='SEARCHING…';box.innerHTML='<div class="dmSearchEmpty">Searching…</div>';
  try{
-   let request=sb.from('profiles').select('id,username,display_name,avatar_url').ilike('username',`%${q}%`).limit(20);
-   if(currentUser?.id)request=request.neq('id',currentUser.id);
-   const result=await Promise.race([request,timeout]);
-   const {data,error}=result||{};
-   if(error)throw error;
-   if(!data?.length){box.innerHTML=`<div class="dmSearchEmpty">No users found for <b>@${dmEsc(q)}</b>.</div>`;return}
+   // Same query pattern as EXOF's existing People Search.
+   const safe=q.replace(/[%_,]/g,'');
+   const {data,error}=await sb.from('profiles')
+     .select('id,username,display_name,bio,avatar_url,background_url')
+     .or(`username.ilike.%${safe}%,display_name.ilike.%${safe}%`)
+     .order('username',{ascending:true}).limit(20);
+   if(error){box.innerHTML='<div class="dmSearchError"><b>SEARCH ERROR</b><small>'+dmEsc(error.message)+'</small></div>';return}
+   const users=(data||[]).filter(u=>!currentUser||u.id!==currentUser.id);
+   if(!users.length){box.innerHTML='<div class="dmSearchEmpty">No users found.</div>';return}
    box.innerHTML='';
-   for(const pr of data){
+   for(const pr of users){
      const r=document.createElement('button');r.type='button';r.className='dmThread dmUserResult';
      r.innerHTML=`${pr.avatar_url?`<img class="dmAvatar" src="${pr.avatar_url}" alt="">`:'<div class="dmAvatar"></div>'}<div class="dmThreadMain"><div class="dmThreadTop"><b>${dmEsc(pr.display_name||pr.username)}</b></div><div class="dmHandle">@${dmEsc(pr.username)}</div></div><span class="dmResultArrow">›</span>`;
      r.onclick=()=>dmOpen(pr.id);box.appendChild(r);
    }
- }catch(err){
-   console.error('EXOF DM direct search diagnostic:',err);
-   box.innerHTML=`<div class="dmSearchError"><b>USER SEARCH FAILED</b><small>${dmEsc(err?.message||String(err))}</small></div>`;
- }finally{btn.disabled=false;btn.textContent='SEARCH'}
+ }catch(err){box.innerHTML='<div class="dmSearchError"><b>SEARCH ERROR</b><small>'+dmEsc(err?.message||String(err))+'</small></div>'}
+ finally{btn.disabled=false;btn.textContent='SEARCH'}
 }
 document.getElementById('dmUserSearchBtn')?.addEventListener('click',dmRunUserSearch);
 document.getElementById('dmUserSearch')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();dmRunUserSearch()}});
