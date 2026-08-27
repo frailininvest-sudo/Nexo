@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.12.17 — Activity Profile Final</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.12.18 — Activity Profile After Close</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -619,7 +619,33 @@ header #messagesBtn.exofDmButton:active{
   white-space:nowrap!important;
 }
 #publicProfile .exofPublicOfficialRole[hidden]{display:none!important}
-</style><style id="exofActivityProfileLinkV1212">#exofActivityRecent [data-profile-user]{cursor:pointer}</style></head>
+</style><script id="exofActivityProfileBridgeV1218">
+(function(){
+  let opening=false;
+  window.addEventListener('exof:activity-profile-selected',function(e){
+    const uid=e?.detail?.userId;
+    if(!uid||opening)return;
+    opening=true;
+
+    const activity=document.getElementById('exofActivityPage');
+    if(activity)activity.hidden=true;
+    document.body.style.overflow='';
+
+    // Wait until Activity's click stack is completely finished, then let the
+    // main EXOF app perform the same public-profile navigation it normally uses.
+    requestAnimationFrame(function(){
+      requestAnimationFrame(async function(){
+        try{
+          await openPublicProfile(uid);
+        }finally{
+          opening=false;
+        }
+      });
+    });
+  });
+})();
+</script>
+<style id="exofActivityProfileLinkV1212">#exofActivityRecent [data-profile-user]{cursor:pointer}</style></head>
 <body>
 <div id="authGate">
   <div class="authBox">
@@ -2092,19 +2118,9 @@ window.EXOF_PRIVACY_API={
            document.body.style.overflow='';
            go('profile');
          }else{
-           // Reuse EXOF's already-proven Explore result click path instead of
-           // creating another public-profile navigation path inside Activity.
-           const username=(p?.username||'').trim();
-           page().hidden=true;
-           document.body.style.overflow='';
-           go('search',{noRoute:true});
-           const input=document.getElementById('userSearchInput');
-           if(input&&username)input.value=username;
-           Promise.resolve(searchUsers()).then(()=>{
-             const result=document.querySelector('#searchResults [data-public-user="'+CSS.escape(String(uid))+'"]');
-             if(result)result.click();
-             else openPublicProfile(uid);
-           });
+           // Activity only reports which user was selected.
+           // Main app navigation happens after the Activity overlay is fully closed.
+           window.dispatchEvent(new CustomEvent('exof:activity-profile-selected',{detail:{userId:uid}}));
          }
        }));
        box.appendChild(el);
