@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.12.13 — Activity Profile Transition</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.12.14 — Activity Profile Open First</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -1119,6 +1119,10 @@ function exofTogglePublicProfileTrack(){
 document.getElementById('publicProfileTrackPlay')?.addEventListener('click',exofTogglePublicProfileTrack);
 
 async function openPublicProfile(userId,opts={}){
+  // Show the destination immediately. This prevents Home from flashing/remaining
+  // visible while the selected public profile is being fetched.
+  activePublicUserId=userId;
+  go('publicProfile',{userId,noRoute:!!opts.restoring});
   const {data:u,error}=await sb.from('profiles').select('*').eq('id',userId).single();
   if(error||!u) return;
   const bg=u.background_url||'';
@@ -1154,7 +1158,6 @@ async function openPublicProfile(userId,opts={}){
       ${d.caption?`<p style="margin:10px 2px 2px">${escapeHtml(d.caption)}</p>`:''}
     </article>`).join('');
   activePublicUserId=userId;
-  go('publicProfile',{userId,noRoute:!!opts.restoring});
 }
 document.getElementById('userSearchBtn')?.addEventListener('click',searchUsers);
 document.getElementById('userSearchInput')?.addEventListener('keydown',e=>{if(e.key==='Enter') searchUsers();});
@@ -2083,14 +2086,7 @@ window.EXOF_PRIVACY_API={
          e.stopPropagation();
          const uid=link.dataset.profileUser;if(!uid)return;
          page().hidden=true;document.body.style.overflow='';
-         if(uid===currentUser?.id){
-           go('profile');
-         }else{
-           // Show the existing public-profile page immediately.
-           // openPublicProfile then fills that same page with the selected user's data.
-           go('publicProfile',{userId:uid});
-           openPublicProfile(uid);
-         }
+         if(uid===currentUser?.id)go('profile');else openPublicProfile(uid);
        }));
        box.appendChild(el);
      });
