@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.12.24 — Activity Profile Underlay</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.13.0 — World DROP</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -619,7 +619,11 @@ header #messagesBtn.exofDmButton:active{
   white-space:nowrap!important;
 }
 #publicProfile .exofPublicOfficialRole[hidden]{display:none!important}
-</style><style id="exofActivityProfileLinkV1212">#exofActivityRecent [data-profile-user]{cursor:pointer}</style></head>
+</style><style id="exofActivityProfileLinkV1212">#exofActivityRecent [data-profile-user]{cursor:pointer}</style><style id="exofWorldDropV13Style">
+.exofWorldDropV13 .dropHero{padding:18px}.worldDropHint{display:block;margin-top:10px;color:#929b94}
+.worldPulseHead{display:flex;justify-content:space-between;align-items:end;margin:18px 2px 10px}.worldPulseHead div{display:flex;flex-direction:column;gap:4px}.worldPulseHead b{font-size:16px}.worldPulseHead b span,.worldPulseHead>small{color:var(--accent)}.worldPulseHead div small{color:#8e9790}
+.exofWorldDropV13 .worldGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.exofWorldDropV13 .world{min-height:132px;padding:14px;border:1px solid #29412d;border-radius:17px;background:linear-gradient(145deg,#0a120c,#050806);display:flex;flex-direction:column;align-items:flex-start;justify-content:center}.exofWorldDropV13 .world b{font-size:15px}.exofWorldDropV13 .world small{color:#a8b0aa}.exofWorldDropV13 .world strong{font-size:31px;color:var(--accent);margin-top:10px}.exofWorldDropV13 .world em{font-style:normal;color:#d5dad6}.worldPulseNote{font-size:11px;color:#89918b;margin:12px 4px 0}.exofWorldDropV13 #postDrop:disabled{opacity:.82;cursor:default}
+</style></head>
 <body>
 <div id="authGate">
   <div class="authBox">
@@ -661,7 +665,25 @@ header #messagesBtn.exofDmButton:active{
 
 <section id="home" class="page active"><div class="tabs"><button class="on">For You</button><button>Following</button><button data-go="drop">DROP ⚡</button></div><div id="realFeed"></div></section>
 
-<section id="drop" class="page"><div class="title">⚡ World DROP</div><p class="sub">Everyone sees everyone. Today's window disappears tomorrow at 2:55 PM ET.</p><div class="card dropHero"><small class="mint"><b>NEXT DROP · 3:00 PM ET</b></small><div class="clock" id="clock">--:--:--</div><p class="sub" id="dropStatus">Today's World Drop is live.</p><button class="primary" id="postDrop">＋ POST MY DROP</button></div><div class="worldGrid"><div class="world"><b>Tokyo 🇯🇵</b><small>Today's moments</small></div><div class="world"><b>Puerto Rico 🇵🇷</b><small>Today's moments</small></div><div class="world"><b>Miami 🇺🇸</b><small>Today's moments</small></div><div class="world"><b>Madrid 🇪🇸</b><small>Today's moments</small></div></div></section>
+<section id="drop" class="page exofWorldDropV13">
+<div class="title">⚡ World DROP</div>
+<p class="sub">Everyone sees everyone. Today’s window disappears tomorrow at 2:55 PM ET.</p>
+<div class="card dropHero">
+  <small class="mint"><b id="worldDropLabel">NEXT DROP · 3:00 PM ET</b></small>
+  <div class="clock" id="clock">--:--:--</div>
+  <p class="sub" id="dropStatus">Get ready for today’s World DROP.</p>
+  <button class="primary" id="postDrop">⚡ GET READY</button>
+  <small id="worldDropHint" class="worldDropHint">Posting opens for only 3 minutes.</small>
+</div>
+<div class="worldPulseHead"><div><b>🌎 WORLD PULSE <span>• LIVE</span></b><small>Top locations right now</small></div><small>● Updating live</small></div>
+<div class="worldGrid" id="worldPulseGrid">
+ <div class="world"><b>PUERTO RICO</b><small>PR</small><strong>—</strong><em>moments</em></div>
+ <div class="world"><b>TOKYO</b><small>JP</small><strong>—</strong><em>moments</em></div>
+ <div class="world"><b>MIAMI</b><small>US</small><strong>—</strong><em>moments</em></div>
+ <div class="world"><b>SPAIN</b><small>ES</small><strong>—</strong><em>moments</em></div>
+</div>
+<p class="worldPulseNote">Locations rotate automatically based on World DROP activity. Everyone still sees the same global feed.</p>
+</section>
 
 <section id="loops" class="page"><div class="title">◎ Loops</div><p class="sub">Living photos built around motion and replay.</p><div class="loopStage"><div class="loopDot"></div></div><div class="actions"><span>♡</span><span>◯</span><span>🔗 Chain</span></div></section>
 
@@ -1673,8 +1695,32 @@ async function loadMyDrops(){
 const publishDropBtn=document.getElementById('publishDropBtn');
 if(publishDropBtn) publishDropBtn.addEventListener('click',async()=>{const msg=document.getElementById('createDropMsg');if(!currentUser){msg.textContent='Please log in again.';return}if(!pendingDropFile){msg.textContent='Choose a photo or video first.';return}if(pendingDropFile.size>50*1024*1024){msg.textContent='File is too large. Maximum 50 MB.';return}publishDropBtn.disabled=true;publishDropBtn.textContent='PUBLISHING...';msg.textContent='';try{const ext=(pendingDropFile.name.split('.').pop()||'bin').replace(/[^a-z0-9]/gi,'').toLowerCase();const path=currentUser.id+'/'+Date.now()+'.'+ext;const up=await sb.storage.from('drop-media').upload(path,pendingDropFile,{contentType:pendingDropFile.type||undefined});if(up.error)throw up.error;const url=sb.storage.from('drop-media').getPublicUrl(path).data.publicUrl;const ins=await sb.from('drops').insert({user_id:currentUser.id,caption:document.getElementById('dropCaption').value.trim().slice(0,300),media_url:url,media_type:pendingDropFile.type.startsWith('video/')?'video':'image'});if(ins.error)throw ins.error;pendingDropFile=null;pendingDropMode='drop';dropMedia.value='';exofCameraPhoto.value='';exofCameraVideo.value='';document.getElementById('dropCaption').value='';document.getElementById('exofCaptionCount').textContent='0/300';exofShowSelectedMedia(null,'drop');msg.textContent='✓ Drop published';await loadDrops();setTimeout(()=>go('home'),500)}catch(err){msg.textContent=err.message||'Could not publish Drop.'}finally{publishDropBtn.disabled=false;publishDropBtn.textContent='PUBLISH DROP'}});
 
-document.getElementById('postDrop').addEventListener('click',function(){this.textContent='✓ DROP POSTED ⚡'});
-function tick(){const p=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).formatToParts(new Date()).reduce((a,x)=>(a[x.type]=x.value,a),{});const cur=(+p.hour)*3600+(+p.minute)*60+(+p.second);let d=54000-cur;if(d<=0)d+=86400;document.getElementById('clock').textContent=[Math.floor(d/3600),Math.floor((d%3600)/60),d%60].map(x=>String(x).padStart(2,'0')).join(':');document.getElementById('dropStatus').textContent=(cur>=53700&&cur<54000)?'⚡ RESET WINDOW · Yesterday is gone · New DROP at 3:00 PM ET':"Today's World Drop stays public until 2:55 PM ET tomorrow."}
+const worldDropBtn=document.getElementById('postDrop');
+worldDropBtn?.addEventListener('click',()=>{
+ const state=window.exofWorldDropState;
+ if(state!=='open')return;
+ go('create');
+});
+function tick(){
+ const p=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).formatToParts(new Date()).reduce((a,x)=>(a[x.type]=x.value,a),{});
+ const cur=(+p.hour)*3600+(+p.minute)*60+(+p.second),open=54000,close=54180,reset=53700;
+ const clock=document.getElementById('clock'),status=document.getElementById('dropStatus'),label=document.getElementById('worldDropLabel'),hint=document.getElementById('worldDropHint');
+ let d;
+ if(cur>=open&&cur<close){
+   window.exofWorldDropState='open';d=close-cur;
+   label.textContent='⚡ WORLD DROP · LIVE';clock.textContent=[Math.floor(d/60),d%60].map(x=>String(x).padStart(2,'0')).join(':');
+   status.textContent='Posting is open now · 3:00 PM – 3:03 PM ET';
+   worldDropBtn.disabled=false;worldDropBtn.textContent='＋ POST MY DROP · '+clock.textContent+' LEFT';
+   hint.textContent='Be quick. 3 minutes to be part of today’s moment.';
+ }else{
+   window.exofWorldDropState='closed';d=open-cur;if(d<=0)d+=86400;
+   clock.textContent=[Math.floor(d/3600),Math.floor((d%3600)/60),d%60].map(x=>String(x).padStart(2,'0')).join(':');
+   if(cur>=reset&&cur<open){label.textContent='NEXT DROP · 3:00 PM ET';status.textContent='⚡ RESET WINDOW · Yesterday is gone · New DROP at 3:00 PM ET';worldDropBtn.textContent='⚡ GET READY';}
+   else if(cur>=close){label.textContent='POSTING CLOSED · NEXT DROP 3:00 PM ET';status.textContent='Today’s World DROP is open to watch, like, comment and share.';worldDropBtn.textContent='🔒 POSTING CLOSED · VIEW DROPS';}
+   else{label.textContent='NEXT DROP · 3:00 PM ET';status.textContent='Today’s World DROP posting window: 3:00 PM – 3:03 PM ET';worldDropBtn.textContent='⚡ GET READY';}
+   worldDropBtn.disabled=true;hint.textContent='Posting opens for only 3 minutes.';
+ }
+}
 tick();setInterval(tick,1000);
 
 const avatarUploadEl=document.getElementById('avatarUpload');
@@ -2084,27 +2130,18 @@ window.EXOF_PRIVACY_API={
           :`<img class="exofActivityThumb" src="${esc(d.media_url)}">`;
        }
        el.innerHTML=`<img class="exofActivityAvatar exofProfileLink" data-profile-user="${esc(n.actor_id||'')}" src="${av(p)}"><div class="exofActivityText"><div><b class="exofProfileLink" data-profile-user="${esc(n.actor_id||'')}">${who(p)}</b> <span>${esc(action)}</span></div><small>${ago(n.created_at)}</small></div>${thumb}`;
-       el.querySelectorAll('[data-profile-user]').forEach(link=>link.addEventListener('click',async e=>{
-         e.preventDefault();
+       el.querySelectorAll('[data-profile-user]').forEach(link=>link.addEventListener('click',e=>{
          e.stopPropagation();
-         const uid=n.actor_id||link.dataset.profileUser;
-         if(!uid)return;
-
+         const uid=link.dataset.profileUser;if(!uid)return;
+         page().hidden=true;document.body.style.overflow='';
          if(uid===currentUser?.id){
-           // Change the page UNDER Activity first, then remove Activity.
            go('profile');
-           page().hidden=true;
-           document.body.style.overflow='';
-           return;
+         }else{
+           // Initialize EXOF's normal public-profile path exactly as a user coming
+           // from Explore/Search, then open the selected account.
+           go('search',{noRoute:true});
+           openPublicProfile(uid);
          }
-
-         // Activity is an overlay. Keep it visible while EXOF switches the
-         // underlying normal page to publicProfile and loads the selected actor.
-         await openPublicProfile(uid);
-
-         // Only after publicProfile is active and populated do we remove Activity.
-         page().hidden=true;
-         document.body.style.overflow='';
        }));
        box.appendChild(el);
      });
