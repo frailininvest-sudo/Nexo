@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.14.0 — World DROP Production</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.15.0 — My World + Global Drop</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -642,6 +642,10 @@ header #messagesBtn.exofDmButton:active{
 .wdHeartBtn .heart{font-size:46px;line-height:1;font-weight:400}.wdHeartBtn span{font-size:17px;color:#fff;font-weight:800}
 .wdHeartBtn .likeFx{position:absolute;left:50%;top:50%;width:64px;height:64px;transform:translate(-50%,-50%) scale(.2);border-radius:50%;pointer-events:none;opacity:0;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 48%,transparent) 0 20%,color-mix(in srgb,var(--accent) 18%,transparent) 35%,transparent 70%);box-shadow:0 0 26px color-mix(in srgb,var(--accent) 55%,transparent)}
 .wdHeartBtn.burst .likeFx{animation:exofLikePulse .62s ease-out}.wdHeartBtn.burst{animation:exofHeartPop .42s ease-out}
+</style><style id="exofMyWorldV15Style">
+.exofHomeTabsV15{grid-template-columns:1fr 1fr!important}
+.exofHomeTabsV15 button{font-weight:900;letter-spacing:.35px}
+.exofHomeTabsV15 .globalGlobe{font-size:15px;vertical-align:-1px;margin-right:3px}
 </style></head>
 <body>
 <div id="authGate">
@@ -682,7 +686,7 @@ header #messagesBtn.exofDmButton:active{
 <main id="app" style="display:none">
 <header><div></div><div class="brandLogo"><div class="exofWordmark" aria-label="EXOF"><span>E</span><span class="exofX">X</span><span>O</span><span>F</span></div></div><div class="headerActions"><button id="searchBtn" class="icon searchBtn" aria-label="Search" data-go="search">⌕</button><button id="messagesBtn" class="icon messagesBtn exofDmButton" aria-label="EXOF DM" data-go="messages"><img src="exof-dm-icon.png" alt="EXOF DM"></button></div></header>
 
-<section id="home" class="page active"><div class="tabs"><button class="on">For You</button><button>Following</button><button data-go="drop">DROP ⚡</button></div><div id="realFeed"></div></section>
+<section id="home" class="page active"><div class="tabs exofHomeTabsV15"><button class="on" id="myWorldTab">MY WORLD</button><button data-go="drop" id="globalDropTab"><span class="globalGlobe">🌐</span> GLOBAL DROP</button></div><div id="realFeed"></div></section>
 
 <section id="drop" class="page exofWorldDropV13">
 <div class="title">⚡ World DROP</div>
@@ -1613,17 +1617,38 @@ async function buildDropCard(d,pr={},own=false){
 }
 
 let exofHomeFeedRenderToken=0;
-async function loadDrops(filter='all'){
+async function loadDrops(filter='myworld'){
  const renderToken=++exofHomeFeedRenderToken;
  const feed=document.getElementById('realFeed'); if(!feed)return;
- let r;
- if(filter==='following'){const ids=await exofFollowingIds();if(!ids.length){feed.innerHTML='<div class="emptyState">Follow people to see their Drops here.</div>';return}r=await sb.from('drops').select('id,user_id,caption,media_url,media_type,created_at').in('user_id',ids).order('created_at',{ascending:false}).limit(30)}
- else r=await sb.from('drops').select('id,user_id,caption,media_url,media_type,created_at').order('created_at',{ascending:false}).limit(30);
- if(r.error){console.error('EXOF feed error:',r.error);feed.innerHTML='<div class="meta">Could not load Drops yet.</div>';return}
+ if(!currentUser){feed.innerHTML='<div class="meta">Log in to see My World.</div>';return}
+
+ // MY WORLD: target mix = 60% you + people you follow, 40% discovery.
+ // If the social side does not have enough content yet, discovery fills the empty space.
+ const followingIds=await exofFollowingIds();
+ const socialIds=[...new Set([currentUser.id,...followingIds])];
+ const [socialRes,discoverRes]=await Promise.all([
+   sb.from('drops').select('id,user_id,caption,media_url,media_type,created_at').in('user_id',socialIds).order('created_at',{ascending:false}).limit(36),
+   sb.from('drops').select('id,user_id,caption,media_url,media_type,created_at').not('user_id','in','('+socialIds.join(',')+')').order('created_at',{ascending:false}).limit(36)
+ ]);
+ if(socialRes.error||discoverRes.error){console.error('EXOF My World feed error:',socialRes.error||discoverRes.error);feed.innerHTML='<div class="meta">Could not load My World yet.</div>';return}
  if(renderToken!==exofHomeFeedRenderToken)return;
- const rawDrops=r.data||[];
+
+ const social=[...(socialRes.data||[])], discovery=[...(discoverRes.data||[])];
+ // Light shuffle discovery so the 40% is not always the exact same people/order.
+ for(let i=discovery.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[discovery[i],discovery[j]]=[discovery[j],discovery[i]]}
+
+ const target=30, socialTarget=Math.round(target*.60), discoveryTarget=target-socialTarget;
+ let mixed=[],si=0,di=0;
+ // Interleave roughly 3 social posts then 2 discovery posts.
+ while(mixed.length<target && (si<social.length||di<discovery.length)){
+   for(let n=0;n<3&&si<social.length&&mixed.length<target;n++)mixed.push(social[si++]);
+   for(let n=0;n<2&&di<discovery.length&&mixed.length<target;n++)mixed.push(discovery[di++]);
+   // If one pool is exhausted, the other fills the feed so new users never see an empty Home.
+   if(si>=social.length&&di<discovery.length)while(di<discovery.length&&mixed.length<target)mixed.push(discovery[di++]);
+   if(di>=discovery.length&&si<social.length)while(si<social.length&&mixed.length<target)mixed.push(social[si++]);
+ }
  const seenDropIds=new Set();
- const drops=rawDrops.filter(d=>{const key=String(d.id);if(seenDropIds.has(key))return false;seenDropIds.add(key);return true});
+ const drops=mixed.filter(d=>{const key=String(d.id);if(seenDropIds.has(key))return false;seenDropIds.add(key);return true});
  const userIds=[...new Set(drops.map(d=>d.user_id).filter(Boolean))];let profileMap={};
  if(userIds.length){const pr=await sb.from('profiles').select('id,username,display_name,avatar_url,official_role').in('id',userIds);if(!pr.error)(pr.data||[]).forEach(p=>profileMap[p.id]=p)}
  if(renderToken!==exofHomeFeedRenderToken)return;
