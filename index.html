@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.12.23 — Activity Force Profile</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.12.24 — Activity Profile Underlay</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -1234,9 +1234,7 @@ exofApplyAccent(localStorage.getItem(EXOF_ACCENT_KEY)||getComputedStyle(document
 function exofSetRoute(id,userId){
   try{const u=new URL(location.href);u.searchParams.set('view',id);if(id==='publicProfile'&&userId)u.searchParams.set('user',userId);else u.searchParams.delete('user');history.replaceState({view:id,user:userId||null},'',u.pathname+u.search+u.hash)}catch(e){}
 }
-function go(id,opts={}){
-  if(window.__exofForceActivityProfile && id==='home') return;
-  pages.forEach(p=>p.classList.toggle('active',p.id===id));nav.forEach(b=>b.classList.toggle('on',b.dataset.go===id));if(!opts.keepScroll)window.scrollTo(0,0);if(!opts.noRoute)exofSetRoute(id,opts.userId);if(id==='profile')loadMyDrops();if(id==='home'&&!opts.skipLoad)loadDrops(opts.feed||'all');}
+function go(id,opts={}){pages.forEach(p=>p.classList.toggle('active',p.id===id));nav.forEach(b=>b.classList.toggle('on',b.dataset.go===id));if(!opts.keepScroll)window.scrollTo(0,0);if(!opts.noRoute)exofSetRoute(id,opts.userId);if(id==='profile')loadMyDrops();if(id==='home'&&!opts.skipLoad)loadDrops(opts.feed||'all');}
 window.exofGo=go;
 async function exofRestoreRoute(){
   const q=new URLSearchParams(location.search),view=q.get('view')||'home',user=q.get('user');
@@ -2086,58 +2084,27 @@ window.EXOF_PRIVACY_API={
           :`<img class="exofActivityThumb" src="${esc(d.media_url)}">`;
        }
        el.innerHTML=`<img class="exofActivityAvatar exofProfileLink" data-profile-user="${esc(n.actor_id||'')}" src="${av(p)}"><div class="exofActivityText"><div><b class="exofProfileLink" data-profile-user="${esc(n.actor_id||'')}">${who(p)}</b> <span>${esc(action)}</span></div><small>${ago(n.created_at)}</small></div>${thumb}`;
-       el.querySelectorAll('[data-profile-user]').forEach(link=>link.addEventListener('click',e=>{
+       el.querySelectorAll('[data-profile-user]').forEach(link=>link.addEventListener('click',async e=>{
          e.preventDefault();
          e.stopPropagation();
          const uid=n.actor_id||link.dataset.profileUser;
          if(!uid)return;
 
-         // This exact click handler was confirmed working in V1.12.20.
-         // IMPORTANT: do not navigate while the Activity click is still bubbling
-         // through document-level handlers. Close Activity now, then open the
-         // profile after the current click event has completely finished.
-         page().hidden=true;
-         document.body.style.overflow='';
-
          if(uid===currentUser?.id){
-           setTimeout(()=>go('profile'),0);
+           // Change the page UNDER Activity first, then remove Activity.
+           go('profile');
+           page().hidden=true;
+           document.body.style.overflow='';
            return;
          }
 
-         setTimeout(async()=>{
-           // FORCE this Activity click to have exactly one destination:
-           // the selected user's public Profile. Do not route through Home.
-           const target=document.getElementById('publicProfile');
-           if(!target)return;
+         // Activity is an overlay. Keep it visible while EXOF switches the
+         // underlying normal page to publicProfile and loads the selected actor.
+         await openPublicProfile(uid);
 
-           // Remove every normal EXOF page from view and activate only publicProfile.
-           document.querySelectorAll('.page').forEach(pg=>pg.classList.remove('active'));
-           target.classList.add('active');
-           document.querySelectorAll('nav button').forEach(btn=>btn.classList.remove('on'));
-
-           activePublicUserId=uid;
-           exofSetRoute('publicProfile',uid);
-           window.scrollTo(0,0);
-
-           // Load Luis into the page without allowing openPublicProfile's go()
-           // calls to change the forced destination during this Activity transition.
-           const originalGo=go;
-           let forceProfile=true;
-           try{
-             // openPublicProfile's internal go('publicProfile') is harmless;
-             // any accidental Home request during this transition is ignored.
-             window.__exofForceActivityProfile=uid;
-             await openPublicProfile(uid,{restoring:true});
-           }finally{
-             window.__exofForceActivityProfile=null;
-             forceProfile=false;
-             // Re-assert the only allowed destination after all async profile work.
-             document.querySelectorAll('.page').forEach(pg=>pg.classList.toggle('active',pg.id==='publicProfile'));
-             document.querySelectorAll('nav button').forEach(btn=>btn.classList.remove('on'));
-             activePublicUserId=uid;
-             exofSetRoute('publicProfile',uid);
-           }
-         },0);
+         // Only after publicProfile is active and populated do we remove Activity.
+         page().hidden=true;
+         document.body.style.overflow='';
        }));
        box.appendChild(el);
      });
