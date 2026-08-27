@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.16.6 — DM Search Render Fix</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.16.7 — DM Search Client Scope Fix</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -2913,10 +2913,15 @@ async function dmRunUserSearch(){
  try{
    // Direct REST request to the same Supabase Data API confirmed as HTTP 200 in Network.
    // This bypasses the hanging query-builder promise in the DM add-on.
-   const endpoint=SUPABASE_URL+'/rest/v1/profiles?select=id,username,display_name,avatar_url&or=(username.ilike.*'+encodeURIComponent(safe)+'*,display_name.ilike.*'+encodeURIComponent(safe)+'*)&order=username.asc&limit=20';
+   const client=window.exofSupabase;
+   if(!client)throw new Error('EXOF Supabase client is not available.');
+   const base=client.supabaseUrl || client.rest?.url?.replace(/\/rest\/v1\/?$/,'');
+   const key=client.supabaseKey;
+   if(!base||!key)throw new Error('Could not read EXOF Supabase client configuration.');
+   const endpoint=base+'/rest/v1/profiles?select=id,username,display_name,avatar_url&or=(username.ilike.*'+encodeURIComponent(safe)+'*,display_name.ilike.*'+encodeURIComponent(safe)+'*)&order=username.asc&limit=20';
    const res=await fetch(endpoint,{
      method:'GET',
-     headers:{'apikey':SUPABASE_PUBLISHABLE_KEY,'Accept':'application/json'},
+     headers:{'apikey':key,'Accept':'application/json'},
      signal:controller.signal
    });
    const raw=await res.text();
