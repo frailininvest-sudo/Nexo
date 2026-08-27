@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.17.0 — DM Global Scope Fix</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.17.1 — DM Chat Navigation Fix</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -2857,6 +2857,13 @@ async function dmGetCurrentUser(){
   dmCurrentUser=data?.user||null;
   return dmCurrentUser;
 }
+
+function dmShowPage(pageId){
+ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+ const page=document.getElementById(pageId);
+ if(page) page.classList.add('active');
+ window.scrollTo(0,0);
+}
 function dmEsc(v){
  return String(v??'')
    .replace(/&/g,'&amp;')
@@ -2893,7 +2900,7 @@ async function dmLoadList(tab='primary'){
  box.appendChild(row)}
 }
 async function dmOpen(uid){
- await dmGetCurrentUser();dmActiveUser=uid;const pr=await dmProfile(uid);const h=document.getElementById('dmChatPerson');h.innerHTML=`${pr?.avatar_url?`<img src="${pr.avatar_url}">`:''}<div><b>${dmEsc(pr?.display_name||pr?.username||'User')}</b><div class="dmHandle">@${dmEsc(pr?.username||'')}</div></div>`;await dmSb.from('direct_messages').update({read:true}).eq('sender_id',uid).eq('recipient_id',dmCurrentUser.id);await dmLoadMessages();go('dmChat');dmRefreshHeaderBadge()}
+ await dmGetCurrentUser();dmActiveUser=uid;const pr=await dmProfile(uid);const h=document.getElementById('dmChatPerson');h.innerHTML=`${pr?.avatar_url?`<img src="${pr.avatar_url}">`:''}<div><b>${dmEsc(pr?.display_name||pr?.username||'User')}</b><div class="dmHandle">@${dmEsc(pr?.username||'')}</div></div>`;await dmSb.from('direct_messages').update({read:true}).eq('sender_id',uid).eq('recipient_id',dmCurrentUser.id);await dmLoadMessages();dmShowPage('dmChat');dmRefreshHeaderBadge()}
 async function dmLoadMessages(){const box=document.getElementById('dmMessages');if(!box||!dmActiveUser)return;const {data,error}=await dmSb.from('direct_messages').select('*').or(`and(sender_id.eq.${dmCurrentUser.id},recipient_id.eq.${dmActiveUser}),and(sender_id.eq.${dmActiveUser},recipient_id.eq.${dmCurrentUser.id})`).eq('is_request',false).order('created_at');if(error){box.innerHTML='<div class="emptyState">'+dmEsc(error.message)+'</div>';return}box.innerHTML='';for(const m of data||[]){const b=document.createElement('div');b.className='dmBubble '+(m.sender_id===dmCurrentUser.id?'mine':'');if(m.media_type==='image')b.innerHTML=`<img src="${m.media_url}">`;else if(m.media_type==='video')b.innerHTML=`<video controls src="${m.media_url}"></video>`;else if(m.media_type==='voice')b.innerHTML=`<audio controls src="${m.media_url}"></audio>`;else b.textContent=m.body||'';const meta=document.createElement('div');meta.className='dmMsgMeta';meta.textContent=new Date(m.created_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});b.appendChild(meta);box.appendChild(b)}box.scrollTop=box.scrollHeight}
 async function dmIsFollowing(uid){const {data}=await dmSb.from('follows').select('follower_id').eq('follower_id',dmCurrentUser.id).eq('following_id',uid).maybeSingle();return !!data}
 async function dmSend(body='',file=null,type='text'){
@@ -2913,7 +2920,7 @@ document.getElementById('dmNewBack')?.addEventListener('click',()=>{
  document.getElementById('messages')?.classList.add('active');
  dmLoadList('primary');
 });
-document.getElementById('dmChatBack')?.addEventListener('click',()=>{go('messages');dmLoadList('primary')});
+document.getElementById('dmChatBack')?.addEventListener('click',()=>{dmShowPage('messages');dmLoadList('primary')});
 document.querySelectorAll('.dmTabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.dmTabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');dmLoadList(b.dataset.dmTab)});
 async function dmRunUserSearch(){
  await dmGetCurrentUser();
