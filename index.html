@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.13.4 — World DROP Live Polish</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.14.0 — World DROP Production</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -702,7 +702,7 @@ header #messagesBtn.exofDmButton:active{
  <div class="world"><b>SPAIN</b><small>ES</small><strong>—</strong><em>moments</em></div>
 </div>
 <p class="worldPulseNote">Locations rotate automatically based on World DROP activity. Everyone still sees the same global feed.</p>
-<input id="worldDropGalleryInput" type="file" accept="image/*" hidden>
+<input id="worldDropGalleryInput" type="file" accept="image/*" capture="environment" hidden>
 
 </section>
 
@@ -1732,7 +1732,7 @@ async function loadMyDrops(){
 const publishDropBtn=document.getElementById('publishDropBtn');
 if(publishDropBtn) publishDropBtn.addEventListener('click',async()=>{const msg=document.getElementById('createDropMsg');if(!currentUser){msg.textContent='Please log in again.';return}if(!pendingDropFile){msg.textContent='Choose a photo or video first.';return}if(pendingDropFile.size>50*1024*1024){msg.textContent='File is too large. Maximum 50 MB.';return}publishDropBtn.disabled=true;publishDropBtn.textContent='PUBLISHING...';msg.textContent='';try{const ext=(pendingDropFile.name.split('.').pop()||'bin').replace(/[^a-z0-9]/gi,'').toLowerCase();const path=currentUser.id+'/'+Date.now()+'.'+ext;const up=await sb.storage.from('drop-media').upload(path,pendingDropFile,{contentType:pendingDropFile.type||undefined});if(up.error)throw up.error;const url=sb.storage.from('drop-media').getPublicUrl(path).data.publicUrl;const ins=await sb.from('drops').insert({user_id:currentUser.id,caption:document.getElementById('dropCaption').value.trim().slice(0,300),media_url:url,media_type:pendingDropFile.type.startsWith('video/')?'video':'image'});if(ins.error)throw ins.error;pendingDropFile=null;pendingDropMode='drop';dropMedia.value='';exofCameraPhoto.value='';exofCameraVideo.value='';document.getElementById('dropCaption').value='';document.getElementById('exofCaptionCount').textContent='0/300';exofShowSelectedMedia(null,'drop');msg.textContent='✓ Drop published';await loadDrops();setTimeout(()=>go('home'),500)}catch(err){msg.textContent=err.message||'Could not publish Drop.'}finally{publishDropBtn.disabled=false;publishDropBtn.textContent='PUBLISH DROP'}});
 
-const EXOF_WORLD_DROP_TEST_MODE=true; // TEMPORARY: lets us test posting before 3:00 PM
+const EXOF_WORLD_DROP_TEST_MODE=false;
 const worldDropBtn=document.getElementById('postDrop');
 worldDropBtn?.addEventListener('click',()=>{
  const state=window.exofWorldDropState;
@@ -1740,26 +1740,48 @@ worldDropBtn?.addEventListener('click',()=>{
  document.getElementById('worldDropGalleryInput')?.click();
 });
 const worldDropGalleryInput=document.getElementById('worldDropGalleryInput');
-let pendingWorldDropImage=null;
-function wdTodayKey(){
- const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).reduce((a,x)=>(a[x.type]=x.value,a),{});
- return `${parts.year}-${parts.month}-${parts.day}`;
+let pendingWorldDropImage=null,pendingWorldDropFile=null,pendingWorldDropLocation='WORLD';
+
+function wdETDate(){
+ const p=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).reduce((a,x)=>(a[x.type]=x.value,a),{});
+ return `${p.year}-${p.month}-${p.day}`;
 }
-function wdPostedToday(){return localStorage.getItem('exof_world_drop_posted_'+(currentUser?.id||'guest'))===wdTodayKey()}
-function wdSetMainButton(){
+async function wdPostedToday(){
+ if(!currentUser)return false;
+ const {data,error}=await sb.from('world_drops').select('id').eq('user_id',currentUser.id).eq('drop_date',wdETDate()).maybeSingle();
+ return !error&&!!data;
+}
+async function wdSetMainButton(){
  if(!worldDropBtn)return;
- if(wdPostedToday()){worldDropBtn.disabled=false;worldDropBtn.textContent='✓ DROP POSTED · ENTER WORLD DROP';}
+ if(await wdPostedToday()){worldDropBtn.disabled=false;worldDropBtn.textContent='✓ DROP POSTED · ENTER WORLD DROP';}
 }
-worldDropBtn?.addEventListener('click',()=>{
- if(wdPostedToday()){go('worldDropLive');return;}
+async function wdResolveLocation(){
+ return new Promise(resolve=>{
+   if(!navigator.geolocation){resolve('WORLD');return;}
+   navigator.geolocation.getCurrentPosition(async pos=>{
+     try{
+       const lat=pos.coords.latitude,lon=pos.coords.longitude;
+       const r=await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+       const j=await r.json();
+       const city=(j.city||j.locality||j.principalSubdivision||'').trim();
+       const country=(j.countryCode||'').trim();
+       resolve(([city,country].filter(Boolean).join(' ')||'WORLD').toUpperCase());
+     }catch(_){resolve('WORLD')}
+   },()=>resolve('WORLD'),{enableHighAccuracy:false,timeout:5000,maximumAge:300000});
+ });
+}
+worldDropBtn?.addEventListener('click',async()=>{
+ if(await wdPostedToday()){await loadWorldDropLive();go('worldDropLive');return;}
  if(window.exofWorldDropState!=='open')return;
  worldDropGalleryInput?.click();
 });
-worldDropGalleryInput?.addEventListener('change',e=>{
+worldDropGalleryInput?.addEventListener('change',async e=>{
  const file=e.target.files&&e.target.files[0];if(!file)return;
+ pendingWorldDropFile=file;
  const reader=new FileReader();
- reader.onload=ev=>{
+ reader.onload=async ev=>{
    pendingWorldDropImage=ev.target.result;
+   pendingWorldDropLocation=await wdResolveLocation();
    const img=document.getElementById('wdPreviewImg');if(img)img.src=pendingWorldDropImage;
    go('worldDropPreview');
  };
@@ -1768,30 +1790,59 @@ worldDropGalleryInput?.addEventListener('change',e=>{
 document.getElementById('wdRetake')?.addEventListener('click',()=>worldDropGalleryInput?.click());
 document.getElementById('wdPreviewBack')?.addEventListener('click',()=>go('drop'));
 document.getElementById('wdLiveBack')?.addEventListener('click',()=>go('drop'));
-document.getElementById('wdPublish')?.addEventListener('click',()=>{
- if(!pendingWorldDropImage||wdPostedToday())return;
- localStorage.setItem('exof_world_drop_posted_'+(currentUser?.id||'guest'),wdTodayKey());
- localStorage.setItem('exof_world_drop_test_image_'+(currentUser?.id||'guest'),pendingWorldDropImage);
- const feed=document.getElementById('wdLiveFeed'),profile=currentProfile||{},avatar=profile.avatar_url||'',username=profile.username||'frai';
- feed.innerHTML=`<article class="wdFeedCard"><div class="wdFeedHead"><div class="wdFeedWho">${avatar?`<img src="${avatar}" alt="">`:''}<div><b>@${username}</b><small>just now</small></div></div><span>⌖ MARYLAND US</span></div><img class="wdFeedMedia" src="${pendingWorldDropImage}" alt="World Drop"><div class="wdFeedLike"><button type="button" class="wdHeartBtn"><i class="likeFx"></i><b class="heart">♡</b><span>0</span></button></div></article>`;
- const btn=feed.querySelector('.wdHeartBtn'),heart=btn?.querySelector('.heart'),count=btn?.querySelector('span');
- btn?.addEventListener('click',()=>{const liked=heart.textContent==='♥';heart.textContent=liked?'♡':'♥';count.textContent=liked?'0':'1';btn.classList.toggle('liked',!liked);if(!liked){btn.classList.remove('burst');void btn.offsetWidth;btn.classList.add('burst');setTimeout(()=>btn.classList.remove('burst'),700)}});
- pendingWorldDropImage=null;
- if(worldDropGalleryInput){worldDropGalleryInput.value='';worldDropGalleryInput.disabled=true;}
- wdSetMainButton();
- go('worldDropLive');
- setTimeout(()=>{if(worldDropGalleryInput)worldDropGalleryInput.disabled=false;},500);
+
+async function wdToggleLike(id,btn){
+ if(!currentUser)return;
+ const {data:existing}=await sb.from('world_drop_likes').select('id').eq('world_drop_id',id).eq('user_id',currentUser.id).maybeSingle();
+ if(existing)await sb.from('world_drop_likes').delete().eq('id',existing.id);
+ else await sb.from('world_drop_likes').insert({world_drop_id:id,user_id:currentUser.id});
+ const {count}=await sb.from('world_drop_likes').select('*',{count:'exact',head:true}).eq('world_drop_id',id);
+ const liked=!existing,heart=btn.querySelector('.heart'),num=btn.querySelector('span');
+ heart.textContent=liked?'♥':'♡';num.textContent=count||0;btn.classList.toggle('liked',liked);
+ if(liked){btn.classList.remove('burst');void btn.offsetWidth;btn.classList.add('burst');setTimeout(()=>btn.classList.remove('burst'),700)}
+}
+async function loadWorldDropLive(){
+ const feed=document.getElementById('wdLiveFeed');if(!feed)return;
+ feed.innerHTML='<div class="wdEmpty">Loading World DROP…</div>';
+ const {data,error}=await sb.from('world_drops').select('id,user_id,media_url,location_label,created_at,profiles(username,avatar_url)').eq('drop_date',wdETDate()).order('created_at',{ascending:false});
+ if(error){feed.innerHTML='<div class="wdEmpty">'+escapeHtml(error.message)+'</div>';return}
+ if(!data?.length){feed.innerHTML='<div class="wdEmpty">No World Drops yet.</div>';return}
+ feed.innerHTML='';
+ for(const d of data){
+   const pr=d.profiles||{}, {count}=await sb.from('world_drop_likes').select('*',{count:'exact',head:true}).eq('world_drop_id',d.id);
+   const {data:mine}=currentUser?await sb.from('world_drop_likes').select('id').eq('world_drop_id',d.id).eq('user_id',currentUser.id).maybeSingle():{data:null};
+   const card=document.createElement('article');card.className='wdFeedCard';
+   card.innerHTML=`<div class="wdFeedHead"><div class="wdFeedWho">${pr.avatar_url?`<img src="${pr.avatar_url}" alt="">`:''}<div><b>@${escapeHtml(pr.username||'user')}</b><small>World DROP</small></div></div><span>⌖ ${escapeHtml(d.location_label||'WORLD')}</span></div><img class="wdFeedMedia" src="${d.media_url}" alt="World Drop"><div class="wdFeedLike"><button type="button" class="wdHeartBtn ${mine?'liked':''}"><i class="likeFx"></i><b class="heart">${mine?'♥':'♡'}</b><span>${count||0}</span></button></div>`;
+   card.querySelector('.wdHeartBtn').onclick=e=>wdToggleLike(d.id,e.currentTarget);
+   feed.appendChild(card);
+ }
+}
+document.getElementById('wdPublish')?.addEventListener('click',async()=>{
+ if(!currentUser||!pendingWorldDropFile||await wdPostedToday())return;
+ const btn=document.getElementById('wdPublish');btn.disabled=true;btn.textContent='PUBLISHING…';
+ try{
+   const ext=(pendingWorldDropFile.name.split('.').pop()||'jpg').replace(/[^a-z0-9]/gi,'').toLowerCase();
+   const path=currentUser.id+'/world-'+wdETDate()+'-'+Date.now()+'.'+ext;
+   const up=await sb.storage.from('drop-media').upload(path,pendingWorldDropFile,{contentType:pendingWorldDropFile.type||'image/jpeg'});
+   if(up.error)throw up.error;
+   const url=sb.storage.from('drop-media').getPublicUrl(path).data.publicUrl;
+   const ins=await sb.from('world_drops').insert({user_id:currentUser.id,media_url:url,location_label:pendingWorldDropLocation,drop_date:wdETDate()});
+   if(ins.error)throw ins.error;
+   pendingWorldDropImage=null;pendingWorldDropFile=null;
+   await loadWorldDropLive();await wdSetMainButton();go('worldDropLive');
+ }catch(err){alert(err.message||'Could not publish World DROP.')}
+ finally{btn.disabled=false;btn.textContent='⚡ PUBLISH WORLD DROP'}
 });
 function tick(){
  if(EXOF_WORLD_DROP_TEST_MODE){
    window.exofWorldDropState='open';
    const clock=document.getElementById('clock'),status=document.getElementById('dropStatus'),label=document.getElementById('worldDropLabel'),hint=document.getElementById('worldDropHint');
-   label.textContent='⚡ WORLD DROP · TEST LIVE';
+   label.textContent='⚡ WORLD DROP · LIVE';
    clock.textContent='03:00';
-   status.textContent='TEST MODE · Posting is open so we can test today’s World DROP.';
+   status.textContent='Posting is open now · 3:00 PM – 3:03 PM ET';
    worldDropBtn.disabled=false;
-   worldDropBtn.textContent='＋ POST MY DROP · TEST OPEN';
-   hint.textContent='Test mode only — the real launch window will be 3:00 PM – 3:03 PM ET.';
+   worldDropBtn.textContent='＋ POST MY DROP';
+   hint.textContent='One World Drop per day · 3:00 PM – 3:03 PM ET';
    wdSetMainButton();
    return;
  }
@@ -1814,21 +1865,7 @@ function tick(){
    worldDropBtn.disabled=true;hint.textContent='Posting opens for only 3 minutes.';
  }
 }
-tick();setInterval(tick,1000);
-function restoreWorldDropTestPost(){
- if(!wdPostedToday())return;
- const image=localStorage.getItem('exof_world_drop_test_image_'+(currentUser?.id||'guest'));if(!image)return;
- const feed=document.getElementById('wdLiveFeed'),profile=currentProfile||{},avatar=profile.avatar_url||'',username=profile.username||'frai';
- if(feed)feed.innerHTML=`<article class="wdFeedCard"><div class="wdFeedHead"><div class="wdFeedWho">${avatar?`<img src="${avatar}" alt="">`:''}<div><b>@${username}</b><small>today</small></div></div><span>⌖ MARYLAND US</span></div><img class="wdFeedMedia" src="${image}" alt="World Drop"><div class="wdFeedLike"><button type="button" class="wdHeartBtn"><i class="likeFx"></i><b class="heart">♡</b><span>0</span></button></div></article>`;
- if(feed){
-   const btn=feed.querySelector('.wdHeartBtn'),heart=btn?.querySelector('.heart'),count=btn?.querySelector('span');
-   btn?.addEventListener('click',()=>{const liked=heart.textContent==='♥';heart.textContent=liked?'♡':'♥';count.textContent=liked?'0':'1';btn.classList.toggle('liked',!liked);if(!liked){btn.classList.remove('burst');void btn.offsetWidth;btn.classList.add('burst');setTimeout(()=>btn.classList.remove('burst'),700)}});
- }
- wdSetMainButton();
-}
-setTimeout(restoreWorldDropTestPost,700);
-
-
+tick();wdSetMainButton();setInterval(tick,1000);
 const avatarUploadEl=document.getElementById('avatarUpload');
 if(avatarUploadEl) avatarUploadEl.addEventListener('change',e=>{pendingAvatarFile=e.target.files&&e.target.files[0];if(!pendingAvatarFile)return;const r=new FileReader();r.onload=ev=>{const x=document.getElementById('editAvatarPreview');x.style.backgroundImage='url("'+ev.target.result+'")';x.style.backgroundSize='cover';x.textContent=''};r.readAsDataURL(pendingAvatarFile)});
 const coverUploadEl=document.getElementById('coverUpload');
