@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.13.2 — World DROP Gallery Test</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.13.3 — World DROP Flow Test</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -632,6 +632,10 @@ header #messagesBtn.exofDmButton:active{
 .worldDropLocation{font-size:10px;border:1px solid #36543d;border-radius:9px;padding:7px 9px;color:#f3f6f3}
 .worldDropMedia{display:block;width:100%;height:auto;max-height:520px;object-fit:contain;background:#000}
 .worldDropLikeRow{display:flex;align-items:center;gap:7px;padding:10px 12px}.worldDropLikeBtn{border:0;background:none;color:#4cff2e;font-size:27px;padding:0;line-height:1}.worldDropLikeCount{font-size:13px}
+</style><style id="worldDropFlowV133Style">
+.exofWorldDropPreview,.exofWorldDropLive{padding-bottom:90px}.worldDropFlowTop{display:flex;align-items:center;gap:12px;padding:8px 0 14px}.worldDropFlowTop>button{width:36px;height:36px;border-radius:50%;border:1px solid #26372a;background:#050806;color:#fff;font-size:25px}.worldDropFlowTop>div{display:flex;flex-direction:column;flex:1}.worldDropFlowTop small{color:#8e978f;font-size:10px}.worldDropFlowTop>span{color:var(--accent);font-weight:800}
+.wdPreviewMedia{border:1px solid #29412d;border-radius:18px;overflow:hidden;background:#000;margin-top:12px}.wdPreviewMedia img{display:block;width:100%;max-height:64vh;object-fit:contain}.wdPreviewActions{display:grid;grid-template-columns:1fr 1.6fr;gap:9px;margin-top:12px}.wdPreviewActions button{min-height:48px}.wdOneOnly{display:block;color:#8d958f;text-align:center;margin-top:12px}
+.wdLiveFeed{display:flex;flex-direction:column;gap:14px}.wdEmpty{border:1px dashed #29412d;border-radius:16px;padding:35px 15px;text-align:center;color:#808980}.wdFeedCard{border:1px solid #263b2a;border-radius:17px;overflow:hidden;background:#030503}.wdFeedHead{display:flex;align-items:center;justify-content:space-between;padding:10px}.wdFeedWho{display:flex;gap:8px;align-items:center}.wdFeedWho img{width:35px;height:35px;border-radius:50%;object-fit:cover}.wdFeedWho div{display:flex;flex-direction:column}.wdFeedWho small{font-size:10px;color:#8e978f}.wdFeedHead>span{border:1px solid #315438;border-radius:8px;padding:6px 8px;font-size:10px}.wdFeedMedia{width:100%;display:block;max-height:65vh;object-fit:contain;background:#000}.wdFeedLike{display:flex;gap:8px;align-items:center;padding:10px 12px}.wdFeedLike button{border:0;background:none;color:var(--accent);font-size:27px;padding:0}
 </style></head>
 <body>
 <div id="authGate">
@@ -693,7 +697,23 @@ header #messagesBtn.exofDmButton:active{
 </div>
 <p class="worldPulseNote">Locations rotate automatically based on World DROP activity. Everyone still sees the same global feed.</p>
 <input id="worldDropGalleryInput" type="file" accept="image/*" hidden>
-<div id="worldDropTestFeed" class="worldDropTestFeed"></div>
+
+</section>
+
+<section id="worldDropPreview" class="page exofWorldDropPreview">
+  <div class="worldDropFlowTop"><button type="button" id="wdPreviewBack">‹</button><b>WORLD DROP PREVIEW</b></div>
+  <p class="sub">Your photo is not posted yet.</p>
+  <div class="wdPreviewMedia"><img id="wdPreviewImg" alt="World Drop preview"></div>
+  <div class="wdPreviewActions">
+    <button type="button" class="secondary" id="wdRetake">↻ RETAKE</button>
+    <button type="button" class="primary" id="wdPublish">⚡ PUBLISH WORLD DROP</button>
+  </div>
+  <small class="wdOneOnly">One World Drop per day. Once published, it cannot be replaced.</small>
+</section>
+
+<section id="worldDropLive" class="page exofWorldDropLive">
+  <div class="worldDropFlowTop"><button type="button" id="wdLiveBack">‹</button><div><b>⚡ WORLD DROP · LIVE</b><small>Everyone sees everyone</small></div><span id="wdLiveTimer">LIVE</span></div>
+  <div id="wdLiveFeed" class="wdLiveFeed"><div class="wdEmpty">Your World DROP feed will appear here.</div></div>
 </section>
 
 <section id="loops" class="page"><div class="title">◎ Loops</div><p class="sub">Living photos built around motion and replay.</p><div class="loopStage"><div class="loopDot"></div></div><div class="actions"><span>♡</span><span>◯</span><span>🔗 Chain</span></div></section>
@@ -1714,32 +1734,43 @@ worldDropBtn?.addEventListener('click',()=>{
  document.getElementById('worldDropGalleryInput')?.click();
 });
 const worldDropGalleryInput=document.getElementById('worldDropGalleryInput');
+let pendingWorldDropImage=null;
+function wdTodayKey(){
+ const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).reduce((a,x)=>(a[x.type]=x.value,a),{});
+ return `${parts.year}-${parts.month}-${parts.day}`;
+}
+function wdPostedToday(){return localStorage.getItem('exof_world_drop_posted_'+(currentUser?.id||'guest'))===wdTodayKey()}
+function wdSetMainButton(){
+ if(!worldDropBtn)return;
+ if(wdPostedToday()){worldDropBtn.disabled=false;worldDropBtn.textContent='✓ DROP POSTED · ENTER WORLD DROP';}
+}
+worldDropBtn?.addEventListener('click',()=>{
+ if(wdPostedToday()){go('worldDropLive');return;}
+ if(window.exofWorldDropState!=='open')return;
+ worldDropGalleryInput?.click();
+});
 worldDropGalleryInput?.addEventListener('change',e=>{
- const file=e.target.files&&e.target.files[0]; if(!file)return;
+ const file=e.target.files&&e.target.files[0];if(!file)return;
  const reader=new FileReader();
  reader.onload=ev=>{
-   const feed=document.getElementById('worldDropTestFeed');
-   const profile=currentProfile||{};
-   const avatar=profile.avatar_url||'';
-   const username=profile.username||'frai';
-   const location='MARYLAND US';
-   feed.innerHTML=`<article class="worldDropPostCard">
-     <div class="worldDropPostHead">
-       <div class="worldDropWho">${avatar?`<img src="${avatar}" alt="">`:'<span class="worldDropAvatarFallback">●</span>'}<div><b>@${username}</b><small>just now</small></div></div>
-       <span class="worldDropLocation">⌖ ${location}</span>
-     </div>
-     <img class="worldDropMedia" src="${ev.target.result}" alt="World Drop">
-     <div class="worldDropLikeRow"><button type="button" class="worldDropLikeBtn">♡</button><b class="worldDropLikeCount">0</b></div>
-   </article>`+feed.innerHTML;
-   const card=feed.querySelector('.worldDropPostCard');
-   card.querySelector('.worldDropLikeBtn').addEventListener('click',function(){
-     const on=this.textContent==='♥'; this.textContent=on?'♡':'♥';
-     card.querySelector('.worldDropLikeCount').textContent=on?'0':'1';
-   });
-   feed.scrollIntoView({behavior:'smooth',block:'start'});
+   pendingWorldDropImage=ev.target.result;
+   const img=document.getElementById('wdPreviewImg');if(img)img.src=pendingWorldDropImage;
+   go('worldDropPreview');
  };
- reader.readAsDataURL(file);
- e.target.value='';
+ reader.readAsDataURL(file);e.target.value='';
+});
+document.getElementById('wdRetake')?.addEventListener('click',()=>worldDropGalleryInput?.click());
+document.getElementById('wdPreviewBack')?.addEventListener('click',()=>go('drop'));
+document.getElementById('wdLiveBack')?.addEventListener('click',()=>go('drop'));
+document.getElementById('wdPublish')?.addEventListener('click',()=>{
+ if(!pendingWorldDropImage||wdPostedToday())return;
+ localStorage.setItem('exof_world_drop_posted_'+(currentUser?.id||'guest'),wdTodayKey());
+ localStorage.setItem('exof_world_drop_test_image_'+(currentUser?.id||'guest'),pendingWorldDropImage);
+ const feed=document.getElementById('wdLiveFeed'),profile=currentProfile||{},avatar=profile.avatar_url||'',username=profile.username||'frai';
+ feed.innerHTML=`<article class="wdFeedCard"><div class="wdFeedHead"><div class="wdFeedWho">${avatar?`<img src="${avatar}" alt="">`:''}<div><b>@${username}</b><small>just now</small></div></div><span>⌖ MARYLAND US</span></div><img class="wdFeedMedia" src="${pendingWorldDropImage}" alt="World Drop"><div class="wdFeedLike"><button type="button">♡</button><b>0</b></div></article>`;
+ const btn=feed.querySelector('.wdFeedLike button'),count=feed.querySelector('.wdFeedLike b');
+ btn?.addEventListener('click',()=>{const liked=btn.textContent==='♥';btn.textContent=liked?'♡':'♥';count.textContent=liked?'0':'1'});
+ pendingWorldDropImage=null;wdSetMainButton();go('worldDropLive');
 });
 function tick(){
  if(EXOF_WORLD_DROP_TEST_MODE){
@@ -1751,6 +1782,7 @@ function tick(){
    worldDropBtn.disabled=false;
    worldDropBtn.textContent='＋ POST MY DROP · TEST OPEN';
    hint.textContent='Test mode only — the real launch window will be 3:00 PM – 3:03 PM ET.';
+   wdSetMainButton();
    return;
  }
  const p=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).formatToParts(new Date()).reduce((a,x)=>(a[x.type]=x.value,a),{});
@@ -1773,6 +1805,15 @@ function tick(){
  }
 }
 tick();setInterval(tick,1000);
+function restoreWorldDropTestPost(){
+ if(!wdPostedToday())return;
+ const image=localStorage.getItem('exof_world_drop_test_image_'+(currentUser?.id||'guest'));if(!image)return;
+ const feed=document.getElementById('wdLiveFeed'),profile=currentProfile||{},avatar=profile.avatar_url||'',username=profile.username||'frai';
+ if(feed)feed.innerHTML=`<article class="wdFeedCard"><div class="wdFeedHead"><div class="wdFeedWho">${avatar?`<img src="${avatar}" alt="">`:''}<div><b>@${username}</b><small>today</small></div></div><span>⌖ MARYLAND US</span></div><img class="wdFeedMedia" src="${image}" alt="World Drop"><div class="wdFeedLike"><button type="button">♡</button><b>0</b></div></article>`;
+ wdSetMainButton();
+}
+setTimeout(restoreWorldDropTestPost,700);
+
 
 const avatarUploadEl=document.getElementById('avatarUpload');
 if(avatarUploadEl) avatarUploadEl.addEventListener('change',e=>{pendingAvatarFile=e.target.files&&e.target.files[0];if(!pendingAvatarFile)return;const r=new FileReader();r.onload=ev=>{const x=document.getElementById('editAvatarPreview');x.style.backgroundImage='url("'+ev.target.result+'")';x.style.backgroundSize='cover';x.textContent=''};r.readAsDataURL(pendingAvatarFile)});
