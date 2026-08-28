@@ -767,6 +767,15 @@ body.dmHoldOpen{overflow:hidden}
 #search .exDiscoverMeta{position:absolute;left:7px;right:7px;bottom:7px;display:flex;justify-content:space-between;color:#fff;font-size:9px;text-shadow:0 1px 4px #000}
 #search .exDiscoverEmpty{grid-column:1/-1;border:1px solid #202a23;border-radius:14px;padding:23px 12px;text-align:center;color:#77817a;font-size:10px}
 </style>
+
+<style id="exRecentSearchesCSS">
+#search .exRecentSearches{display:flex;gap:12px;overflow-x:auto;padding:2px 0 7px;scrollbar-width:none}
+#search .exRecentSearches::-webkit-scrollbar{display:none}
+#search .exRecentPerson{position:relative;min-width:60px;width:60px;text-align:center;cursor:pointer}
+#search .exRecentPerson img,#search .exRecentAvatar{width:52px;height:52px;border-radius:50%;object-fit:cover;background:#151a16;border:1px solid #29342d;display:block;margin:0 auto}
+#search .exRecentPerson small{display:block;color:#ddd;font-size:9px;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#search .exRecentRemove{position:absolute;right:0;top:-3px;width:18px;height:18px;border:0;border-radius:50%;background:#333a35;color:#fff;font-size:12px;line-height:18px;padding:0;z-index:2}
+</style>
 </head>
 <body><div id="exofBuzzToast"></div>
 <div id="authGate">
@@ -918,6 +927,11 @@ body.dmHoldOpen{overflow:hidden}
 <div class="title">Explore</div>
 <div class="exLiveSearch"><span class="exMag">⌕</span><input id="userSearchInput" type="text" placeholder="Search people on EXOF..." autocomplete="off"><button id="userSearchBtn" class="primary" aria-label="Search" style="display:none">SEARCH</button></div>
 <div id="searchResults" class="exSearchResults"><div class="emptyState">Search for people on EXOF.</div></div>
+
+<div id="exRecentSearchesWrap" style="display:none">
+  <div class="exSectionHead"><b>Recent</b><button type="button" id="exClearRecentSearches">Clear</button></div>
+  <div id="exRecentSearches" class="exRecentSearches"></div>
+</div>
 
 <div class="exSectionHead"><b>Explore EXOF</b></div>
 <div class="exExploreCards">
@@ -3276,6 +3290,58 @@ setTimeout(dmRefreshHeaderBadge,1200);setTimeout(()=>dmLoadList('primary'),1500)
     loadDiscover();
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
+
+<script id="exRecentSearchesJS">
+(function(){
+  var KEY='exof_recent_people_v1';
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function getRecent(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return []}}
+  function saveRecent(a){localStorage.setItem(KEY,JSON.stringify(a.slice(0,12)))}
+  function renderRecent(){
+    var wrap=document.getElementById('exRecentSearchesWrap'), box=document.getElementById('exRecentSearches');
+    if(!wrap||!box)return;
+    var a=getRecent(); wrap.style.display=a.length?'block':'none';
+    box.innerHTML=a.map(function(p){
+      var av=p.avatar_url?'<img src="'+esc(p.avatar_url)+'" alt="">':'<div class="exRecentAvatar"></div>';
+      return '<div class="exRecentPerson" data-recent-id="'+esc(p.id)+'">'+av+'<button class="exRecentRemove" type="button" data-remove-id="'+esc(p.id)+'">×</button><small>@'+esc(p.username||'user')+'</small></div>';
+    }).join('');
+    box.querySelectorAll('.exRecentPerson').forEach(function(el){
+      el.addEventListener('click',function(e){
+        if(e.target.closest('.exRecentRemove'))return;
+        var p=a.find(function(x){return String(x.id)===String(el.dataset.recentId)});
+        if(p&&typeof openPublicProfile==='function')openPublicProfile(p.id);
+      });
+    });
+    box.querySelectorAll('.exRecentRemove').forEach(function(btn){
+      btn.addEventListener('click',function(e){e.stopPropagation();saveRecent(a.filter(function(p){return String(p.id)!==String(btn.dataset.removeId)}));renderRecent();});
+    });
+  }
+  function rememberFromClickedResult(el){
+    var id=el && (el.dataset.id||el.dataset.userId||el.getAttribute('data-profile-id'));
+    if(!id)return;
+    var nameEl=el.querySelector('b,strong,.username,[class*="name"]');
+    var txt=(el.innerText||'').split('\n').map(function(x){return x.trim()}).filter(Boolean);
+    var username=(txt.find(function(x){return x.charAt(0)==='@'})||'').replace(/^@/,'');
+    if(!username && nameEl)username=(nameEl.textContent||'').trim().replace(/^@/,'');
+    var img=el.querySelector('img');
+    var p={id:id,username:username||'user',avatar_url:img?img.src:''};
+    var a=getRecent().filter(function(x){return String(x.id)!==String(id)});a.unshift(p);saveRecent(a);renderRecent();
+  }
+  function init(){
+    renderRecent();
+    var clear=document.getElementById('exClearRecentSearches');
+    if(clear)clear.addEventListener('click',function(){saveRecent([]);renderRecent();});
+    var results=document.getElementById('searchResults');
+    if(results){
+      results.addEventListener('click',function(e){
+        var el=e.target.closest('[data-id],[data-user-id],[data-profile-id]');
+        if(el)rememberFromClickedResult(el);
+      },true);
+    }
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
 </body></html>
