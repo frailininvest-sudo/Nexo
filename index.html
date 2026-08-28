@@ -3317,7 +3317,20 @@ function render(){
  const w=document.getElementById('exRecentSearchesWrap'),b=document.getElementById('exRecentSearches');if(!w||!b)return;
  const a=get();w.style.display=a.length?'block':'none';
  b.innerHTML=a.map(p=>`<div class="exRecentPerson" data-rid="${esc(p.id)}">${p.avatar_url?`<img src="${esc(p.avatar_url)}" alt="">`:'<div class="exRecentAvatar"></div>'}<button class="exRecentRemove" type="button" data-x="${esc(p.id)}">×</button><small>@${esc(p.username||'user')}</small></div>`).join('');
- b.querySelectorAll('.exRecentPerson').forEach(el=>el.onclick=e=>{if(e.target.closest('.exRecentRemove'))return;const p=a.find(x=>String(x.id)===String(el.dataset.rid));if(p&&typeof openPublicProfile==='function')openPublicProfile(p.id)});
+ b.querySelectorAll('.exRecentPerson').forEach(el=>el.onclick=e=>{
+   if(e.target.closest('.exRecentRemove'))return;
+   const p=a.find(x=>String(x.id)===String(el.dataset.rid));
+   if(!p)return;
+   try{
+     if(typeof window.openPublicProfile==='function'){
+       window.openPublicProfile(p.id);
+     }else if(typeof openPublicProfile==='function'){
+       openPublicProfile(p.id);
+     }else if(typeof window.exofGo==='function'){
+       window.exofGo('publicProfile',{userId:p.id});
+     }
+   }catch(err){console.warn('EXOF Recent profile open',err);}
+ });
  b.querySelectorAll('.exRecentRemove').forEach(x=>x.onclick=e=>{e.stopPropagation();set(a.filter(p=>String(p.id)!==String(x.dataset.x)));render()});
 }
 function init(){render();const c=document.getElementById('exClearRecentSearches');if(c)c.onclick=()=>{set([]);render()};}
