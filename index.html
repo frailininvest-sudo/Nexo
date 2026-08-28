@@ -3375,15 +3375,20 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 </script>
 <script id="exofChains120JS">
 (function(){
+const chainSb = window.supabase.createClient(
+  'https://nisiywhlgmjhznmbswly.supabase.co',
+  'sb_publishable_N7GpDjtXPIjJiVq__c8MUA_UGwhr7TA'
+);
+
 let active=null, draft=null, chainFile=null, chainObjectURL='';
 const M=id=>document.getElementById(id), E=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-async function user(){try{const {data}=await sb.auth.getUser();return data?.user||null}catch(_){return null}}
+async function user(){try{const {data}=await chainSb.auth.getUser();return data?.user||null}catch(_){return null}}
 async function load(){
  const box=M('exChainList');if(!box)return;box.innerHTML='<div class="exDiscoverEmpty">Loading global Chains…</div>';
  try{
-  const {data,error}=await sb.from('chains').select('*').eq('status','active').order('created_at',{ascending:false}).limit(30);if(error)throw error;
+  const {data,error}=await chainSb.from('chains').select('*').eq('status','active').order('created_at',{ascending:false}).limit(30);if(error)throw error;
   if(!data?.length){box.innerHTML='<div class="exDiscoverEmpty">No Global Chains yet.<br>Start the first one 🌎</div>';return}
-  const ids=data.map(c=>c.id),r=await sb.from('chain_entries').select('chain_id,media_url,media_type,user_id').in('chain_id',ids),entries=r.data||[];
+  const ids=data.map(c=>c.id),r=await chainSb.from('chain_entries').select('chain_id,media_url,media_type,user_id').in('chain_id',ids),entries=r.data||[];
   box.innerHTML=data.map(c=>{const ce=entries.filter(e=>e.chain_id===c.id),f=ce[0],thumb=f?(f.media_type==='video'?`<video src="${E(f.media_url)}" muted playsinline></video>`:`<img src="${E(f.media_url)}">`):'🔗';return `<article class="exChainCard" data-c="${c.id}"><div class="exChainThumb">${thumb}</div><div class="exChainBody"><b>${E(c.title)}</b><small>${E(c.description||'Global EXOF Chain')}</small><strong>🌎 ${ce.length} ${ce.length===1?'person':'people'} continuing</strong></div><button type="button" class="exChainView">View Chain</button></article>`}).join('');
   box.querySelectorAll('[data-c]').forEach(el=>el.onclick=()=>open(data.find(c=>c.id===el.dataset.c)));
  }catch(e){console.error('Global Chains:',e);box.innerHTML='<div class="exDiscoverEmpty">Could not load Global Chains.</div>'}
@@ -3391,7 +3396,7 @@ async function load(){
 async function open(c){
  active=c;M('exChainTitle').textContent=c.title;M('exChainDesc').textContent=c.description||'Anyone can continue this Chain.';M('exChainModal').hidden=false;
  const b=M('exChainEntries');b.innerHTML='<div class="exDiscoverEmpty">Loading Chain…</div>';
- const {data,error}=await sb.from('chain_entries').select('*').eq('chain_id',c.id).order('created_at',{ascending:true});
+ const {data,error}=await chainSb.from('chain_entries').select('*').eq('chain_id',c.id).order('created_at',{ascending:true});
  if(error){b.innerHTML='<div class="exDiscoverEmpty">'+E(error.message)+'</div>';return}
  b.innerHTML=data?.length?data.map((x,i)=>`<div class="exChainEntry"><div class="exChainEntryMedia">${x.media_type==='video'?`<video src="${E(x.media_url)}" controls playsinline></video>`:`<img src="${E(x.media_url)}">`}</div><small>#${i+1}</small></div>`).join(''):'<div class="exDiscoverEmpty">Be the first to continue.</div>';
 }
@@ -3429,18 +3434,18 @@ async function publish(){
  try{
   let chainId=draft.chain_id;
   if(draft.mode==='first'){
-   const cr=await sb.from('chains').insert({creator_id:u.id,title:draft.title,description:draft.description,status:'active'}).select().single();if(cr.error)throw cr.error;chainId=cr.data.id;newChainId=chainId;
+   const cr=await chainSb.from('chains').insert({creator_id:u.id,title:draft.title,description:draft.description,status:'active'}).select().single();if(cr.error)throw cr.error;chainId=cr.data.id;newChainId=chainId;
   }
   const ext=(chainFile.name.split('.').pop()||'bin').replace(/[^a-z0-9]/gi,'').toLowerCase(), path=u.id+'/chains/'+chainId+'/'+Date.now()+'.'+ext;uploadedPath=path;
-  const up=await sb.storage.from('drop-media').upload(path,chainFile,{contentType:chainFile.type||undefined});if(up.error)throw up.error;
-  const url=sb.storage.from('drop-media').getPublicUrl(path).data.publicUrl, type=chainFile.type.startsWith('video/')?'video':'image';
-  const er=await sb.from('chain_entries').insert({chain_id:chainId,user_id:u.id,media_url:url,media_type:type,caption:draft.description||null});if(er.error)throw er.error;
-  if(draft.mode==='first')await sb.from('chains').update({cover_url:url}).eq('id',chainId);
+  const up=await chainSb.storage.from('drop-media').upload(path,chainFile,{contentType:chainFile.type||undefined});if(up.error)throw up.error;
+  const url=chainSb.storage.from('drop-media').getPublicUrl(path).data.publicUrl, type=chainFile.type.startsWith('video/')?'video':'image';
+  const er=await chainSb.from('chain_entries').insert({chain_id:chainId,user_id:u.id,media_url:url,media_type:type,caption:draft.description||null});if(er.error)throw er.error;
+  if(draft.mode==='first')await chainSb.from('chains').update({cover_url:url}).eq('id',chainId);
   msg.textContent=draft.mode==='first'?'✓ Global Chain published':'✓ Added to Chain';
   resetMedia();M('exStartChainModal').hidden=true;M('exChainMediaStep').hidden=true;M('exNewChainTitle').hidden=false;M('exNewChainDesc').hidden=false;M('exCreateChain').hidden=false;M('exNewChainTitle').value='';M('exNewChainDesc').value='';M('exPublishGlobalChain').textContent='CREATE GLOBAL CHAIN 🌎';draft=null;await load();
  }catch(e){
   console.error('Chain publish:',e);
-  if(newChainId)await sb.from('chains').delete().eq('id',newChainId);
+  if(newChainId)await chainSb.from('chains').delete().eq('id',newChainId);
   msg.textContent=e.message||'Could not publish Chain.';
  }finally{btn.disabled=!chainFile;if(draft)btn.textContent=draft.mode==='continue'?'ADD TO CHAIN 🔗':'CREATE GLOBAL CHAIN 🌎'}
 }
