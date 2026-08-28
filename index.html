@@ -776,7 +776,23 @@ body.dmHoldOpen{overflow:hidden}
 #search .exRecentPerson small{display:block;color:#ddd;font-size:9px;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #search .exRecentRemove{position:absolute;right:0;top:-3px;width:18px;height:18px;border:0;border-radius:50%;background:#333a35;color:#fff;font-size:12px;line-height:18px;padding:0;z-index:2}
 </style>
-</head>
+
+<style id="exofChains120CSS">
+#search .exDiscoverGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:3px}
+#search .exDiscoverItem{border-radius:5px;aspect-ratio:1/1.18}
+#search .exChainsSection{margin-top:20px;padding-bottom:10px}
+#search .exChainList{display:flex;flex-direction:column;gap:8px}
+#search .exChainCard{display:grid;grid-template-columns:58px 1fr auto;gap:10px;align-items:center;border:1px solid #253129;border-radius:14px;background:#090c0a;padding:9px}
+#search .exChainThumb{width:58px;height:58px;border-radius:10px;background:#121713;display:grid;place-items:center;font-size:25px}
+#search .exChainBody{min-width:0}.exChainBody b{display:block;font-size:11px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.exChainBody small{display:block;color:#78827b;font-size:8px;margin:3px 0}.exChainBody strong{display:block;color:var(--accent);font-size:8px}
+#search .exChainView{border:1px solid #334038;border-radius:18px;background:#090c0a;color:var(--accent);padding:7px 9px;font-weight:800;font-size:8px;white-space:nowrap}
+.exChainModal{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.78);display:grid;place-items:end center;padding:0}.exChainModal[hidden]{display:none}
+.exChainSheet{position:relative;width:min(100%,520px);box-sizing:border-box;background:#080b09;border:1px solid #263129;border-radius:24px 24px 0 0;padding:24px 18px 26px;color:#fff;box-shadow:0 -10px 50px rgba(0,0,0,.55)}
+.exChainClose{position:absolute;right:14px;top:12px;border:0;background:#181d19;color:#fff;border-radius:50%;width:30px;height:30px;font-size:20px}
+.exChainHero{font-size:35px}.exChainSheet h2{font-size:20px;margin:10px 0 5px}.exChainSheet p{color:#8a948d;font-size:11px;line-height:1.5}
+.exChainPreview{display:flex;align-items:center;justify-content:center;gap:9px;margin:20px 0}.exChainPreview div{width:62px;height:62px;border-radius:12px;border:1px solid #2d3931;background:#101511;display:grid;place-items:center;color:var(--accent);font-size:9px;font-weight:900}.exChainPreview span{color:var(--accent)}
+.exContinueChain{width:100%;height:44px}
+</style></head>
 <body><div id="exofBuzzToast"></div>
 <div id="authGate">
   <div class="authBox">
@@ -933,15 +949,40 @@ body.dmHoldOpen{overflow:hidden}
   <div id="exRecentSearches" class="exRecentSearches"></div>
 </div>
 
-<div class="exSectionHead"><b>Explore EXOF</b></div>
-<div class="exExploreCards">
-  <div class="exExploreCard"><div class="exCardIcon">🌎</div><b>Now</b><small>See what's happening right now</small><span>›</span></div>
-  <div class="exExploreCard"><div class="exCardIcon">🔗</div><b>Chains</b><small>Continue and discover chains</small><span>›</span></div>
+<div class="exSectionHead"><b>Discover</b><button type="button" id="exDiscoverRefresh">Refresh</button></div>
+<div id="exDiscoverGrid" class="exDiscoverGrid"><div class="exDiscoverEmpty">Discovering EXOF…</div></div>
+
+<div class="exChainsSection">
+  <div class="exSectionHead"><b>🔗 Chains</b><button type="button" id="exChainsSeeAll">See all</button></div>
+  <div class="exChainList">
+    <article class="exChainCard">
+      <div class="exChainThumb exChainCollage">🌎</div>
+      <div class="exChainBody"><b>Show your view right now 🌎</b><small>Start a worldwide photo chain</small><strong>Be the first to continue</strong></div>
+      <button type="button" class="exChainView" data-chain="view">View Chain</button>
+    </article>
+    <article class="exChainCard">
+      <div class="exChainThumb">👟</div>
+      <div class="exChainBody"><b>Show today's fit 👟</b><small>Share your look and continue the chain</small><strong>Join the chain</strong></div>
+      <button type="button" class="exChainView" data-chain="fit">View Chain</button>
+    </article>
+    <article class="exChainCard">
+      <div class="exChainThumb">🎨</div>
+      <div class="exChainBody"><b>Continue this drawing 🎨</b><small>Add your version to the story</small><strong>Join the chain</strong></div>
+      <button type="button" class="exChainView" data-chain="drawing">View Chain</button>
+    </article>
+  </div>
 </div>
 
-<div class="exSectionHead"><b>Discover</b><button type="button" id="exDiscoverRefresh">Refresh</button></div>
-<div class="exDiscoverTabs"><button class="on" type="button">For You</button><button type="button">Recent</button><button type="button">Popular</button><button type="button">Loops</button></div>
-<div id="exDiscoverGrid" class="exDiscoverGrid"><div class="exDiscoverEmpty">Discovering EXOF…</div></div>
+<div id="exChainModal" class="exChainModal" hidden>
+ <div class="exChainSheet">
+   <button type="button" class="exChainClose" id="exChainClose">×</button>
+   <div class="exChainHero">🔗</div>
+   <h2 id="exChainTitle">Chain</h2>
+   <p id="exChainDesc">Continue this Chain with your own Drop.</p>
+   <div class="exChainPreview"><div>YOU</div><span>→</span><div>+ NEXT</div><span>→</span><div>...</div></div>
+   <button type="button" class="primary exContinueChain" id="exContinueChain">CONTINUE CHAIN</button>
+ </div>
+</div>
 </div></section>
 <section id="publicProfile" class="page publicProfile">
 <div id="publicProfileShell" class="profileShell"><div id="publicProfileBg" class="profileBg"></div><div class="profileShade"></div><div class="profileContent"><div id="publicCover" class="cover"></div><div id="publicAvatar" class="profileAva">E</div><div id="publicName" class="name">EXOF user</div><div class="exofPublicMetaLine"><p id="publicHandle" class="bio">@user</p><span id="publicOfficialRole" class="exofPublicOfficialRole" hidden></span></div><p id="publicBio" class="bio" style="margin-top:4px"></p><button id="publicFollowBtn" class="followBtn" type="button" style="display:none">FOLLOW</button><button id="publicBlockBtn" type="button" style="display:none">BLOCK USER</button><div class="stats"><div><b id="publicFollowers">0</b><small>FOLLOWERS</small></div><div><b id="publicFollowing">0</b><small>FOLLOWING</small></div><div><b id="publicDropCount">0</b><small>DROPS</small></div></div><div class="module" id="publicProfileTrackModule"><div class="track"><div><small class="mint">PROFILE TRACK</small><h4 id="publicProfileTrackTitle">No track selected</h4><span class="meta" id="publicProfileTrackArtist">No public track selected</span></div><button class="play" id="publicProfileTrackPlay" type="button">▶</button></div><div id="publicProfileTrackPlayer" style="display:none"></div></div><div class="module"><h4>♥ Favorite Drops</h4><div class="worldGrid"><div class="world"></div><div class="world"></div></div></div></div></div>
@@ -3299,8 +3340,6 @@ setTimeout(dmRefreshHeaderBadge,1200);setTimeout(()=>dmLoadList('primary'),1500)
     });
     var refresh=document.getElementById('exDiscoverRefresh');
     if(refresh) refresh.addEventListener('click',loadDiscover);
-    var tabs=document.querySelectorAll('#search .exDiscoverTabs button');
-    tabs.forEach(function(btn){btn.addEventListener('click',function(){tabs.forEach(function(x){x.classList.remove('on');});btn.classList.add('on');});});
     loadDiscover();
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
@@ -3352,7 +3391,30 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)render()})
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
-</body></html>
+<script id="exofChains120JS">
+(function(){
+ const modal=()=>document.getElementById('exChainModal');
+ const info={
+   view:["Show your view right now 🌎","Add a photo or Loop showing what you see right now."],
+   fit:["Show today's fit 👟","Add today's outfit and become the next person in the Chain."],
+   drawing:["Continue this drawing 🎨","Add your own version and continue the visual story."]
+ };
+ function openChain(k){let m=modal(),x=info[k]||["EXOF Chain","Continue this Chain with your own Drop."];document.getElementById('exChainTitle').textContent=x[0];document.getElementById('exChainDesc').textContent=x[1];m.hidden=false;}
+ function close(){let m=modal();if(m)m.hidden=true}
+ function init(){
+   document.querySelectorAll('[data-chain]').forEach(b=>b.onclick=()=>openChain(b.dataset.chain));
+   document.getElementById('exChainClose')?.addEventListener('click',close);
+   modal()?.addEventListener('click',e=>{if(e.target===modal())close()});
+   document.getElementById('exContinueChain')?.addEventListener('click',()=>{
+     close();
+     // Use EXOF's normal Create navigation without touching private app functions.
+     const create=document.querySelector('[data-go="create"]');
+     if(create)create.click();
+   });
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script></body></html>
 <style id="exofProfileBackgroundV184">
 #profile #profileShell.profileShell{
   background:transparent!important;
