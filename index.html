@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.18.1 — DM Hold Menu</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.18.2 — Profile Music Autoplay</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -296,6 +296,8 @@ window.addEventListener('pageshow',function(){
     if(artist)artist.textContent=(t.artist||'YouTube')+' · Tap ▶ to play inside EXOF';
   }catch(e){}
 });
+
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&typeof exofStopPublicProfileMusic==='function')exofStopPublicProfileMusic()});
 </script>
 
 <style id="exofTopLoopsV189Styles">
@@ -738,6 +740,24 @@ header #messagesBtn.exofDmButton:active{
 .dmHoldActions .danger{border-color:#572323;color:#ff7b7b;background:#1a0d0d}
 .dmHoldCancel{width:100%;height:43px;margin-top:7px;border-radius:13px;border:0;background:#182019;color:#aeb8b1;font-weight:900}
 body.dmHoldOpen{overflow:hidden}
+</style>
+
+<style id="exofProfileMusicAutoplayV1182">
+#publicProfileTrackPlayer{
+  position:absolute!important;
+  width:2px!important;height:2px!important;
+  overflow:hidden!important;opacity:.01!important;
+  pointer-events:none!important;
+  left:-9999px!important;top:-9999px!important;
+}
+#publicProfileTrackModule.exofMusicPlaying{
+  border-color:color-mix(in srgb,var(--accent) 55%,#263129)!important;
+  box-shadow:0 0 18px color-mix(in srgb,var(--accent) 12%,transparent)!important;
+}
+#publicProfileTrackModule.exofMusicPlaying #publicProfileTrackPlay{
+  box-shadow:0 0 0 1px var(--accent),0 0 12px color-mix(in srgb,var(--accent) 30%,transparent);
+}
+#publicProfileTrackArtist.exofAutoplayBlocked{color:#d7ddd9!important}
 </style>
 </head>
 <body><div id="exofBuzzToast"></div>
@@ -1241,7 +1261,7 @@ function escapeHtml(v){
   return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
-let publicProfileTrack=null;
+let publicProfileTrack=null,publicProfileYtPlayer=null,publicProfileMusicUserId=null,publicProfileAutoplayWanted=false;
 function exofYouTubeIdFromTrack(track){
   if(!track)return '';
   if(track.id)return track.id;
@@ -1249,18 +1269,29 @@ function exofYouTubeIdFromTrack(track){
   const m=String(raw).match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{6,})/);
   return m?m[1]:'';
 }
+function exofStopPublicProfileMusic(){
+  publicProfileAutoplayWanted=false;
+  try{if(publicProfileYtPlayer&&typeof publicProfileYtPlayer.stopVideo==='function')publicProfileYtPlayer.stopVideo()}catch(_){}
+  try{if(publicProfileYtPlayer&&typeof publicProfileYtPlayer.destroy==='function')publicProfileYtPlayer.destroy()}catch(_){}
+  publicProfileYtPlayer=null;
+  const holder=document.getElementById('publicProfileTrackPlayer');
+  if(holder){holder.innerHTML='';holder.dataset.playing='0';holder.style.display='none'}
+  const btn=document.getElementById('publicProfileTrackPlay');
+  if(btn)btn.textContent='▶';
+  document.getElementById('publicProfileTrackModule')?.classList.remove('exofMusicPlaying');
+}
+window.exofStopPublicProfileMusic=exofStopPublicProfileMusic;
 function exofSetPublicTrack(track){
+  exofStopPublicProfileMusic();
   publicProfileTrack=track&&exofYouTubeIdFromTrack(track)?track:null;
   const title=document.getElementById('publicProfileTrackTitle');
   const artist=document.getElementById('publicProfileTrackArtist');
   const play=document.getElementById('publicProfileTrackPlay');
-  const holder=document.getElementById('publicProfileTrackPlayer');
-  if(holder){holder.innerHTML='';holder.style.display='none';}
-  if(play)play.textContent='▶';
+  if(artist)artist.classList.remove('exofAutoplayBlocked');
   if(publicProfileTrack){
     if(title)title.textContent=publicProfileTrack.title||'My YouTube Track';
-    if(artist)artist.textContent=(publicProfileTrack.artist||'YouTube')+' · Tap ▶ to play';
-    if(play)play.disabled=false;
+    if(artist)artist.textContent=(publicProfileTrack.artist||'YouTube')+' · Profile music';
+    if(play){play.disabled=false;play.textContent='▶'}
   }else{
     if(title)title.textContent='No track selected';
     if(artist)artist.textContent='No public track selected';
@@ -1276,29 +1307,69 @@ async function exofLoadPublicProfileTrack(profile){
   }catch(e){console.warn('Public track parse:',e)}
   exofSetPublicTrack(track);
 }
+function exofPublicMusicStatus(text,blocked=false){
+  const artist=document.getElementById('publicProfileTrackArtist');
+  if(!artist)return;
+  artist.textContent=text;
+  artist.classList.toggle('exofAutoplayBlocked',!!blocked);
+}
+function exofBuildPublicProfilePlayer(autoplay=true){
+  if(!publicProfileTrack)return;
+  const id=exofYouTubeIdFromTrack(publicProfileTrack);if(!id)return;
+  if(!(window.YT&&YT.Player)){setTimeout(()=>exofBuildPublicProfilePlayer(autoplay),250);return}
+  exofStopPublicProfileMusic();
+  publicProfileAutoplayWanted=autoplay;
+  const holder=document.getElementById('publicProfileTrackPlayer');if(!holder)return;
+  holder.style.display='block';holder.innerHTML='';
+  publicProfileYtPlayer=new YT.Player('publicProfileTrackPlayer',{
+    videoId:id,width:'2',height:'2',
+    playerVars:{autoplay:autoplay?1:0,playsinline:1,rel:0,modestbranding:1,controls:0,disablekb:1,origin:window.location.origin},
+    events:{
+      onReady:function(e){
+        if(!publicProfileAutoplayWanted)return;
+        try{
+          const r=e.target.playVideo();
+          exofPublicMusicStatus((publicProfileTrack.artist||'YouTube')+' · Starting profile music…');
+        }catch(_){
+          exofPublicMusicStatus((publicProfileTrack.artist||'YouTube')+' · Tap ▶ to hear profile song',true);
+        }
+      },
+      onStateChange:function(e){
+        const btn=document.getElementById('publicProfileTrackPlay');
+        const mod=document.getElementById('publicProfileTrackModule');
+        if(e.data===YT.PlayerState.PLAYING){
+          if(btn)btn.textContent='Ⅱ';if(holder)holder.dataset.playing='1';mod?.classList.add('exofMusicPlaying');
+          exofPublicMusicStatus((publicProfileTrack.artist||'YouTube')+' · Now playing');
+        }else if(e.data===YT.PlayerState.PAUSED||e.data===YT.PlayerState.ENDED){
+          if(btn)btn.textContent='▶';if(holder)holder.dataset.playing='0';mod?.classList.remove('exofMusicPlaying');
+          exofPublicMusicStatus((publicProfileTrack.artist||'YouTube')+' · Profile music');
+        }
+      },
+      onAutoplayBlocked:function(){
+        publicProfileAutoplayWanted=false;
+        const btn=document.getElementById('publicProfileTrackPlay');if(btn)btn.textContent='▶';
+        exofPublicMusicStatus((publicProfileTrack.artist||'YouTube')+' · Tap ▶ to hear profile song',true);
+      },
+      onError:function(){
+        publicProfileAutoplayWanted=false;
+        const btn=document.getElementById('publicProfileTrackPlay');if(btn)btn.textContent='▶';
+        exofPublicMusicStatus('This Profile Track cannot be played here.',true);
+      }
+    }
+  });
+}
 function exofTogglePublicProfileTrack(){
   if(!publicProfileTrack)return;
-  const id=exofYouTubeIdFromTrack(publicProfileTrack);
-  if(!id)return;
-  const holder=document.getElementById('publicProfileTrackPlayer');
-  const btn=document.getElementById('publicProfileTrackPlay');
-  if(!holder)return;
-  if(holder.dataset.playing==='1'){
-    holder.innerHTML='';
-    holder.dataset.playing='0';
-    holder.style.display='none';
-    if(btn)btn.textContent='▶';
+  if(publicProfileYtPlayer&&typeof publicProfileYtPlayer.getPlayerState==='function'){
+    const st=publicProfileYtPlayer.getPlayerState();
+    if(st===YT.PlayerState.PLAYING){publicProfileYtPlayer.pauseVideo();return}
+    publicProfileAutoplayWanted=true;
+    try{publicProfileYtPlayer.playVideo()}catch(_){exofBuildPublicProfilePlayer(true)}
     return;
   }
-  // iframe is intentionally created from the VISITED profile's saved track,
-  // never from the signed-in user's selectedVideo/localStorage.
-  holder.innerHTML='<iframe src="https://www.youtube.com/embed/'+encodeURIComponent(id)+'?autoplay=1&playsinline=1&rel=0" title="Profile Track" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen style="width:100%;aspect-ratio:16/9;border:0;border-radius:12px;margin-top:8px"></iframe>';
-  holder.dataset.playing='1';
-  holder.style.display='block';
-  if(btn)btn.textContent='■';
+  exofBuildPublicProfilePlayer(true);
 }
 document.getElementById('publicProfileTrackPlay')?.addEventListener('click',exofTogglePublicProfileTrack);
-
 async function openPublicProfile(userId,opts={}){
   // Show the destination immediately. This prevents Home from flashing/remaining
   // visible while the selected public profile is being fetched.
@@ -1325,7 +1396,13 @@ async function openPublicProfile(userId,opts={}){
     publicRoleEl.textContent=publicRole;
   }
   document.getElementById('publicBio').textContent=u.bio||'';
+  publicProfileMusicUserId=userId;
   await exofLoadPublicProfileTrack(u);
+  if(publicProfileTrack){
+    // Try immediately. Modern browsers may block audible autoplay until the
+    // visitor has interacted with EXOF; the profile card then becomes the fallback.
+    setTimeout(()=>{if(activePublicUserId===userId)exofBuildPublicProfilePlayer(true)},120);
+  }
   await refreshFollowUI(userId);
   const list=document.getElementById('publicDropsList');
   list.innerHTML='<div class="emptyState">Loading Drops…</div>';
@@ -1415,7 +1492,7 @@ exofApplyAccent(localStorage.getItem(EXOF_ACCENT_KEY)||getComputedStyle(document
 function exofSetRoute(id,userId){
   try{const u=new URL(location.href);u.searchParams.set('view',id);if(id==='publicProfile'&&userId)u.searchParams.set('user',userId);else u.searchParams.delete('user');history.replaceState({view:id,user:userId||null},'',u.pathname+u.search+u.hash)}catch(e){}
 }
-function go(id,opts={}){pages.forEach(p=>p.classList.toggle('active',p.id===id));nav.forEach(b=>b.classList.toggle('on',b.dataset.go===id));if(!opts.keepScroll)window.scrollTo(0,0);if(!opts.noRoute)exofSetRoute(id,opts.userId);if(id==='profile')loadMyDrops();if(id==='home'&&!opts.skipLoad)loadDrops(opts.feed||'all');}
+function go(id,opts={}){if(id!=='publicProfile'&&typeof exofStopPublicProfileMusic==='function')exofStopPublicProfileMusic();pages.forEach(p=>p.classList.toggle('active',p.id===id));nav.forEach(b=>b.classList.toggle('on',b.dataset.go===id));if(!opts.keepScroll)window.scrollTo(0,0);if(!opts.noRoute)exofSetRoute(id,opts.userId);if(id==='profile')loadMyDrops();if(id==='home'&&!opts.skipLoad)loadDrops(opts.feed||'all');}
 window.exofGo=go;
 async function exofRestoreRoute(){
   const q=new URLSearchParams(location.search),view=q.get('view')||'home',user=q.get('user');
