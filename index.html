@@ -1333,12 +1333,8 @@ async function searchUsers(){
       const uid=el.dataset.publicUser;
       const u=(data||[]).find(x=>String(x.id)===String(uid));
       if(u){
-        const key='exof_recent_people_v3';
-        let recent=[];
-        try{ recent=JSON.parse(localStorage.getItem(key)||'[]'); }catch(_){}
-        recent=[{id:u.id,username:u.username||'user',display_name:u.display_name||'',avatar_url:u.avatar_url||''},...recent.filter(x=>String(x.id)!==String(u.id))].slice(0,12);
-        localStorage.setItem(key,JSON.stringify(recent));
-        window.dispatchEvent(new CustomEvent('exof-recents-updated'));
+        // V1.22.5: account-synced Explore Recent (Supabase), no device-only localStorage.
+        if(typeof window.exofRecentAdd==='function') window.exofRecentAdd(u);
       }
     }catch(e){console.warn('EXOF recent save',e);}
     openPublicProfile(el.dataset.publicUser);
@@ -3344,46 +3340,96 @@ setTimeout(dmRefreshHeaderBadge,1200);setTimeout(()=>dmLoadList('primary'),1500)
 
 <script id="exRecentSearchesJS">
 (function(){
-const KEY='exof_recent_people_v3';
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-function get(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(_){return[]}}
-function set(a){localStorage.setItem(KEY,JSON.stringify(a.slice(0,12)))}
+let recent=[];
+let currentUserId=null;
+let loading=false;
+
+async function clientUser(){
+  const c=window.exofSupabase;if(!c)return null;
+  const {data:{user}}=await c.auth.getUser();
+  currentUserId=user?.id||null;
+  return user||null;
+}
+async function load(){
+  if(loading)return; loading=true;
+  try{
+    const c=window.exofSupabase,u=await clientUser();
+    if(!c||!u){recent=[];render();return;}
+    const {data:rows,error}=await c.from('search_recents').select('profile_id,searched_at').eq('user_id',u.id).order('searched_at',{ascending:false}).limit(12);
+    if(error)throw error;
+    const ids=(rows||[]).map(r=>r.profile_id).filter(Boolean);
+    if(!ids.length){recent=[];render();return;}
+    const {data:profiles,error:pe}=await c.from('profiles').select('id,username,display_name,avatar_url').in('id',ids);
+    if(pe)throw pe;
+    const map=new Map((profiles||[]).map(p=>[String(p.id),p]));
+    recent=ids.map(id=>map.get(String(id))).filter(Boolean);
+    render();
+  }catch(e){console.warn('EXOF Recent cloud load',e);}
+  finally{loading=false;}
+}
+async function add(p){
+  try{
+    const c=window.exofSupabase,u=await clientUser();if(!c||!u||!p?.id)return;
+    const {error}=await c.from('search_recents').upsert({user_id:u.id,profile_id:p.id,searched_at:new Date().toISOString()},{onConflict:'user_id,profile_id'});
+    if(error)throw error;
+    recent=[{id:p.id,username:p.username||'user',display_name:p.display_name||'',avatar_url:p.avatar_url||''},...recent.filter(x=>String(x.id)!==String(p.id))].slice(0,12);
+    render();
+    // Keep only the newest 12 rows for this account.
+    const {data:rows}=await c.from('search_recents').select('profile_id,searched_at').eq('user_id',u.id).order('searched_at',{ascending:false});
+    if(rows?.length>12){
+      const oldIds=rows.slice(12).map(r=>r.profile_id);
+      if(oldIds.length)await c.from('search_recents').delete().eq('user_id',u.id).in('profile_id',oldIds);
+    }
+  }catch(e){console.warn('EXOF Recent cloud save',e);}
+}
+async function remove(id){
+  try{
+    const c=window.exofSupabase,u=await clientUser();if(!c||!u)return;
+    const {error}=await c.from('search_recents').delete().eq('user_id',u.id).eq('profile_id',id);if(error)throw error;
+    recent=recent.filter(p=>String(p.id)!==String(id));render();
+  }catch(e){console.warn('EXOF Recent cloud remove',e);}
+}
+async function clear(){
+  try{
+    const c=window.exofSupabase,u=await clientUser();if(!c||!u)return;
+    const {error}=await c.from('search_recents').delete().eq('user_id',u.id);if(error)throw error;
+    recent=[];render();
+  }catch(e){console.warn('EXOF Recent cloud clear',e);}
+}
 function render(){
  const w=document.getElementById('exRecentSearchesWrap'),b=document.getElementById('exRecentSearches');if(!w||!b)return;
- const a=get();w.style.display=a.length?'block':'none';
+ const a=recent;w.style.display=a.length?'block':'none';
  b.innerHTML=a.map(p=>`<div class="exRecentPerson" data-rid="${esc(p.id)}">${p.avatar_url?`<img src="${esc(p.avatar_url)}" alt="">`:'<div class="exRecentAvatar"></div>'}<button class="exRecentRemove" type="button" data-x="${esc(p.id)}">×</button><small>@${esc(p.username||'user')}</small></div>`).join('');
  b.querySelectorAll('.exRecentPerson').forEach(el=>el.onclick=async e=>{
    if(e.target.closest('.exRecentRemove'))return;
-   const p=a.find(x=>String(x.id)===String(el.dataset.rid));
-   if(!p||!p.id)return;
+   const p=a.find(x=>String(x.id)===String(el.dataset.rid));if(!p||!p.id)return;
    try{
-     // Use EXOF's own Search result routing instead of calling private-scope functions.
-     const input=document.getElementById('userSearchInput');
-     const searchBtn=document.getElementById('userSearchBtn');
-     const results=document.getElementById('searchResults');
+     const input=document.getElementById('userSearchInput'),searchBtn=document.getElementById('userSearchBtn'),results=document.getElementById('searchResults');
      if(!input||!searchBtn||!results)return;
-     input.value=p.username||'';
-     searchBtn.click();
-     let tries=0;
-     const timer=setInterval(()=>{
-       tries++;
-       const exact=results.querySelector('[data-public-user="'+CSS.escape(String(p.id))+'"]');
-       if(exact){
-         clearInterval(timer);
-         exact.click();
-       }else if(tries>=30){
-         clearInterval(timer);
-         console.warn('EXOF Recent: exact saved profile was not returned by Search');
-       }
-     },100);
+     input.value=p.username||'';searchBtn.click();let tries=0;
+     const timer=setInterval(()=>{tries++;const exact=results.querySelector('[data-public-user="'+CSS.escape(String(p.id))+'"]');if(exact){clearInterval(timer);exact.click();}else if(tries>=30){clearInterval(timer);console.warn('EXOF Recent: exact saved profile was not returned by Search');}},100);
    }catch(err){console.warn('EXOF Recent native profile open',err);}
  });
- b.querySelectorAll('.exRecentRemove').forEach(x=>x.onclick=e=>{e.stopPropagation();set(a.filter(p=>String(p.id)!==String(x.dataset.x)));render()});
+ b.querySelectorAll('.exRecentRemove').forEach(x=>x.onclick=e=>{e.stopPropagation();remove(x.dataset.x)});
 }
-function init(){render();const c=document.getElementById('exClearRecentSearches');if(c)c.onclick=()=>{set([]);render()};}
-window.addEventListener('exof-recents-updated',render);
-window.addEventListener('popstate',()=>setTimeout(render,50));
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)render()});
+function subscribe(){
+  const c=window.exofSupabase;if(!c||!currentUserId||typeof c.channel!=='function')return;
+  try{
+    c.channel('explore-recents-'+currentUserId)
+      .on('postgres_changes',{event:'*',schema:'public',table:'search_recents',filter:'user_id=eq.'+currentUserId},()=>load())
+      .subscribe();
+  }catch(e){console.warn('EXOF Recent realtime',e);}
+}
+async function init(){
+  const c=document.getElementById('exClearRecentSearches');if(c)c.onclick=clear;
+  await load();subscribe();
+}
+window.exofRecentAdd=add;
+window.addEventListener('exof-recents-updated',load);
+window.addEventListener('popstate',()=>setTimeout(load,50));
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
+window.addEventListener('focus',load);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
