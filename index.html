@@ -739,6 +739,34 @@ header #messagesBtn.exofDmButton:active{
 .dmHoldCancel{width:100%;height:43px;margin-top:7px;border-radius:13px;border:0;background:#182019;color:#aeb8b1;font-weight:900}
 body.dmHoldOpen{overflow:hidden}
 </style>
+
+<style id="exExploreSafeCSS">
+#search .searchPanel.exExploreSafe{padding-bottom:24px}
+#search .exLiveSearch{position:relative;margin:8px 0 10px}
+#search .exLiveSearch input{width:100%;height:48px;box-sizing:border-box;border:1px solid #2a352e;border-radius:15px;background:#070a08;color:#fff;padding:0 16px 0 44px;font-size:13px;outline:none}
+#search .exLiveSearch input:focus{border-color:var(--accent);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 25%,transparent)}
+#search .exMag{position:absolute;left:15px;top:9px;color:var(--accent);font-size:24px;z-index:2}
+#search .exSearchResults{margin-bottom:4px}
+#search .exSearchResults .emptyState{padding:12px}
+#search .exSectionHead{display:flex;align-items:center;justify-content:space-between;margin:18px 0 9px}
+#search .exSectionHead b{font-size:15px}
+#search .exSectionHead button{border:0;background:none;color:var(--accent);font-weight:800;font-size:11px}
+#search .exExploreCards{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+#search .exExploreCard{position:relative;min-height:112px;border:1px solid #29342d;border-radius:16px;background:linear-gradient(145deg,#0d120e,#070907);padding:14px;box-sizing:border-box}
+#search .exCardIcon{font-size:24px;margin-bottom:8px}
+#search .exExploreCard b{display:block;font-size:15px;margin-bottom:4px}
+#search .exExploreCard small{display:block;color:#78827b;font-size:9px;line-height:1.4;max-width:105px}
+#search .exExploreCard>span{position:absolute;right:13px;top:42px;color:var(--accent);font-size:29px}
+#search .exDiscoverTabs{display:flex;gap:7px;overflow-x:auto;margin:0 0 10px;scrollbar-width:none}
+#search .exDiscoverTabs::-webkit-scrollbar{display:none}
+#search .exDiscoverTabs button{border:0;border-radius:18px;background:#111512;color:#858d88;padding:8px 13px;font-weight:800;font-size:10px;white-space:nowrap}
+#search .exDiscoverTabs button.on{background:var(--accent);color:#031000;box-shadow:0 0 13px color-mix(in srgb,var(--accent) 25%,transparent)}
+#search .exDiscoverGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#search .exDiscoverItem{position:relative;aspect-ratio:3/4;border-radius:13px;overflow:hidden;background:#111}
+#search .exDiscoverItem img,#search .exDiscoverItem video{width:100%;height:100%;object-fit:cover;display:block}
+#search .exDiscoverMeta{position:absolute;left:7px;right:7px;bottom:7px;display:flex;justify-content:space-between;color:#fff;font-size:9px;text-shadow:0 1px 4px #000}
+#search .exDiscoverEmpty{grid-column:1/-1;border:1px solid #202a23;border-radius:14px;padding:23px 12px;text-align:center;color:#77817a;font-size:10px}
+</style>
 </head>
 <body><div id="exofBuzzToast"></div>
 <div id="authGate">
@@ -886,7 +914,21 @@ body.dmHoldOpen{overflow:hidden}
 <div class="card"><b>Profile style</b><div class="styleGrid" style="margin-top:10px"><button class="styleBtn on">Minimal</button><button class="styleBtn">Y2K</button><button class="styleBtn">Neon</button><button class="styleBtn">Editorial</button></div></div>
 <div class="card"><b>Modules</b><p class="sub">These will be draggable in the full app.</p><div class="drag">☰ About Me</div><div class="drag">☰ Profile Track</div><div class="drag">☰ Favorite Drops</div><div class="drag">☰ Spaces I'm In</div></div><button id="customSaveBtn" class="primary">SAVE & VIEW PROFILE</button><div id="customSaveMsg" class="authMsg"></div></section>
 
-<section id="search" class="page"><div class="searchPanel"><div class="title">Explore</div><div class="searchBox"><input id="userSearchInput" type="text" placeholder="Search @username or name..." autocomplete="off"><button id="userSearchBtn" class="primary" style="width:auto;padding:0 18px">SEARCH</button></div><div id="searchResults"><div class="emptyState">Search for people on EXOF.</div></div><div class="worldGrid"><div class="world"><b>🌎 Now</b><small>What's happening</small></div><div class="world"><b>🔗 Chains</b><small>Continue a story</small></div></div></div></section>
+<section id="search" class="page"><div class="searchPanel exExploreSafe">
+<div class="title">Explore</div>
+<div class="exLiveSearch"><span class="exMag">⌕</span><input id="userSearchInput" type="text" placeholder="Search people on EXOF..." autocomplete="off"><button id="userSearchBtn" class="primary" aria-label="Search" style="display:none">SEARCH</button></div>
+<div id="searchResults" class="exSearchResults"><div class="emptyState">Search for people on EXOF.</div></div>
+
+<div class="exSectionHead"><b>Explore EXOF</b></div>
+<div class="exExploreCards">
+  <div class="exExploreCard"><div class="exCardIcon">🌎</div><b>Now</b><small>See what's happening right now</small><span>›</span></div>
+  <div class="exExploreCard"><div class="exCardIcon">🔗</div><b>Chains</b><small>Continue and discover chains</small><span>›</span></div>
+</div>
+
+<div class="exSectionHead"><b>Discover</b><button type="button" id="exDiscoverRefresh">Refresh</button></div>
+<div class="exDiscoverTabs"><button class="on" type="button">For You</button><button type="button">Recent</button><button type="button">Popular</button><button type="button">Loops</button></div>
+<div id="exDiscoverGrid" class="exDiscoverGrid"><div class="exDiscoverEmpty">Discovering EXOF…</div></div>
+</div></section>
 <section id="publicProfile" class="page publicProfile">
 <div id="publicProfileShell" class="profileShell"><div id="publicProfileBg" class="profileBg"></div><div class="profileShade"></div><div class="profileContent"><div id="publicCover" class="cover"></div><div id="publicAvatar" class="profileAva">E</div><div id="publicName" class="name">EXOF user</div><div class="exofPublicMetaLine"><p id="publicHandle" class="bio">@user</p><span id="publicOfficialRole" class="exofPublicOfficialRole" hidden></span></div><p id="publicBio" class="bio" style="margin-top:4px"></p><button id="publicFollowBtn" class="followBtn" type="button" style="display:none">FOLLOW</button><button id="publicBlockBtn" type="button" style="display:none">BLOCK USER</button><div class="stats"><div><b id="publicFollowers">0</b><small>FOLLOWERS</small></div><div><b id="publicFollowing">0</b><small>FOLLOWING</small></div><div><b id="publicDropCount">0</b><small>DROPS</small></div></div><div class="module" id="publicProfileTrackModule"><div class="track"><div><small class="mint">PROFILE TRACK</small><h4 id="publicProfileTrackTitle">No track selected</h4><span class="meta" id="publicProfileTrackArtist">No public track selected</span></div><button class="play" id="publicProfileTrackPlay" type="button">▶</button></div><div id="publicProfileTrackPlayer" style="display:none"></div></div><div class="module"><h4>♥ Favorite Drops</h4><div class="worldGrid"><div class="world"></div><div class="world"></div></div></div></div></div>
 <div style="padding:10px 16px 110px"><button class="secondary" data-go="search" style="margin-bottom:12px">← BACK TO SEARCH</button><div id="publicDropsList"><div class="emptyState">No Drops yet.</div></div></div></section>
@@ -3192,6 +3234,50 @@ setTimeout(dmRefreshHeaderBadge,1200);setTimeout(()=>dmLoadList('primary'),1500)
     <button id="dmHoldCancel" class="dmHoldCancel" type="button">CANCEL</button>
   </div>
 </div>
+
+<script id="exExploreSafeJS">
+(function(){
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  async function loadDiscover(){
+    var grid=document.getElementById('exDiscoverGrid');
+    if(!grid || typeof sb==='undefined') return;
+    grid.innerHTML='<div class="exDiscoverEmpty">Discovering EXOF…</div>';
+    try{
+      var r=await sb.from('drops').select('id,user_id,media_url,media_type,caption,created_at').order('created_at',{ascending:false}).limit(12);
+      if(r.error) throw r.error;
+      var rows=(r.data||[]).filter(function(d){return !!d.media_url;});
+      if(!rows.length){grid.innerHTML='<div class="exDiscoverEmpty">New public Drops will appear here.</div>';return;}
+      grid.innerHTML=rows.map(function(d){
+        var media=d.media_type==='video'
+          ? '<video src="'+esc(d.media_url)+'" muted playsinline preload="metadata"></video>'
+          : '<img src="'+esc(d.media_url)+'" alt="" loading="lazy">';
+        return '<div class="exDiscoverItem" data-ex-user="'+esc(d.user_id)+'">'+media+'<div class="exDiscoverMeta"><b>EXOF</b><span>●</span></div></div>';
+      }).join('');
+      grid.querySelectorAll('[data-ex-user]').forEach(function(el){
+        el.addEventListener('click',function(){ if(typeof openPublicProfile==='function') openPublicProfile(el.dataset.exUser); });
+      });
+    }catch(e){
+      console.warn('EXOF Discover:',e);
+      grid.innerHTML='<div class="exDiscoverEmpty">Discover will appear here when public Drops are available.</div>';
+    }
+  }
+  function init(){
+    var input=document.getElementById('userSearchInput');
+    if(!input || input.dataset.exploreSafe==='1') return;
+    input.dataset.exploreSafe='1';
+    var results=document.getElementById('searchResults');
+    input.addEventListener('input',function(){
+      if(!input.value.trim() && results) results.innerHTML='<div class="emptyState">Search for people on EXOF.</div>';
+    });
+    var refresh=document.getElementById('exDiscoverRefresh');
+    if(refresh) refresh.addEventListener('click',loadDiscover);
+    var tabs=document.querySelectorAll('#search .exDiscoverTabs button');
+    tabs.forEach(function(btn){btn.addEventListener('click',function(){tabs.forEach(function(x){x.classList.remove('on');});btn.classList.add('on');});});
+    loadDiscover();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
 </body></html>
 <style id="exofProfileBackgroundV184">
 #profile #profileShell.profileShell{
