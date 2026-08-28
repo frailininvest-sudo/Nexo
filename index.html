@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.17.1 — DM Chat Navigation Fix</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.17.2 — DM Photo Confirm</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -668,6 +668,8 @@ header #messagesBtn.exofDmButton:active{
 .dmSearchActionRow .dmSearch{margin:10px 0}
 #dmUserSearchBtn{height:43px;border:1px solid var(--accent);border-radius:13px;background:var(--accent);color:#061006;font-weight:950;padding:0 15px}
 #dmUserSearchBtn:disabled{opacity:.55}
+</style><style id="exofDmPhotoConfirmV1172">
+.dmXOPhotoBtn{position:relative!important;width:42px!important;height:42px!important;flex:0 0 42px!important;border:1px solid #2d5b34!important;border-radius:13px!important;background:#071009!important;padding:0!important;overflow:hidden!important}.dmXOText{position:absolute;left:5px;top:5px;color:var(--accent);font-size:13px;font-weight:1000;letter-spacing:-1px}.dmXOCamera{position:absolute;right:2px;bottom:1px;font-size:19px}.dmPhotoConfirm{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.72);display:flex;align-items:flex-end;justify-content:center;padding:14px}.dmPhotoConfirm[hidden]{display:none!important}.dmPhotoConfirmCard{width:min(430px,100%);background:#0b0f0c;border:1px solid var(--accent);border-radius:22px;padding:14px;display:grid;grid-template-columns:92px 1fr;gap:12px}.dmPhotoConfirmCard img{width:92px;height:112px;object-fit:cover;border-radius:14px;border:1px solid #304334}.dmPhotoConfirmInfo{display:flex;flex-direction:column;justify-content:center;gap:5px}.dmPhotoConfirmInfo b{font-size:17px}.dmPhotoConfirmInfo small{color:#aeb5af}.dmPhotoConfirmActions{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}.dmPhotoConfirmActions button{height:44px;border-radius:14px;font-weight:1000}#dmPhotoCancel{background:#121613;color:#fff;border:1px solid #465048}#dmPhotoSend{background:var(--accent);color:#061006;border:1px solid var(--accent)}
 </style></head>
 <body>
 <div id="authGate">
@@ -834,10 +836,10 @@ header #messagesBtn.exofDmButton:active{
 <div id="dmUserResults"><div class="dmSearchEmpty">Enter a username, then tap SEARCH.</div></div></section>
 
 <section id="dmChat" class="page exofDmPage">
-<div class="dmChatHead"><button id="dmChatBack" class="dmBack">‹</button><div id="dmChatPerson" class="dmChatPerson"></div><button id="dmBuzzTop" class="dmBuzzTop" title="Buzz">〽</button></div>
+<div class="dmChatHead"><button id="dmChatBack" class="dmBack">‹</button><div id="dmChatPerson" class="dmChatPerson"></div></div>
 <div id="dmMessages" class="dmMessages"></div>
-<div class="dmComposer"><button id="dmPhotoBtn">▧</button><button id="dmVoiceBtn">🎙</button><input id="dmText" placeholder="Message..."><button id="dmSendBtn" class="dmSend">➤</button><button id="dmBuzzBtn" class="dmBuzz">〽</button></div>
-<input id="dmPhotoInput" type="file" accept="image/*,video/*" hidden>
+<div class="dmComposer"><button id="dmPhotoBtn" class="dmXOPhotoBtn" title="Choose photo"><span class="dmXOText">XO</span><span class="dmXOCamera">📷</span></button><button id="dmVoiceBtn">🎙</button><input id="dmText" placeholder="Message..."><button id="dmSendBtn" class="dmSend">➤</button><button id="dmBuzzBtn" class="dmBuzz">〽</button></div>
+<div id="dmPhotoConfirm" class="dmPhotoConfirm" hidden><div class="dmPhotoConfirmCard"><img id="dmPhotoPreview" alt="Selected photo"><div class="dmPhotoConfirmInfo"><b>Photo selected</b><small>Send this photo to the conversation?</small></div><div class="dmPhotoConfirmActions"><button id="dmPhotoCancel" type="button">CANCEL</button><button id="dmPhotoSend" type="button">SEND</button></div></div></div><input id="dmPhotoInput" type="file" accept="image/*" hidden>
 <div id="dmVoiceStatus" class="dmVoiceStatus"></div>
 </section>
 
@@ -2970,12 +2972,17 @@ document.getElementById('dmUserSearchBtn')?.addEventListener('click',dmRunUserSe
 document.getElementById('dmUserSearch')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();dmRunUserSearch()}});
 document.getElementById('dmSendBtn')?.addEventListener('click',async()=>{const i=document.getElementById('dmText'),v=i.value.trim();if(!v)return;await dmSend(v);i.value=''});
 document.getElementById('dmText')?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();document.getElementById('dmSendBtn').click()}});
+let dmPendingPhoto=null,dmPendingPhotoUrl='';
 document.getElementById('dmPhotoBtn')?.addEventListener('click',()=>document.getElementById('dmPhotoInput').click());
-document.getElementById('dmPhotoInput')?.addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;await dmSend('',f,f.type.startsWith('video/')?'video':'image');e.target.value=''});
+document.getElementById('dmPhotoInput')?.addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;dmPendingPhoto=f;if(dmPendingPhotoUrl)URL.revokeObjectURL(dmPendingPhotoUrl);dmPendingPhotoUrl=URL.createObjectURL(f);document.getElementById('dmPhotoPreview').src=dmPendingPhotoUrl;document.getElementById('dmPhotoConfirm').hidden=false});
+function dmClosePhotoConfirm(){document.getElementById('dmPhotoConfirm').hidden=true;if(dmPendingPhotoUrl){URL.revokeObjectURL(dmPendingPhotoUrl);dmPendingPhotoUrl=''}dmPendingPhoto=null;document.getElementById('dmPhotoInput').value=''}
+document.getElementById('dmPhotoCancel')?.addEventListener('click',dmClosePhotoConfirm);
+document.getElementById('dmPhotoConfirm')?.addEventListener('click',e=>{if(e.target.id==='dmPhotoConfirm')dmClosePhotoConfirm()});
+document.getElementById('dmPhotoSend')?.addEventListener('click',async()=>{if(!dmPendingPhoto)return;const f=dmPendingPhoto,btn=document.getElementById('dmPhotoSend');btn.disabled=true;btn.textContent='SENDING…';try{await dmSend('',f,'image');dmClosePhotoConfirm()}finally{btn.disabled=false;btn.textContent='SEND'}});
 document.getElementById('dmVoiceBtn')?.addEventListener('click',async()=>{const st=document.getElementById('dmVoiceStatus');if(dmRecorder?.state==='recording'){dmRecorder.stop();return}try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});dmChunks=[];dmRecorder=new MediaRecorder(stream);dmRecorder.ondataavailable=e=>dmChunks.push(e.data);dmRecorder.onstop=async()=>{st.textContent='Sending voice message…';const blob=new Blob(dmChunks,{type:dmRecorder.mimeType||'audio/webm'});const f=new File([blob],'voice.webm',{type:blob.type});await dmSend('',f,'voice');stream.getTracks().forEach(t=>t.stop());st.textContent=''};dmRecorder.start();st.textContent='● Recording… tap mic to send'}catch(e){alert('Microphone permission is required for voice messages.')}});
 async function dmBuzz(){
  await dmGetCurrentUser();if(!dmActiveUser)return;const {data:last}=await dmSb.from('dm_buzzes').select('created_at').eq('sender_id',dmCurrentUser.id).eq('recipient_id',dmActiveUser).order('created_at',{ascending:false}).limit(1).maybeSingle();if(last&&Date.now()-new Date(last.created_at).getTime()<10*60*1000){alert('You can Buzz this person again in a few minutes.');return}const {error}=await dmSb.from('dm_buzzes').insert({sender_id:dmCurrentUser.id,recipient_id:dmActiveUser});if(error)return alert(error.message);document.getElementById('dmChat').classList.add('dmBuzzShake');setTimeout(()=>document.getElementById('dmChat').classList.remove('dmBuzzShake'),1200)}
-document.getElementById('dmBuzzBtn')?.addEventListener('click',dmBuzz);document.getElementById('dmBuzzTop')?.addEventListener('click',dmBuzz);
+document.getElementById('dmBuzzBtn')?.addEventListener('click',dmBuzz);
 document.getElementById('messagesBtn')?.addEventListener('click',()=>setTimeout(()=>dmLoadList('primary'),50));
 setInterval(()=>{if(document.getElementById('dmChat')?.classList.contains('active'))dmLoadMessages();dmRefreshHeaderBadge()},5000);
 setTimeout(dmRefreshHeaderBadge,1200);
