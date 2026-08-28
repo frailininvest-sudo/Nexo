@@ -3324,8 +3324,9 @@ function render(){
    try{
      // Use EXOF's real public-profile function directly with THIS Recent card's saved UUID.
      // Do not reuse activePublicUserId or the last search result.
-     activePublicUserId=p.id;
-     openPublicProfile(p.id,{restoring:false});
+     // openPublicProfile is defined in EXOF's main script but is not a window property.
+     // Call the existing lexical function directly; it sets activePublicUserId internally.
+     openPublicProfile(p.id);
    }catch(err){
      console.warn('EXOF Recent exact profile open',err);
    }
