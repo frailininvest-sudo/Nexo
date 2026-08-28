@@ -3320,16 +3320,15 @@ function render(){
  b.querySelectorAll('.exRecentPerson').forEach(el=>el.onclick=e=>{
    if(e.target.closest('.exRecentRemove'))return;
    const p=a.find(x=>String(x.id)===String(el.dataset.rid));
-   if(!p)return;
+   if(!p||!p.id)return;
    try{
-     if(typeof window.openPublicProfile==='function'){
-       window.openPublicProfile(p.id);
-     }else if(typeof openPublicProfile==='function'){
-       openPublicProfile(p.id);
-     }else if(typeof window.exofGo==='function'){
-       window.exofGo('publicProfile',{userId:p.id});
-     }
-   }catch(err){console.warn('EXOF Recent profile open',err);}
+     // Use EXOF's real public-profile function directly with THIS Recent card's saved UUID.
+     // Do not reuse activePublicUserId or the last search result.
+     activePublicUserId=p.id;
+     openPublicProfile(p.id,{restoring:false});
+   }catch(err){
+     console.warn('EXOF Recent exact profile open',err);
+   }
  });
  b.querySelectorAll('.exRecentRemove').forEach(x=>x.onclick=e=>{e.stopPropagation();set(a.filter(p=>String(p.id)!==String(x.dataset.x)));render()});
 }
