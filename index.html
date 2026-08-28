@@ -3295,53 +3295,69 @@ setTimeout(dmRefreshHeaderBadge,1200);setTimeout(()=>dmLoadList('primary'),1500)
 
 <script id="exRecentSearchesJS">
 (function(){
-  var KEY='exof_recent_people_v1';
+  var KEY='exof_recent_people_v2';
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
-  function getRecent(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return []}}
-  function saveRecent(a){localStorage.setItem(KEY,JSON.stringify(a.slice(0,12)))}
-  function renderRecent(){
-    var wrap=document.getElementById('exRecentSearchesWrap'), box=document.getElementById('exRecentSearches');
-    if(!wrap||!box)return;
-    var a=getRecent(); wrap.style.display=a.length?'block':'none';
-    box.innerHTML=a.map(function(p){
-      var av=p.avatar_url?'<img src="'+esc(p.avatar_url)+'" alt="">':'<div class="exRecentAvatar"></div>';
-      return '<div class="exRecentPerson" data-recent-id="'+esc(p.id)+'">'+av+'<button class="exRecentRemove" type="button" data-remove-id="'+esc(p.id)+'">×</button><small>@'+esc(p.username||'user')+'</small></div>';
-    }).join('');
-    box.querySelectorAll('.exRecentPerson').forEach(function(el){
-      el.addEventListener('click',function(e){
-        if(e.target.closest('.exRecentRemove'))return;
-        var p=a.find(function(x){return String(x.id)===String(el.dataset.recentId)});
-        if(p&&typeof openPublicProfile==='function')openPublicProfile(p.id);
-      });
-    });
-    box.querySelectorAll('.exRecentRemove').forEach(function(btn){
-      btn.addEventListener('click',function(e){e.stopPropagation();saveRecent(a.filter(function(p){return String(p.id)!==String(btn.dataset.removeId)}));renderRecent();});
-    });
+  function getR(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return []}}
+  function setR(a){localStorage.setItem(KEY,JSON.stringify(a.slice(0,12)))}
+  function render(){
+    var w=document.getElementById('exRecentSearchesWrap'),b=document.getElementById('exRecentSearches');
+    if(!w||!b)return; var a=getR(); w.style.display=a.length?'block':'none';
+    b.innerHTML=a.map(function(p){var av=p.avatar_url?'<img src="'+esc(p.avatar_url)+'" alt="">':'<div class="exRecentAvatar"></div>';return '<div class="exRecentPerson" data-rid="'+esc(p.id)+'">'+av+'<button class="exRecentRemove" type="button" data-x="'+esc(p.id)+'">×</button><small>@'+esc(p.username||'user')+'</small></div>';}).join('');
+    b.querySelectorAll('.exRecentPerson').forEach(function(el){el.onclick=function(e){if(e.target.closest('.exRecentRemove'))return;var p=a.find(function(x){return String(x.id)===String(el.dataset.rid)});if(p&&typeof window.openPublicProfile==='function')window.openPublicProfile(p.id);};});
+    b.querySelectorAll('.exRecentRemove').forEach(function(x){x.onclick=function(e){e.stopPropagation();setR(a.filter(function(p){return String(p.id)!==String(x.dataset.x)}));render();};});
   }
-  function rememberFromClickedResult(el){
-    var id=el && (el.dataset.id||el.dataset.userId||el.getAttribute('data-profile-id'));
-    if(!id)return;
-    var nameEl=el.querySelector('b,strong,.username,[class*="name"]');
-    var txt=(el.innerText||'').split('\n').map(function(x){return x.trim()}).filter(Boolean);
-    var username=(txt.find(function(x){return x.charAt(0)==='@'})||'').replace(/^@/,'');
-    if(!username && nameEl)username=(nameEl.textContent||'').trim().replace(/^@/,'');
-    var img=el.querySelector('img');
-    var p={id:id,username:username||'user',avatar_url:img?img.src:''};
-    var a=getRecent().filter(function(x){return String(x.id)!==String(id)});a.unshift(p);saveRecent(a);renderRecent();
+  function remember(p){
+    if(!p||!p.id)return;
+    var a=getR().filter(function(x){return String(x.id)!==String(p.id)});a.unshift(p);setR(a);render();
+  }
+  function captureResultCard(card){
+    if(!card)return;
+    var txt=(card.innerText||'').split('\n').map(function(x){return x.trim()}).filter(Boolean);
+    var username=(txt.find(function(x){return x.charAt(0)==='@';})||'').replace(/^@/,'');
+    var img=card.querySelector('img');
+    var id=card.dataset.uid||card.dataset.userId||card.dataset.id||card.dataset.profileId||'';
+    if(!id){
+      var oc=card.getAttribute('onclick')||'';
+      var m=oc.match(/openPublicProfile\s*\(\s*['"]([^'"]+)['"]/); if(m)id=m[1];
+    }
+    if(id)remember({id:id,username:username||txt[0]||'user',avatar_url:img?img.src:''});
   }
   function init(){
-    renderRecent();
-    var clear=document.getElementById('exClearRecentSearches');
-    if(clear)clear.addEventListener('click',function(){saveRecent([]);renderRecent();});
+    render();
+    var clear=document.getElementById('exClearRecentSearches');if(clear)clear.onclick=function(){setR([]);render();};
     var results=document.getElementById('searchResults');
     if(results){
       results.addEventListener('click',function(e){
-        var el=e.target.closest('[data-id],[data-user-id],[data-profile-id]');
-        if(el)rememberFromClickedResult(el);
+        var card=e.target.closest('.searchResult,.userResult,.resultItem,.userRow,[data-uid],[data-user-id],[data-profile-id],[data-id]');
+        if(card)captureResultCard(card);
       },true);
+    }
+    // Robust fallback: when Search opens any public profile, remember the visible search result
+    // that corresponds to that exact profile ID. This avoids depending on CSS class names.
+    if(typeof window.openPublicProfile==='function' && !window.openPublicProfile.__exRecentWrapped){
+      var original=window.openPublicProfile;
+      var wrapped=function(id){
+        try{
+          var cards=results?Array.from(results.children):[];
+          var card=cards.find(function(c){
+            var attrs=[c.dataset.uid,c.dataset.userId,c.dataset.profileId,c.dataset.id].filter(Boolean);
+            var oc=c.getAttribute&&c.getAttribute('onclick')||'';
+            return attrs.some(function(v){return String(v)===String(id)}) || oc.indexOf(String(id))>=0;
+          });
+          if(card){
+            var txt=(card.innerText||'').split('\n').map(function(x){return x.trim()}).filter(Boolean);
+            var username=(txt.find(function(x){return x.charAt(0)==='@';})||'').replace(/^@/,'');
+            var img=card.querySelector('img');
+            remember({id:id,username:username||txt[0]||'user',avatar_url:img?img.src:''});
+          }
+        }catch(e){}
+        return original.apply(this,arguments);
+      };
+      wrapped.__exRecentWrapped=true;window.openPublicProfile=wrapped;
     }
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+  setTimeout(init,700);
 })();
 </script>
 </body></html>
