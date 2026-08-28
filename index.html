@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.17.6 — Hold Voice Preview</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.17.7 — Voice Composer Fix</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -686,7 +686,22 @@ header #messagesBtn.exofDmButton:active{
 #exofBuzzToast{position:fixed;left:50%;top:78px;transform:translateX(-50%) translateY(-15px);z-index:100000;background:#071009;border:1px solid var(--accent);color:#fff;border-radius:16px;padding:10px 15px;font-weight:900;opacity:0;pointer-events:none;transition:.2s;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis}
 #exofBuzzToast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .dmBuzzCooldown{opacity:.55!important;pointer-events:none!important}
-</style><style id="exofVoiceHoldV1176">#dmVoiceBtn{touch-action:none;user-select:none;-webkit-user-select:none}#dmVoiceBtn.dmRecording{border-radius:50%;box-shadow:0 0 0 2px var(--accent),0 0 18px rgba(76,255,38,.35);animation:voicePulse .8s infinite}@keyframes voicePulse{50%{transform:scale(1.12)}}.dmComposer{position:relative}.dmVoiceStatus.recording{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);z-index:20;background:#090d0a;border:1px solid var(--accent);border-radius:14px;padding:7px 12px;color:#fff;font-weight:900;white-space:nowrap}.dmVoicePreview{position:absolute;left:8px;right:8px;bottom:58px;height:50px;background:#111512;border:1px solid #29372d;border-radius:24px;z-index:30;display:flex;align-items:center;gap:9px;padding:5px 9px}.dmVoicePreview[hidden]{display:none!important}.dmVoicePreview button{width:38px;height:38px;border-radius:50%;border:0;background:rgba(76,255,38,.12);color:var(--accent);font-size:18px}.dmVoicePreview #dmVoiceDelete{background:transparent;color:#fff;font-size:25px}.dmVoiceWave{flex:1;color:var(--accent);font-size:19px;letter-spacing:1px;overflow:hidden;white-space:nowrap}.dmVoicePreview span{font-size:12px;color:#ddd}</style></head>
+</style><style id="exofVoiceHoldV1176">#dmVoiceBtn{touch-action:none;user-select:none;-webkit-user-select:none}#dmVoiceBtn.dmRecording{border-radius:50%;box-shadow:0 0 0 2px var(--accent),0 0 18px rgba(76,255,38,.35);animation:voicePulse .8s infinite}@keyframes voicePulse{50%{transform:scale(1.12)}}.dmComposer{position:relative}.dmVoiceStatus.recording{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);z-index:20;background:#090d0a;border:1px solid var(--accent);border-radius:14px;padding:7px 12px;color:#fff;font-weight:900;white-space:nowrap}.dmVoicePreview{position:absolute;left:8px;right:8px;bottom:58px;height:50px;background:#111512;border:1px solid #29372d;border-radius:24px;z-index:30;display:flex;align-items:center;gap:9px;padding:5px 9px}.dmVoicePreview[hidden]{display:none!important}.dmVoicePreview button{width:38px;height:38px;border-radius:50%;border:0;background:rgba(76,255,38,.12);color:var(--accent);font-size:18px}.dmVoicePreview #dmVoiceDelete{background:transparent;color:#fff;font-size:25px}.dmVoiceWave{flex:1;color:var(--accent);font-size:19px;letter-spacing:1px;overflow:hidden;white-space:nowrap}.dmVoicePreview span{font-size:12px;color:#ddd}</style><style id="exofVoiceComposerFixV1177">
+.dmComposer{position:sticky!important;bottom:0!important;display:flex!important;align-items:center!important;gap:7px!important}
+.dmVoicePreview{position:static!important;inset:auto!important;bottom:auto!important;height:44px!important;min-width:0!important;flex:1 1 auto!important;background:#111512!important;border:1px solid #29372d!important;border-radius:22px!important;display:flex!important;align-items:center!important;gap:7px!important;padding:3px 7px!important;box-shadow:none!important;z-index:auto!important}
+.dmVoicePreview[hidden]{display:none!important}
+.dmVoicePreview #dmVoicePlay{width:34px!important;height:34px!important;flex:0 0 34px!important;border-radius:50%!important;background:rgba(76,255,38,.13)!important;color:var(--accent)!important;border:0!important;font-size:16px!important}
+.dmVoicePreview #dmVoiceDelete{width:30px!important;height:34px!important;flex:0 0 30px!important;background:transparent!important;color:#fff!important;border:0!important;font-size:24px!important;padding:0!important}
+.dmVoicePreview .dmVoiceWave{flex:1 1 auto!important;min-width:30px!important;color:var(--accent)!important;overflow:hidden!important;white-space:nowrap!important;font-size:16px!important;letter-spacing:0!important}
+.dmVoicePreview #dmVoiceDuration{font-size:11px!important;color:#dfe5e0!important;flex:0 0 auto!important}
+.dmComposer.voicePreviewing #dmPhotoBtn,
+.dmComposer.voicePreviewing #dmVoiceBtn,
+.dmComposer.voicePreviewing #dmText,
+.dmComposer.voicePreviewing #dmBuzzBtn{display:none!important}
+.dmComposer.voicePreviewing #dmVoicePreview{display:flex!important}
+.dmComposer.voicePreviewing #dmSendBtn{display:grid!important;flex:0 0 44px!important}
+.dmVoiceStatus.recording{bottom:58px!important}
+</style></head>
 <body><div id="exofBuzzToast"></div>
 <div id="authGate">
   <div class="authBox">
@@ -854,9 +869,14 @@ header #messagesBtn.exofDmButton:active{
 <section id="dmChat" class="page exofDmPage">
 <div class="dmChatHead"><button id="dmChatBack" class="dmBack">‹</button><div id="dmChatPerson" class="dmChatPerson"></div></div>
 <div id="dmMessages" class="dmMessages"></div>
-<div class="dmComposer"><button id="dmPhotoBtn" class="dmXOPhotoBtn" title="Choose photo" aria-label="Choose photo"><img src="xo-camera-icon.png" class="dmXOMascot" alt=""></button><button id="dmVoiceBtn">🎙</button><input id="dmText" placeholder="Message..."><button id="dmSendBtn" class="dmSend">➤</button><button id="dmBuzzBtn" class="dmBuzz">〽</button></div>
+<div class="dmComposer"><button id="dmPhotoBtn" class="dmXOPhotoBtn" title="Choose photo" aria-label="Choose photo"><img src="xo-camera-icon.png" class="dmXOMascot" alt=""></button><button id="dmVoiceBtn">🎙</button><input id="dmText" placeholder="Message..."><div id="dmVoicePreview" class="dmVoicePreview" hidden>
+<button id="dmVoicePlay" type="button" aria-label="Play voice preview">▶</button>
+<div class="dmVoiceWave">▂▅▃▇▄▆▃▅▇▄▃▆</div>
+<span id="dmVoiceDuration">0:00</span>
+<button id="dmVoiceDelete" type="button" aria-label="Delete voice preview">×</button>
+</div><button id="dmSendBtn" class="dmSend">➤</button><button id="dmBuzzBtn" class="dmBuzz">〽</button></div>
 <div id="dmPhotoConfirm" class="dmPhotoConfirm" hidden><div class="dmPhotoConfirmCard"><img id="dmPhotoPreview" alt="Selected photo"><div class="dmPhotoConfirmInfo"><b>Photo selected</b><small>Send this photo to the conversation?</small></div><div class="dmPhotoConfirmActions"><button id="dmPhotoCancel" type="button">CANCEL</button><button id="dmPhotoSend" type="button">SEND</button></div></div></div><input id="dmPhotoInput" type="file" accept="image/*" hidden>
-<div id="dmVoiceStatus" class="dmVoiceStatus"></div><div id="dmVoicePreview" class="dmVoicePreview" hidden><button id="dmVoicePlay" type="button">▶</button><div class="dmVoiceWave">▂▅▃▇▄▆▃▅▇▄▃▆</div><span id="dmVoiceDuration">0:00</span><button id="dmVoiceDelete" type="button">×</button></div>
+<div id="dmVoiceStatus" class="dmVoiceStatus"></div>
 </section>
 
 <nav><button class="on" data-go="home"><span>⌂</span>Home</button><button data-go="loops"><span>◎</span>Loops</button><button data-go="create"><span class="plus">＋</span>Create</button><button data-go="spaces"><span>⌘</span>Spaces</button><button data-go="profile"><span>◉</span>Profile</button></nav>
@@ -3016,7 +3036,25 @@ async function dmRunUserSearch(){
 }
 document.getElementById('dmUserSearchBtn')?.addEventListener('click',dmRunUserSearch);
 document.getElementById('dmUserSearch')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();dmRunUserSearch()}});
-document.getElementById('dmSendBtn')?.addEventListener('click',async()=>{if(dmVoiceBlob){const f=new File([dmVoiceBlob],'voice.webm',{type:dmVoiceBlob.type||'audio/webm'});await dmSend('',f,'voice');dmVoiceClearPreview();return}const i=document.getElementById('dmText'),v=i.value.trim();if(!v)return;await dmSend(v);i.value=''});
+document.getElementById('dmSendBtn')?.addEventListener('click',async()=>{
+ const btn=document.getElementById('dmSendBtn');
+ if(dmVoiceBlob){
+   const mime=dmVoiceBlob.type||'audio/webm';
+   const ext=mime.includes('mp4')?'mp4':mime.includes('ogg')?'ogg':'webm';
+   const f=new File([dmVoiceBlob],'voice.'+ext,{type:mime});
+   btn.disabled=true;const old=btn.textContent;btn.textContent='…';
+   try{
+     await dmSend('',f,'voice');
+     dmVoiceClearPreview();
+   }catch(err){
+     console.error('EXOF voice send error:',err);
+     alert('Voice message could not be sent: '+(err?.message||String(err)));
+   }finally{btn.disabled=false;btn.textContent=old}
+   return;
+ }
+ const i=document.getElementById('dmText'),v=i.value.trim();if(!v)return;
+ try{await dmSend(v);i.value=''}catch(err){console.error('EXOF message send error:',err);alert(err?.message||String(err))}
+});
 document.getElementById('dmText')?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();document.getElementById('dmSendBtn').click()}});
 let dmPendingPhoto=null,dmPendingPhotoUrl='';
 document.getElementById('dmPhotoBtn')?.addEventListener('click',()=>document.getElementById('dmPhotoInput').click());
@@ -3028,8 +3066,13 @@ document.getElementById('dmPhotoSend')?.addEventListener('click',async()=>{if(!d
 let dmVoiceBlob=null,dmVoiceUrl='',dmVoiceStartedAt=0,dmVoiceTimer=null,dmVoiceStream=null,dmVoicePressing=false;
 const dmVoiceBtn=document.getElementById('dmVoiceBtn'),dmVoiceStatus=document.getElementById('dmVoiceStatus'),dmVoicePreview=document.getElementById('dmVoicePreview'),dmVoicePlay=document.getElementById('dmVoicePlay'),dmVoiceDelete=document.getElementById('dmVoiceDelete'),dmVoiceDuration=document.getElementById('dmVoiceDuration');
 function dmVoiceFmt(sec){sec=Math.max(0,Math.round(sec||0));return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0')}
-function dmVoiceClearPreview(){if(dmVoiceUrl){URL.revokeObjectURL(dmVoiceUrl);dmVoiceUrl=''}dmVoiceBlob=null;dmVoicePreview.hidden=true;dmVoicePlay.textContent='▶'}
-async function dmVoiceStart(e){e?.preventDefault();if(dmRecorder?.state==='recording'||dmVoicePressing)return;dmVoicePressing=true;dmVoiceClearPreview();try{dmVoiceStream=await navigator.mediaDevices.getUserMedia({audio:true});if(!dmVoicePressing){dmVoiceStream.getTracks().forEach(t=>t.stop());dmVoiceStream=null;return}dmChunks=[];dmRecorder=new MediaRecorder(dmVoiceStream);dmRecorder.ondataavailable=ev=>{if(ev.data?.size)dmChunks.push(ev.data)};dmRecorder.onstop=()=>{clearInterval(dmVoiceTimer);dmVoiceBtn.classList.remove('dmRecording');dmVoiceStatus.classList.remove('recording');dmVoiceStatus.textContent='';const duration=(Date.now()-dmVoiceStartedAt)/1000;dmVoiceBlob=new Blob(dmChunks,{type:dmRecorder.mimeType||'audio/webm'});dmVoiceUrl=URL.createObjectURL(dmVoiceBlob);dmVoiceDuration.textContent=dmVoiceFmt(duration);dmVoicePreview.hidden=false;dmVoiceStream?.getTracks().forEach(t=>t.stop());dmVoiceStream=null};dmRecorder.start();dmVoiceStartedAt=Date.now();dmVoiceBtn.classList.add('dmRecording');dmVoiceStatus.classList.add('recording');const tick=()=>dmVoiceStatus.textContent='● REC  '+dmVoiceFmt((Date.now()-dmVoiceStartedAt)/1000);tick();dmVoiceTimer=setInterval(tick,250)}catch(err){dmVoicePressing=false;alert('Microphone permission is required for voice messages.')}}
+function dmVoiceClearPreview(){
+ if(dmVoicePlay?._audio){try{dmVoicePlay._audio.pause()}catch(_){}dmVoicePlay._audio=null}
+ if(dmVoiceUrl){URL.revokeObjectURL(dmVoiceUrl);dmVoiceUrl=''}
+ dmVoiceBlob=null;dmVoicePreview.hidden=true;dmVoicePlay.textContent='▶';
+ document.querySelector('#dmChat .dmComposer')?.classList.remove('voicePreviewing')
+}
+async function dmVoiceStart(e){e?.preventDefault();if(dmRecorder?.state==='recording'||dmVoicePressing)return;dmVoicePressing=true;dmVoiceClearPreview();try{dmVoiceStream=await navigator.mediaDevices.getUserMedia({audio:true});if(!dmVoicePressing){dmVoiceStream.getTracks().forEach(t=>t.stop());dmVoiceStream=null;return}dmChunks=[];dmRecorder=new MediaRecorder(dmVoiceStream);dmRecorder.ondataavailable=ev=>{if(ev.data?.size)dmChunks.push(ev.data)};dmRecorder.onstop=()=>{clearInterval(dmVoiceTimer);dmVoiceBtn.classList.remove('dmRecording');dmVoiceStatus.classList.remove('recording');dmVoiceStatus.textContent='';const duration=(Date.now()-dmVoiceStartedAt)/1000;dmVoiceBlob=new Blob(dmChunks,{type:dmRecorder.mimeType||'audio/webm'});dmVoiceUrl=URL.createObjectURL(dmVoiceBlob);dmVoiceDuration.textContent=dmVoiceFmt(duration);dmVoicePreview.hidden=false;document.querySelector('#dmChat .dmComposer')?.classList.add('voicePreviewing');dmVoiceStream?.getTracks().forEach(t=>t.stop());dmVoiceStream=null};dmRecorder.start();dmVoiceStartedAt=Date.now();dmVoiceBtn.classList.add('dmRecording');dmVoiceStatus.classList.add('recording');const tick=()=>dmVoiceStatus.textContent='● REC  '+dmVoiceFmt((Date.now()-dmVoiceStartedAt)/1000);tick();dmVoiceTimer=setInterval(tick,250)}catch(err){dmVoicePressing=false;alert('Microphone permission is required for voice messages.')}}
 function dmVoiceStop(e){e?.preventDefault();dmVoicePressing=false;if(dmRecorder?.state==='recording')dmRecorder.stop()}
 dmVoiceBtn?.addEventListener('pointerdown',dmVoiceStart);dmVoiceBtn?.addEventListener('pointerup',dmVoiceStop);dmVoiceBtn?.addEventListener('pointercancel',dmVoiceStop);dmVoiceBtn?.addEventListener('pointerleave',e=>{if(dmVoicePressing)dmVoiceStop(e)});dmVoiceBtn?.addEventListener('contextmenu',e=>e.preventDefault());
 dmVoicePlay?.addEventListener('click',()=>{if(!dmVoiceUrl)return;if(dmVoicePlay._audio&&!dmVoicePlay._audio.paused){dmVoicePlay._audio.pause();dmVoicePlay.textContent='▶';return}const a=new Audio(dmVoiceUrl);dmVoicePlay._audio=a;dmVoicePlay.textContent='❚❚';a.onended=()=>dmVoicePlay.textContent='▶';a.play()});dmVoiceDelete?.addEventListener('click',dmVoiceClearPreview);
