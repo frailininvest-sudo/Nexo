@@ -1179,6 +1179,28 @@ recoveryForm.addEventListener('submit',async(e)=>{
   authMessage('Password updated successfully. Log in with your new password.','good');
 });
 
+// V1.22.6 — Profile Realtime Sync. One channel per signed-in EXOF account.
+let exofProfileRealtimeChannel=null;
+function exofStopProfileRealtime(){
+  try{if(exofProfileRealtimeChannel){sb.removeChannel(exofProfileRealtimeChannel);exofProfileRealtimeChannel=null;}}catch(e){console.warn('EXOF Profile Realtime stop:',e)}
+}
+function exofStartProfileRealtime(user){
+  exofStopProfileRealtime();
+  if(!user?.id)return;
+  exofProfileRealtimeChannel=sb.channel('exof-profile-'+user.id)
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'profiles',filter:'id=eq.'+user.id},async(payload)=>{
+      try{
+        // Fetch the authoritative row so every profile field stays in sync.
+        const {data,error}=await sb.from('profiles').select('*').eq('id',user.id).single();
+        if(error)throw error;
+        currentProfile=data;
+        currentUser=user;
+        paintProfile(user,data);
+      }catch(e){console.warn('EXOF Profile Realtime refresh:',e)}
+    })
+    .subscribe();
+}
+
 async function enterApp(session){
   if(recoveryMode){ showRecovery(); return; }
   if(!session||!session.user){
@@ -1189,6 +1211,7 @@ async function enterApp(session){
   try{
     const profile=await ensureProfile(session.user);
     paintProfile(session.user,profile);
+    exofStartProfileRealtime(session.user);
     authGate.style.display='none';
     app.style.display='block';
     await exofRestoreRoute();
@@ -1237,6 +1260,7 @@ loginForm.addEventListener('submit',async(e)=>{
 });
 
 document.getElementById('logoutBtn').addEventListener('click',async()=>{
+  exofStopProfileRealtime();
   await sb.auth.signOut();
   app.style.display='none';
   authGate.style.display='grid';
