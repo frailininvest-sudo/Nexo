@@ -801,6 +801,13 @@ body.dmHoldOpen{overflow:hidden}
 #search .exChainThumb img,
 #search .exChainThumb video{display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:cover;border-radius:10px}
 #search .exChainBody{min-width:0;overflow:hidden}
+</style><style id="exofChainMediaViewer1224">
+.exChainEntry{cursor:pointer}
+.exChainMediaViewer{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.96);display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box}
+.exChainMediaViewer[hidden]{display:none}
+.exChainMediaViewerStage{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.exChainMediaViewerStage img,.exChainMediaViewerStage video{display:block;max-width:100%;max-height:92vh;width:auto;height:auto;object-fit:contain;border-radius:12px}
+.exChainMediaViewerClose{position:absolute;right:18px;top:18px;z-index:2;width:38px;height:38px;border:1px solid #354038;border-radius:50%;background:#111713;color:#fff;font-size:25px;line-height:34px}
 </style></head>
 <body><div id="exofBuzzToast"></div>
 <div id="authGate">
@@ -3405,7 +3412,8 @@ async function open(c){
  const b=M('exChainEntries');b.innerHTML='<div class="exDiscoverEmpty">Loading Chain…</div>';
  const {data,error}=await chainSb.from('chain_entries').select('*').eq('chain_id',c.id).order('created_at',{ascending:true});
  if(error){b.innerHTML='<div class="exDiscoverEmpty">'+E(error.message)+'</div>';return}
- b.innerHTML=data?.length?data.map((x,i)=>`<div class="exChainEntry"><div class="exChainEntryMedia">${x.media_type==='video'?`<video src="${E(x.media_url)}" controls playsinline></video>`:`<img src="${E(x.media_url)}">`}</div><small>#${i+1}</small></div>`).join(''):'<div class="exDiscoverEmpty">Be the first to continue.</div>';
+ b.innerHTML=data?.length?data.map((x,i)=>`<div class="exChainEntry" data-chain-media="${E(x.media_url)}" data-chain-type="${E(x.media_type)}"><div class="exChainEntryMedia">${x.media_type==='video'?`<video src="${E(x.media_url)}" muted playsinline></video>`:`<img src="${E(x.media_url)}">`}</div><small>#${i+1}</small></div>`).join(''):'<div class="exDiscoverEmpty">Be the first to continue.</div>';
+ if(data?.length)b.querySelectorAll('[data-chain-media]').forEach(el=>el.addEventListener('click',()=>showChainMedia(el.dataset.chainMedia,el.dataset.chainType)));
 }
 function resetMedia(){
  chainFile=null;if(chainObjectURL){URL.revokeObjectURL(chainObjectURL);chainObjectURL=''}M('exChainMediaPreview').innerHTML='CHOOSE A PHOTO OR VIDEO';M('exPublishGlobalChain').disabled=true;M('exChainPublishMsg').textContent='';
@@ -3456,7 +3464,19 @@ async function publish(){
   msg.textContent=e.message||'Could not publish Chain.';
  }finally{btn.disabled=!chainFile;if(draft)btn.textContent=draft.mode==='continue'?'ADD TO CHAIN 🔗':'CREATE GLOBAL CHAIN 🌎'}
 }
+function showChainMedia(url,type){
+ const viewer=M('exChainMediaViewer'),stage=M('exChainMediaViewerStage');if(!viewer||!stage||!url)return;
+ stage.innerHTML=type==='video'?`<video src="${E(url)}" controls autoplay playsinline></video>`:`<img src="${E(url)}" alt="Chain contribution">`;
+ viewer.hidden=false;document.body.style.overflow='hidden';
+}
+function closeChainMedia(){
+ const viewer=M('exChainMediaViewer'),stage=M('exChainMediaViewerStage');if(!viewer||!stage)return;
+ stage.querySelector('video')?.pause();stage.innerHTML='';viewer.hidden=true;document.body.style.overflow='';
+}
 function init(){
+ M('exChainMediaViewerClose')?.addEventListener('click',closeChainMedia);
+ M('exChainMediaViewer')?.addEventListener('click',e=>{if(e.target===M('exChainMediaViewer')||e.target===M('exChainMediaViewerStage'))closeChainMedia()});
+
  M('exChainsRefresh')?.addEventListener('click',load);
  M('exStartChainBtn')?.addEventListener('click',()=>{backToInfo();M('exStartChainModal').hidden=false});
  M('exChainClose')?.addEventListener('click',()=>M('exChainModal').hidden=true);
@@ -3473,7 +3493,10 @@ function init(){
 }
 document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
 })();
-</script></body></html>
+</script><div id="exChainMediaViewer" class="exChainMediaViewer" hidden>
+  <button type="button" id="exChainMediaViewerClose" class="exChainMediaViewerClose">×</button>
+  <div id="exChainMediaViewerStage" class="exChainMediaViewerStage"></div>
+</div></body></html>
 <style id="exofProfileBackgroundV184">
 #profile #profileShell.profileShell{
   background:transparent!important;
