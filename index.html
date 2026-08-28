@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.17.7 — Voice Composer Fix</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.18.0 — DM Inbox Upgrade</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -701,6 +701,16 @@ header #messagesBtn.exofDmButton:active{
 .dmComposer.voicePreviewing #dmVoicePreview{display:flex!important}
 .dmComposer.voicePreviewing #dmSendBtn{display:grid!important;flex:0 0 44px!important}
 .dmVoiceStatus.recording{bottom:58px!important}
+</style><style id="exofDmInboxUpgradeV1180">
+#dmUserSearchBtn{display:none!important}.dmSearchActionRow{display:block!important}
+.dmRecentHead{display:flex;justify-content:space-between;align-items:center;padding:7px 3px;color:#8e9991;font-size:11px;font-weight:900}.dmRecentClear{border:0;background:transparent;color:var(--accent);font-size:11px}
+.dmRecentX{margin-left:auto;border:0!important;background:transparent!important;color:#8e9991!important;font-size:19px!important;width:30px!important;padding:0!important}
+.dmThread{position:relative;overflow:hidden;touch-action:pan-y}.dmThreadContent{position:relative;z-index:2;background:#050806;display:flex;align-items:center;gap:10px;width:100%;transition:transform .2s ease;box-sizing:border-box}
+.dmSwipeActions{position:absolute;inset:0 0 0 auto;z-index:1;display:flex;align-items:stretch;justify-content:flex-end}
+.dmSwipeActions button{border:0;color:#fff;font-size:10px;font-weight:900;padding:0 10px;min-width:62px}.dmSwipeArchive{background:#27332b}.dmSwipeMute{background:#384138}.dmSwipeDelete{background:#762323}.dmSwipeBlock{background:#3e1717}
+.dmThread.swiped .dmThreadContent{transform:translateX(-248px)}
+.dmInboxRecent{padding:6px 2px 2px;color:#758079;font-size:10px;font-weight:900}
+.dmThread.muted .dmPreview:after{content:" · MUTED";color:#768078;font-size:9px}
 </style></head>
 <body><div id="exofBuzzToast"></div>
 <div id="authGate">
@@ -2951,24 +2961,49 @@ async function dmRefreshHeaderBadge(){
  if(!b){const host=document.getElementById('messagesBtn');if(host){const x=document.createElement('span');x.id='exofDmHeaderBadge';x.className='dmUnread';x.style.cssText='position:absolute;right:-3px;top:-3px;min-width:21px;height:21px;font-size:10px';host.style.position='relative';host.appendChild(x)}}
  const el=document.getElementById('exofDmHeaderBadge');if(el){el.textContent=n;el.style.display=n?'flex':'none'}
 }
-async function dmLoadList(tab='primary'){
+function dmLocalSet(key){try{return new Set(JSON.parse(localStorage.getItem(key)||'[]'))}catch(_){return new Set()}}
+function dmLocalSave(key,set){localStorage.setItem(key,JSON.stringify([...set]))}
+function dmRecentKey(){return 'exof_dm_recent_'+(dmCurrentUser?.id||'guest')}
+function dmGetRecents(){try{return JSON.parse(localStorage.getItem(dmRecentKey())||'[]')}catch(_){return []}}
+function dmAddRecent(pr){if(!pr?.id)return;let a=dmGetRecents().filter(x=>x.id!==pr.id);a.unshift({id:pr.id,username:pr.username||'',display_name:pr.display_name||'',avatar_url:pr.avatar_url||''});localStorage.setItem(dmRecentKey(),JSON.stringify(a.slice(0,10)))}
+function dmRemoveRecent(id){localStorage.setItem(dmRecentKey(),JSON.stringify(dmGetRecents().filter(x=>x.id!==id)))}
+function dmThreadMarkup(pr,m,unread,tab,uid){
+ const media=m?.media_type==='voice'?'🎙 Voice message':m?.media_url?'▧ Photo / video':dmEsc(m?.body||'Message');
+ const time=m?.created_at?new Date(m.created_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'';
+ return `<div class="dmSwipeActions"><button class="dmSwipeArchive">ARCHIVE</button><button class="dmSwipeMute">MUTE</button><button class="dmSwipeDelete">DELETE</button><button class="dmSwipeBlock">BLOCK</button></div><div class="dmThreadContent">${pr.avatar_url?`<img class="dmAvatar" src="${pr.avatar_url}">`:'<div class="dmAvatar"></div>'}<div class="dmThreadMain"><div class="dmThreadTop"><b>${dmEsc(pr.display_name||pr.username)}</b><span class="dmHandle">@${dmEsc(pr.username)}</span></div><div class="dmPreview">${media}</div></div><span class="dmTime">${time}</span>${unread?`<span class="dmUnread">${unread}</span>`:''}${tab==='requests'?'<div class="dmRequestActions"><button class="accept">Accept</button><button class="delete">Delete</button></div>':''}</div>`;
+}
+function dmWireSwipe(row,uid,tab){
+ let x0=0,y0=0,dx=0;
+ row.addEventListener('touchstart',e=>{x0=e.touches[0].clientX;y0=e.touches[0].clientY;dx=0},{passive:true});
+ row.addEventListener('touchmove',e=>{dx=e.touches[0].clientX-x0},{passive:true});
+ row.addEventListener('touchend',()=>{if(Math.abs(dx)>55)row.classList.toggle('swiped',dx<0);});
+ row.querySelector('.dmThreadContent')?.addEventListener('click',()=>{if(row.classList.contains('swiped')){row.classList.remove('swiped');return}dmOpen(uid)});
+ const archived=dmLocalSet('exof_dm_archived_'+dmCurrentUser.id),muted=dmLocalSet('exof_dm_muted_'+dmCurrentUser.id),hidden=dmLocalSet('exof_dm_hidden_'+dmCurrentUser.id),blocked=dmLocalSet('exof_dm_blocked_'+dmCurrentUser.id);
+ if(muted.has(uid))row.classList.add('muted');
+ row.querySelector('.dmSwipeArchive')?.addEventListener('click',e=>{e.stopPropagation();archived.add(uid);dmLocalSave('exof_dm_archived_'+dmCurrentUser.id,archived);row.remove()});
+ row.querySelector('.dmSwipeMute')?.addEventListener('click',e=>{e.stopPropagation();if(muted.has(uid))muted.delete(uid);else muted.add(uid);dmLocalSave('exof_dm_muted_'+dmCurrentUser.id,muted);row.classList.toggle('muted');row.classList.remove('swiped')});
+ row.querySelector('.dmSwipeDelete')?.addEventListener('click',e=>{e.stopPropagation();if(!confirm('Remove this conversation from your inbox?'))return;hidden.add(uid);dmLocalSave('exof_dm_hidden_'+dmCurrentUser.id,hidden);row.remove()});
+ row.querySelector('.dmSwipeBlock')?.addEventListener('click',async e=>{e.stopPropagation();if(!confirm('Block this user from your EXOF DM inbox?'))return;blocked.add(uid);hidden.add(uid);dmLocalSave('exof_dm_blocked_'+dmCurrentUser.id,blocked);dmLocalSave('exof_dm_hidden_'+dmCurrentUser.id,hidden);try{await dmSb.from('user_blocks').insert({blocker_id:dmCurrentUser.id,blocked_id:uid})}catch(_){}row.remove()});
+}
+async function dmLoadList(tab='primary',filter=''){
  await dmGetCurrentUser();
  const box=document.getElementById('dmConversationList');if(!box||!dmCurrentUser)return;
  box.innerHTML='<div class="meta">Loading…</div>';
  const {data,error}=await dmSb.from('direct_messages').select('id,sender_id,recipient_id,body,media_url,media_type,created_at,read,is_request').or(`sender_id.eq.${dmCurrentUser.id},recipient_id.eq.${dmCurrentUser.id}`).order('created_at',{ascending:false}).limit(250);
  if(error){box.innerHTML='<div class="emptyState">'+dmEsc(error.message)+'</div>';return}
+ const hidden=dmLocalSet('exof_dm_hidden_'+dmCurrentUser.id),archived=dmLocalSet('exof_dm_archived_'+dmCurrentUser.id),blocked=dmLocalSet('exof_dm_blocked_'+dmCurrentUser.id);
  const latest=new Map();
- for(const m of data||[]){const other=m.sender_id===dmCurrentUser.id?m.recipient_id:m.sender_id;const request=!!m.is_request;if((tab==='requests')!==request)continue;if(!latest.has(other))latest.set(other,m)}
- if(!latest.size){box.innerHTML='<div class="emptyState">'+(tab==='requests'?'No message requests.':'No messages yet.')+'</div>';return}
+ for(const m of data||[]){const other=m.sender_id===dmCurrentUser.id?m.recipient_id:m.sender_id;const request=!!m.is_request;if((tab==='requests')!==request||hidden.has(other)||archived.has(other)||blocked.has(other))continue;if(!latest.has(other))latest.set(other,m)}
+ const rows=[];
+ for(const [uid,m] of latest){const pr=await dmProfile(uid);if(!pr)continue;const q=filter.trim().replace(/^@/,'').toLowerCase();if(q&&!(`${pr.username||''} ${pr.display_name||''}`.toLowerCase().includes(q)))continue;const unread=(data||[]).filter(x=>x.sender_id===uid&&x.recipient_id===dmCurrentUser.id&&!x.read&&!!x.is_request===(tab==='requests')).length;rows.push([uid,m,pr,unread])}
+ if(!rows.length){box.innerHTML='<div class="emptyState">'+(filter?'No matching conversations.':tab==='requests'?'No message requests.':'No messages yet.')+'</div>';return}
  box.innerHTML='';
- for(const [uid,m] of latest){const pr=await dmProfile(uid);if(!pr)continue;const unread=(data||[]).filter(x=>x.sender_id===uid&&x.recipient_id===dmCurrentUser.id&&!x.read&&!!x.is_request===(tab==='requests')).length;
- const row=document.createElement('div');row.className='dmThread';row.innerHTML=`${pr.avatar_url?`<img class="dmAvatar" src="${pr.avatar_url}">`:'<div class="dmAvatar"></div>'}<div class="dmThreadMain"><div class="dmThreadTop"><b>${dmEsc(pr.display_name||pr.username)}</b><span class="dmHandle">@${dmEsc(pr.username)}</span></div><div class="dmPreview">${m.media_type==='voice'?'🎙 Voice message':m.media_url?'▧ Photo / video':dmEsc(m.body||'Message')}</div></div><span class="dmTime">${new Date(m.created_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</span>${unread?`<span class="dmUnread">${unread}</span>`:''}${tab==='requests'?'<div class="dmRequestActions"><button class="accept">Accept</button><button class="delete">Delete</button></div>':''}`;
- if(tab==='requests'){row.querySelector('.accept').onclick=async e=>{e.stopPropagation();await dmSb.from('direct_messages').update({is_request:false}).or(`and(sender_id.eq.${uid},recipient_id.eq.${dmCurrentUser.id}),and(sender_id.eq.${dmCurrentUser.id},recipient_id.eq.${uid})`);dmLoadList('requests')};row.querySelector('.delete').onclick=async e=>{e.stopPropagation();await dmSb.from('direct_messages').delete().eq('sender_id',uid).eq('recipient_id',dmCurrentUser.id).eq('is_request',true);dmLoadList('requests')}}
- else row.onclick=()=>dmOpen(uid);
- box.appendChild(row)}
+ for(const [uid,m,pr,unread] of rows){const row=document.createElement('div');row.className='dmThread';row.innerHTML=dmThreadMarkup(pr,m,unread,tab,uid);
+  if(tab==='requests'){row.querySelector('.accept').onclick=async e=>{e.stopPropagation();await dmSb.from('direct_messages').update({is_request:false}).or(`and(sender_id.eq.${uid},recipient_id.eq.${dmCurrentUser.id}),and(sender_id.eq.${dmCurrentUser.id},recipient_id.eq.${uid})`);dmLoadList('requests')};row.querySelector('.delete').onclick=async e=>{e.stopPropagation();await dmSb.from('direct_messages').delete().eq('sender_id',uid).eq('recipient_id',dmCurrentUser.id).eq('is_request',true);dmLoadList('requests')}}
+  dmWireSwipe(row,uid,tab);box.appendChild(row)}
 }
 async function dmOpen(uid){
- await dmGetCurrentUser();dmActiveUser=uid;const pr=await dmProfile(uid);const h=document.getElementById('dmChatPerson');h.innerHTML=`${pr?.avatar_url?`<img src="${pr.avatar_url}">`:''}<div><b>${dmEsc(pr?.display_name||pr?.username||'User')}</b><div class="dmHandle">@${dmEsc(pr?.username||'')}</div></div>`;await dmSb.from('direct_messages').update({read:true}).eq('sender_id',uid).eq('recipient_id',dmCurrentUser.id);await dmLoadMessages();dmShowPage('dmChat');dmRefreshHeaderBadge()}
+ await dmGetCurrentUser();dmActiveUser=uid;const pr=await dmProfile(uid);dmAddRecent(pr);const h=document.getElementById('dmChatPerson');h.innerHTML=`${pr?.avatar_url?`<img src="${pr.avatar_url}">`:''}<div><b>${dmEsc(pr?.display_name||pr?.username||'User')}</b><div class="dmHandle">@${dmEsc(pr?.username||'')}</div></div>`;await dmSb.from('direct_messages').update({read:true}).eq('sender_id',uid).eq('recipient_id',dmCurrentUser.id);await dmLoadMessages();dmShowPage('dmChat');dmRefreshHeaderBadge()}
 async function dmLoadMessages(){const box=document.getElementById('dmMessages');if(!box||!dmActiveUser)return;const {data,error}=await dmSb.from('direct_messages').select('*').or(`and(sender_id.eq.${dmCurrentUser.id},recipient_id.eq.${dmActiveUser}),and(sender_id.eq.${dmActiveUser},recipient_id.eq.${dmCurrentUser.id})`).eq('is_request',false).order('created_at');if(error){box.innerHTML='<div class="emptyState">'+dmEsc(error.message)+'</div>';return}box.innerHTML='';for(const m of data||[]){const b=document.createElement('div');b.className='dmBubble '+(m.sender_id===dmCurrentUser.id?'mine':'');if(m.media_type==='image')b.innerHTML=`<img src="${m.media_url}">`;else if(m.media_type==='video')b.innerHTML=`<video controls src="${m.media_url}"></video>`;else if(m.media_type==='voice')b.innerHTML=`<audio controls src="${m.media_url}"></audio>`;else b.textContent=m.body||'';const meta=document.createElement('div');meta.className='dmMsgMeta';meta.textContent=new Date(m.created_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});b.appendChild(meta);box.appendChild(b)}box.scrollTop=box.scrollHeight}
 async function dmIsFollowing(uid){const {data}=await dmSb.from('follows').select('follower_id').eq('follower_id',dmCurrentUser.id).eq('following_id',uid).maybeSingle();return !!data}
 async function dmSend(body='',file=null,type='text'){
@@ -2981,7 +3016,7 @@ document.getElementById('dmComposeBtn')?.addEventListener('click',()=>{
  const page=document.getElementById('dmNew');
  if(page)page.classList.add('active');
  const q=document.getElementById('dmUserSearch');
- if(q){q.value='';setTimeout(()=>q.focus(),80)}
+ if(q){q.value='';dmRenderRecents();setTimeout(()=>q.focus(),80)}
 });
 document.getElementById('dmNewBack')?.addEventListener('click',()=>{
  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -2990,52 +3025,24 @@ document.getElementById('dmNewBack')?.addEventListener('click',()=>{
 });
 document.getElementById('dmChatBack')?.addEventListener('click',()=>{dmShowPage('messages');dmLoadList('primary')});
 document.querySelectorAll('.dmTabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.dmTabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');dmLoadList(b.dataset.dmTab)});
-async function dmRunUserSearch(){
- await dmGetCurrentUser();
- const input=document.getElementById('dmUserSearch'),box=document.getElementById('dmUserResults'),btn=document.getElementById('dmUserSearchBtn');
- const q=(input?.value||'').trim().replace(/^@/,'');
- if(!q){box.innerHTML='<div class="dmSearchEmpty">Type a name or @username.</div>';return}
- btn.disabled=true;btn.textContent='SEARCHING…';box.innerHTML='<div class="dmSearchEmpty">Searching…</div>';
- const safe=q.replace(/[%_,]/g,'');
- const controller=new AbortController();
- const timer=setTimeout(()=>controller.abort(),8000);
- try{
-   // Direct REST request to the same Supabase Data API confirmed as HTTP 200 in Network.
-   // This bypasses the hanging query-builder promise in the DM add-on.
-   const client=window.exofSupabase;
-   if(!client)throw new Error('EXOF Supabase client is not available.');
-   const base=client.supabaseUrl || client.rest?.url?.replace(/\/rest\/v1\/?$/,'');
-   const key=client.supabaseKey;
-   if(!base||!key)throw new Error('Could not read EXOF Supabase client configuration.');
-   const endpoint=base+'/rest/v1/profiles?select=id,username,display_name,avatar_url&or=(username.ilike.*'+encodeURIComponent(safe)+'*,display_name.ilike.*'+encodeURIComponent(safe)+'*)&order=username.asc&limit=20';
-   const res=await fetch(endpoint,{
-     method:'GET',
-     headers:{'apikey':key,'Accept':'application/json'},
-     signal:controller.signal
-   });
-   const raw=await res.text();
-   if(!res.ok)throw new Error('Supabase '+res.status+': '+raw.slice(0,300));
-   let data=[];try{data=JSON.parse(raw)}catch(_){throw new Error('Invalid profiles response')}
-   let myUserId=null;
-   try{
-     const {data:authData}=await client.auth.getUser();
-     myUserId=authData?.user?.id||null;
-   }catch(_){}
-   const users=(data||[]).filter(u=>!myUserId||u.id!==myUserId);
-   if(!users.length){box.innerHTML='<div class="dmSearchEmpty">No users found for <b>@'+dmEsc(q)+'</b>.</div>';return}
-   box.innerHTML='';
-   for(const pr of users){
-     const r=document.createElement('button');r.type='button';r.className='dmThread dmUserResult';
-     r.innerHTML=`${pr.avatar_url?`<img class="dmAvatar" src="${pr.avatar_url}" alt="">`:'<div class="dmAvatar"></div>'}<div class="dmThreadMain"><div class="dmThreadTop"><b>${dmEsc(pr.display_name||pr.username)}</b></div><div class="dmHandle">@${dmEsc(pr.username)}</div></div><span class="dmResultArrow">›</span>`;
-     r.onclick=()=>dmOpen(pr.id);box.appendChild(r);
-   }
- }catch(err){
-   const msg=err?.name==='AbortError'?'Search timed out after 8 seconds.':(err?.message||String(err));
-   box.innerHTML='<div class="dmSearchError"><b>SEARCH ERROR</b><small>'+dmEsc(msg)+'</small></div>';
- }finally{clearTimeout(timer);btn.disabled=false;btn.textContent='SEARCH'}
+function dmRenderRecents(){
+ const box=document.getElementById('dmUserResults');if(!box)return;const rec=dmGetRecents();
+ if(!rec.length){box.innerHTML='<div class="dmSearchEmpty">Start typing to find people on EXOF.</div>';return}
+ box.innerHTML='<div class="dmRecentHead"><span>RECENT</span><button class="dmRecentClear">Clear all</button></div>';
+ box.querySelector('.dmRecentClear').onclick=()=>{localStorage.removeItem(dmRecentKey());dmRenderRecents()};
+ for(const pr of rec){const r=document.createElement('div');r.className='dmThread dmUserResult';r.innerHTML=`<div class="dmThreadContent">${pr.avatar_url?`<img class="dmAvatar" src="${pr.avatar_url}">`:'<div class="dmAvatar"></div>'}<div class="dmThreadMain"><div class="dmThreadTop"><b>${dmEsc(pr.display_name||pr.username)}</b></div><div class="dmHandle">@${dmEsc(pr.username)}</div></div><button class="dmRecentX">×</button></div>`;r.querySelector('.dmThreadContent').onclick=e=>{if(e.target.closest('.dmRecentX'))return;dmOpen(pr.id)};r.querySelector('.dmRecentX').onclick=e=>{e.stopPropagation();dmRemoveRecent(pr.id);r.remove()};box.appendChild(r)}
 }
-document.getElementById('dmUserSearchBtn')?.addEventListener('click',dmRunUserSearch);
-document.getElementById('dmUserSearch')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();dmRunUserSearch()}});
+let dmUserSearchTimer=null,dmUserSearchSeq=0;
+async function dmRunUserSearch(){
+ await dmGetCurrentUser();const input=document.getElementById('dmUserSearch'),box=document.getElementById('dmUserResults');const q=(input?.value||'').trim().replace(/^@/,'');
+ if(!q){dmRenderRecents();return}
+ const seq=++dmUserSearchSeq;box.innerHTML='<div class="dmSearchEmpty">Searching…</div>';const safe=q.replace(/[%_,]/g,'');
+ try{const client=window.exofSupabase,base=client.supabaseUrl||client.rest?.url?.replace(/\/rest\/v1\/?$/,''),key=client.supabaseKey;const endpoint=base+'/rest/v1/profiles?select=id,username,display_name,avatar_url&or=(username.ilike.*'+encodeURIComponent(safe)+'*,display_name.ilike.*'+encodeURIComponent(safe)+'*)&order=username.asc&limit=20';const res=await fetch(endpoint,{headers:{apikey:key,Accept:'application/json'}});if(!res.ok)throw new Error('Supabase '+res.status);const data=await res.json();if(seq!==dmUserSearchSeq)return;const users=(data||[]).filter(u=>u.id!==dmCurrentUser.id);if(!users.length){box.innerHTML='<div class="dmSearchEmpty">No users found.</div>';return}box.innerHTML='';for(const pr of users){const r=document.createElement('button');r.type='button';r.className='dmThread dmUserResult';r.innerHTML=`${pr.avatar_url?`<img class="dmAvatar" src="${pr.avatar_url}">`:'<div class="dmAvatar"></div>'}<div class="dmThreadMain"><div class="dmThreadTop"><b>${dmEsc(pr.display_name||pr.username)}</b></div><div class="dmHandle">@${dmEsc(pr.username)}</div></div><span class="dmResultArrow">›</span>`;r.onclick=()=>{dmAddRecent(pr);dmOpen(pr.id)};box.appendChild(r)}}catch(err){box.innerHTML='<div class="dmSearchError"><b>SEARCH ERROR</b><small>'+dmEsc(err?.message||String(err))+'</small></div>'}
+}
+document.getElementById('dmUserSearch')?.addEventListener('input',()=>{clearTimeout(dmUserSearchTimer);dmUserSearchTimer=setTimeout(dmRunUserSearch,180)});
+document.getElementById('dmUserSearch')?.addEventListener('focus',()=>{if(!document.getElementById('dmUserSearch').value.trim())dmRenderRecents()});
+document.getElementById('dmSearch')?.addEventListener('focus',()=>{if(!document.getElementById('dmSearch').value.trim())dmLoadList(document.querySelector('.dmTabs button.on')?.dataset.dmTab||'primary')});
+document.getElementById('dmSearch')?.addEventListener('input',e=>dmLoadList(document.querySelector('.dmTabs button.on')?.dataset.dmTab||'primary',e.target.value));
 document.getElementById('dmSendBtn')?.addEventListener('click',async()=>{
  const btn=document.getElementById('dmSendBtn');
  if(dmVoiceBlob){
@@ -3084,7 +3091,7 @@ async function dmBuzz(){
 document.getElementById('dmBuzzBtn')?.addEventListener('click',dmBuzz);
 document.getElementById('messagesBtn')?.addEventListener('click',()=>setTimeout(()=>dmLoadList('primary'),50));
 setInterval(()=>{if(document.getElementById('dmChat')?.classList.contains('active'))dmLoadMessages();dmRefreshHeaderBadge()},5000);
-setTimeout(dmRefreshHeaderBadge,1200);
+setTimeout(dmRefreshHeaderBadge,1200);setTimeout(()=>dmLoadList('primary'),1500);
 </script></body></html>
 <style id="exofProfileBackgroundV184">
 #profile #profileShell.profileShell{
