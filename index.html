@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.18.0 — DM Inbox Upgrade</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.18.1 — DM Hold Menu</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -711,7 +711,35 @@ header #messagesBtn.exofDmButton:active{
 .dmThread.swiped .dmThreadContent{transform:translateX(-248px)}
 .dmInboxRecent{padding:6px 2px 2px;color:#758079;font-size:10px;font-weight:900}
 .dmThread.muted .dmPreview:after{content:" · MUTED";color:#768078;font-size:9px}
-</style></head>
+</style>
+<style id="exofDmHoldMenuV1181">
+.dmThread{position:relative!important;overflow:visible!important;touch-action:pan-y!important}
+.dmThreadContent{transform:none!important;transition:none!important;background:#050806!important}
+.dmSwipeActions{display:none!important}
+.dmThread.swiped .dmThreadContent{transform:none!important}
+
+#dmHoldMenuBackdrop{
+ position:fixed;inset:0;z-index:99980;background:rgba(0,0,0,.38);
+ display:flex;align-items:flex-end;justify-content:center;padding:14px;
+}
+#dmHoldMenuBackdrop[hidden]{display:none!important}
+#dmHoldMenu{
+ width:min(430px,calc(100vw - 24px));background:#0b0f0c;
+ border:1px solid #29372d;border-radius:20px;padding:8px;
+ box-shadow:0 18px 60px rgba(0,0,0,.6);margin-bottom:max(72px,env(safe-area-inset-bottom));
+}
+.dmHoldPerson{display:flex;align-items:center;gap:10px;padding:8px 10px 12px;border-bottom:1px solid #1c271f}
+.dmHoldPerson img,.dmHoldPerson .dmAvatar{width:38px;height:38px;border-radius:50%;object-fit:cover}
+.dmHoldPersonText{min-width:0}.dmHoldPersonText b{display:block;color:#fff;font-size:14px}
+.dmHoldPersonText span{display:block;color:#7f8c83;font-size:11px;margin-top:1px}
+.dmHoldActions{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:8px 0 2px}
+.dmHoldActions button{height:45px;border-radius:13px;border:1px solid #27352c;background:#111713;color:#fff;font-weight:900;font-size:12px}
+.dmHoldActions button:active{transform:scale(.98)}
+.dmHoldActions .danger{border-color:#572323;color:#ff7b7b;background:#1a0d0d}
+.dmHoldCancel{width:100%;height:43px;margin-top:7px;border-radius:13px;border:0;background:#182019;color:#aeb8b1;font-weight:900}
+body.dmHoldOpen{overflow:hidden}
+</style>
+</head>
 <body><div id="exofBuzzToast"></div>
 <div id="authGate">
   <div class="authBox">
@@ -2970,21 +2998,80 @@ function dmRemoveRecent(id){localStorage.setItem(dmRecentKey(),JSON.stringify(dm
 function dmThreadMarkup(pr,m,unread,tab,uid){
  const media=m?.media_type==='voice'?'🎙 Voice message':m?.media_url?'▧ Photo / video':dmEsc(m?.body||'Message');
  const time=m?.created_at?new Date(m.created_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'';
- return `<div class="dmSwipeActions"><button class="dmSwipeArchive">ARCHIVE</button><button class="dmSwipeMute">MUTE</button><button class="dmSwipeDelete">DELETE</button><button class="dmSwipeBlock">BLOCK</button></div><div class="dmThreadContent">${pr.avatar_url?`<img class="dmAvatar" src="${pr.avatar_url}">`:'<div class="dmAvatar"></div>'}<div class="dmThreadMain"><div class="dmThreadTop"><b>${dmEsc(pr.display_name||pr.username)}</b><span class="dmHandle">@${dmEsc(pr.username)}</span></div><div class="dmPreview">${media}</div></div><span class="dmTime">${time}</span>${unread?`<span class="dmUnread">${unread}</span>`:''}${tab==='requests'?'<div class="dmRequestActions"><button class="accept">Accept</button><button class="delete">Delete</button></div>':''}</div>`;
+ return `<div class="dmThreadContent">${pr.avatar_url?`<img class="dmAvatar" src="${pr.avatar_url}">`:'<div class="dmAvatar"></div>'}<div class="dmThreadMain"><div class="dmThreadTop"><b>${dmEsc(pr.display_name||pr.username)}</b><span class="dmHandle">@${dmEsc(pr.username)}</span></div><div class="dmPreview">${media}</div></div><span class="dmTime">${time}</span>${unread?`<span class="dmUnread">${unread}</span>`:''}${tab==='requests'?'<div class="dmRequestActions"><button class="accept">Accept</button><button class="delete">Delete</button></div>':''}</div>`;
+}
+let dmHoldTarget=null,dmHoldTimer=null,dmHoldStartX=0,dmHoldStartY=0;
+function dmCloseHoldMenu(){
+ const bd=document.getElementById('dmHoldMenuBackdrop');
+ if(bd)bd.hidden=true;
+ document.body.classList.remove('dmHoldOpen');
+ dmHoldTarget=null;
+}
+async function dmOpenHoldMenu(uid,row){
+ const pr=await dmProfile(uid);if(!pr)return;
+ dmHoldTarget={uid,row,pr};
+ const muted=dmLocalSet('exof_dm_muted_'+dmCurrentUser.id);
+ const person=document.getElementById('dmHoldPerson');
+ person.innerHTML=`${pr.avatar_url?`<img src="${pr.avatar_url}">`:'<div class="dmAvatar"></div>'}<div class="dmHoldPersonText"><b>${dmEsc(pr.display_name||pr.username)}</b><span>@${dmEsc(pr.username||'')}</span></div>`;
+ document.getElementById('dmHoldMute').textContent=muted.has(uid)?'UNMUTE':'MUTE';
+ const bd=document.getElementById('dmHoldMenuBackdrop');bd.hidden=false;document.body.classList.add('dmHoldOpen');
+ if(navigator.vibrate)try{navigator.vibrate(18)}catch(_){}
 }
 function dmWireSwipe(row,uid,tab){
- let x0=0,y0=0,dx=0;
- row.addEventListener('touchstart',e=>{x0=e.touches[0].clientX;y0=e.touches[0].clientY;dx=0},{passive:true});
- row.addEventListener('touchmove',e=>{dx=e.touches[0].clientX-x0},{passive:true});
- row.addEventListener('touchend',()=>{if(Math.abs(dx)>55)row.classList.toggle('swiped',dx<0);});
- row.querySelector('.dmThreadContent')?.addEventListener('click',()=>{if(row.classList.contains('swiped')){row.classList.remove('swiped');return}dmOpen(uid)});
- const archived=dmLocalSet('exof_dm_archived_'+dmCurrentUser.id),muted=dmLocalSet('exof_dm_muted_'+dmCurrentUser.id),hidden=dmLocalSet('exof_dm_hidden_'+dmCurrentUser.id),blocked=dmLocalSet('exof_dm_blocked_'+dmCurrentUser.id);
+ const content=row.querySelector('.dmThreadContent')||row;
+ let longPressed=false;
+ const start=(x,y)=>{
+   longPressed=false;dmHoldStartX=x;dmHoldStartY=y;clearTimeout(dmHoldTimer);
+   dmHoldTimer=setTimeout(()=>{longPressed=true;dmOpenHoldMenu(uid,row)},520);
+ };
+ const move=(x,y)=>{if(Math.abs(x-dmHoldStartX)>12||Math.abs(y-dmHoldStartY)>12)clearTimeout(dmHoldTimer)};
+ const end=()=>clearTimeout(dmHoldTimer);
+ row.addEventListener('touchstart',e=>start(e.touches[0].clientX,e.touches[0].clientY),{passive:true});
+ row.addEventListener('touchmove',e=>move(e.touches[0].clientX,e.touches[0].clientY),{passive:true});
+ row.addEventListener('touchend',end,{passive:true});
+ row.addEventListener('touchcancel',end,{passive:true});
+ row.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse')start(e.clientX,e.clientY)});
+ row.addEventListener('pointermove',e=>{if(e.pointerType==='mouse')move(e.clientX,e.clientY)});
+ row.addEventListener('pointerup',e=>{if(e.pointerType==='mouse')end()});
+ row.addEventListener('contextmenu',e=>{e.preventDefault();clearTimeout(dmHoldTimer);dmOpenHoldMenu(uid,row)});
+ row.querySelector('.dmThreadContent')?.addEventListener('click',e=>{
+   if(longPressed){e.preventDefault();e.stopPropagation();longPressed=false;return}
+   dmOpen(uid)
+ });
+ const muted=dmLocalSet('exof_dm_muted_'+dmCurrentUser.id);
  if(muted.has(uid))row.classList.add('muted');
- row.querySelector('.dmSwipeArchive')?.addEventListener('click',e=>{e.stopPropagation();archived.add(uid);dmLocalSave('exof_dm_archived_'+dmCurrentUser.id,archived);row.remove()});
- row.querySelector('.dmSwipeMute')?.addEventListener('click',e=>{e.stopPropagation();if(muted.has(uid))muted.delete(uid);else muted.add(uid);dmLocalSave('exof_dm_muted_'+dmCurrentUser.id,muted);row.classList.toggle('muted');row.classList.remove('swiped')});
- row.querySelector('.dmSwipeDelete')?.addEventListener('click',e=>{e.stopPropagation();if(!confirm('Remove this conversation from your inbox?'))return;hidden.add(uid);dmLocalSave('exof_dm_hidden_'+dmCurrentUser.id,hidden);row.remove()});
- row.querySelector('.dmSwipeBlock')?.addEventListener('click',async e=>{e.stopPropagation();if(!confirm('Block this user from your EXOF DM inbox?'))return;blocked.add(uid);hidden.add(uid);dmLocalSave('exof_dm_blocked_'+dmCurrentUser.id,blocked);dmLocalSave('exof_dm_hidden_'+dmCurrentUser.id,hidden);try{await dmSb.from('user_blocks').insert({blocker_id:dmCurrentUser.id,blocked_id:uid})}catch(_){}row.remove()});
 }
+function dmInitHoldMenu(){
+ const bd=document.getElementById('dmHoldMenuBackdrop'),menu=document.getElementById('dmHoldMenu');
+ if(!bd||bd.dataset.ready)return;bd.dataset.ready='1';
+ bd.addEventListener('click',e=>{if(e.target===bd)dmCloseHoldMenu()});
+ menu?.addEventListener('click',e=>e.stopPropagation());
+ document.getElementById('dmHoldCancel')?.addEventListener('click',dmCloseHoldMenu);
+ document.getElementById('dmHoldArchive')?.addEventListener('click',()=>{
+   if(!dmHoldTarget)return;const {uid,row}=dmHoldTarget;
+   const set=dmLocalSet('exof_dm_archived_'+dmCurrentUser.id);set.add(uid);dmLocalSave('exof_dm_archived_'+dmCurrentUser.id,set);row.remove();dmCloseHoldMenu()
+ });
+ document.getElementById('dmHoldMute')?.addEventListener('click',()=>{
+   if(!dmHoldTarget)return;const {uid,row}=dmHoldTarget;
+   const set=dmLocalSet('exof_dm_muted_'+dmCurrentUser.id);
+   if(set.has(uid))set.delete(uid);else set.add(uid);
+   dmLocalSave('exof_dm_muted_'+dmCurrentUser.id,set);row.classList.toggle('muted',set.has(uid));dmCloseHoldMenu()
+ });
+ document.getElementById('dmHoldDelete')?.addEventListener('click',()=>{
+   if(!dmHoldTarget)return;const {uid,row}=dmHoldTarget;
+   if(!confirm('Remove this conversation from your inbox?'))return;
+   const set=dmLocalSet('exof_dm_hidden_'+dmCurrentUser.id);set.add(uid);dmLocalSave('exof_dm_hidden_'+dmCurrentUser.id,set);row.remove();dmCloseHoldMenu()
+ });
+ document.getElementById('dmHoldBlock')?.addEventListener('click',async()=>{
+   if(!dmHoldTarget)return;const {uid,row}=dmHoldTarget;
+   if(!confirm('Block this user from your EXOF DM inbox?'))return;
+   const blocked=dmLocalSet('exof_dm_blocked_'+dmCurrentUser.id),hidden=dmLocalSet('exof_dm_hidden_'+dmCurrentUser.id);
+   blocked.add(uid);hidden.add(uid);dmLocalSave('exof_dm_blocked_'+dmCurrentUser.id,blocked);dmLocalSave('exof_dm_hidden_'+dmCurrentUser.id,hidden);
+   try{await dmSb.from('user_blocks').insert({blocker_id:dmCurrentUser.id,blocked_id:uid})}catch(_){}
+   row.remove();dmCloseHoldMenu()
+ });
+}
+setTimeout(dmInitHoldMenu,0);
 async function dmLoadList(tab='primary',filter=''){
  await dmGetCurrentUser();
  const box=document.getElementById('dmConversationList');if(!box||!dmCurrentUser)return;
@@ -3092,7 +3179,20 @@ document.getElementById('dmBuzzBtn')?.addEventListener('click',dmBuzz);
 document.getElementById('messagesBtn')?.addEventListener('click',()=>setTimeout(()=>dmLoadList('primary'),50));
 setInterval(()=>{if(document.getElementById('dmChat')?.classList.contains('active'))dmLoadMessages();dmRefreshHeaderBadge()},5000);
 setTimeout(dmRefreshHeaderBadge,1200);setTimeout(()=>dmLoadList('primary'),1500);
-</script></body></html>
+</script>
+<div id="dmHoldMenuBackdrop" hidden>
+  <div id="dmHoldMenu" role="dialog" aria-modal="true">
+    <div id="dmHoldPerson" class="dmHoldPerson"></div>
+    <div class="dmHoldActions">
+      <button id="dmHoldArchive" type="button">ARCHIVE</button>
+      <button id="dmHoldMute" type="button">MUTE</button>
+      <button id="dmHoldDelete" class="danger" type="button">DELETE</button>
+      <button id="dmHoldBlock" class="danger" type="button">BLOCK</button>
+    </div>
+    <button id="dmHoldCancel" class="dmHoldCancel" type="button">CANCEL</button>
+  </div>
+</div>
+</body></html>
 <style id="exofProfileBackgroundV184">
 #profile #profileShell.profileShell{
   background:transparent!important;
