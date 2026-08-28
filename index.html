@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.18.2 — Profile Music Autoplay</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.18.3 — Profile Music Gesture Autoplay</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -3269,6 +3269,118 @@ setTimeout(dmRefreshHeaderBadge,1200);setTimeout(()=>dmLoadList('primary'),1500)
     <button id="dmHoldCancel" class="dmHoldCancel" type="button">CANCEL</button>
   </div>
 </div>
+
+<script id="exofProfileMusicInteractionAutoplayV1183">
+/*
+ EXOF V1.18.3
+ Use the tap that navigates to a profile as the user gesture for profile audio.
+ Also arm own-profile music from the Profile navigation tap.
+*/
+(function(){
+  let armedAt=0, pendingProfileId=null, gestureAudio=null;
+
+  function armGesture(profileId){
+    armedAt=Date.now();
+    pendingProfileId=profileId||null;
+
+    // Prime media permission during the actual user gesture.
+    // This tiny silent audio is only a browser-policy unlock attempt.
+    try{
+      if(!gestureAudio){
+        gestureAudio=new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=");
+        gestureAudio.volume=0.01;
+      }
+      const pr=gestureAudio.play();
+      if(pr&&pr.catch)pr.catch(()=>{});
+    }catch(_){}
+
+    // If a YT player already exists, play inside the same gesture.
+    try{
+      if(window.publicProfileYtPlayer && typeof window.publicProfileYtPlayer.playVideo==='function'){
+        window.publicProfileAutoplayWanted=true;
+        window.publicProfileYtPlayer.playVideo();
+      }
+    }catch(_){}
+  }
+  window.exofArmProfileMusicGesture=armGesture;
+
+  // Capture phase runs before normal EXOF click handlers.
+  document.addEventListener('click',function(e){
+    const el=e.target.closest && e.target.closest(
+      '[data-user-id],[data-profile-id],[data-uid],.profileLink,.userLink,.avatar,.dmAvatar,#navProfile,#profileNav,#meAvatar'
+    );
+    if(!el)return;
+    const uid=el.dataset?.userId||el.dataset?.profileId||el.dataset?.uid||null;
+    armGesture(uid);
+  },true);
+
+  document.addEventListener('touchend',function(e){
+    const el=e.target.closest && e.target.closest(
+      '[data-user-id],[data-profile-id],[data-uid],.profileLink,.userLink,.avatar,.dmAvatar,#navProfile,#profileNav,#meAvatar'
+    );
+    if(!el)return;
+    const uid=el.dataset?.userId||el.dataset?.profileId||el.dataset?.uid||null;
+    armGesture(uid);
+  },{capture:true,passive:true});
+
+  // Wrap public profile opening: remember that this navigation came from a user gesture
+  // and retry playback as soon as the selected profile track/player exists.
+  const waitForPublicMusic=(uid)=>{
+    let tries=0;
+    const tick=()=>{
+      tries++;
+      try{
+        if(window.activePublicUserId===uid && window.publicProfileTrack){
+          window.publicProfileAutoplayWanted=true;
+          if(window.publicProfileYtPlayer && typeof window.publicProfileYtPlayer.playVideo==='function'){
+            window.publicProfileYtPlayer.playVideo();
+            return;
+          }
+          if(typeof window.exofBuildPublicProfilePlayer==='function'){
+            window.exofBuildPublicProfilePlayer(true);
+          }
+        }
+      }catch(_){}
+      if(tries<24)setTimeout(tick,100);
+    };
+    tick();
+  };
+
+  // Intercept calls without changing existing application behavior.
+  const installWrap=()=>{
+    if(typeof window.openPublicProfile==='function' && !window.openPublicProfile.__exof1183){
+      const original=window.openPublicProfile;
+      const wrapped=async function(userId,opts={}){
+        const freshGesture=(Date.now()-armedAt)<1800;
+        if(freshGesture)pendingProfileId=userId;
+        const result=await original.apply(this,arguments);
+        if(freshGesture)waitForPublicMusic(userId);
+        return result;
+      };
+      wrapped.__exof1183=true;
+      window.openPublicProfile=wrapped;
+    }
+  };
+  setTimeout(installWrap,0);
+  setTimeout(installWrap,500);
+  setTimeout(installWrap,1500);
+
+  // Own profile: use the Profile navigation gesture and auto-click the existing
+  // track control once the profile view is active. This keeps the same EXOF player.
+  const tryOwnProfile=()=>{
+    if((Date.now()-armedAt)>1800)return;
+    const page=document.querySelector('#profile.active,#myProfile.active,[data-page="profile"].active');
+    if(!page)return;
+    const btn=document.querySelector(
+      '#profileTrackPlay,#myProfileTrackPlay,#trackPlayBtn,.profileTrackPlay,.trackPlay'
+    );
+    if(btn && !btn.disabled){
+      try{btn.click()}catch(_){}
+    }
+  };
+  document.addEventListener('click',()=>{setTimeout(tryOwnProfile,80);setTimeout(tryOwnProfile,350)},false);
+})();
+</script>
 </body></html>
 <style id="exofProfileBackgroundV184">
 #profile #profileShell.profileShell{
