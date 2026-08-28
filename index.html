@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.17.2 — DM Photo Confirm</title>
+<meta name="theme-color" content="#07100b"><title>EXOF V1.17.3 — XO Camera Mascot</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -670,6 +670,11 @@ header #messagesBtn.exofDmButton:active{
 #dmUserSearchBtn:disabled{opacity:.55}
 </style><style id="exofDmPhotoConfirmV1172">
 .dmXOPhotoBtn{position:relative!important;width:42px!important;height:42px!important;flex:0 0 42px!important;border:1px solid #2d5b34!important;border-radius:13px!important;background:#071009!important;padding:0!important;overflow:hidden!important}.dmXOText{position:absolute;left:5px;top:5px;color:var(--accent);font-size:13px;font-weight:1000;letter-spacing:-1px}.dmXOCamera{position:absolute;right:2px;bottom:1px;font-size:19px}.dmPhotoConfirm{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.72);display:flex;align-items:flex-end;justify-content:center;padding:14px}.dmPhotoConfirm[hidden]{display:none!important}.dmPhotoConfirmCard{width:min(430px,100%);background:#0b0f0c;border:1px solid var(--accent);border-radius:22px;padding:14px;display:grid;grid-template-columns:92px 1fr;gap:12px}.dmPhotoConfirmCard img{width:92px;height:112px;object-fit:cover;border-radius:14px;border:1px solid #304334}.dmPhotoConfirmInfo{display:flex;flex-direction:column;justify-content:center;gap:5px}.dmPhotoConfirmInfo b{font-size:17px}.dmPhotoConfirmInfo small{color:#aeb5af}.dmPhotoConfirmActions{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}.dmPhotoConfirmActions button{height:44px;border-radius:14px;font-weight:1000}#dmPhotoCancel{background:#121613;color:#fff;border:1px solid #465048}#dmPhotoSend{background:var(--accent);color:#061006;border:1px solid var(--accent)}
+</style><style id="exofDmMascotCameraV1173">
+.dmXOPhotoBtn{width:46px!important;height:46px!important;flex:0 0 46px!important;padding:0!important;border-radius:14px!important;position:relative!important;overflow:hidden!important;background:#050906!important;border:1px solid #2d5b34!important}
+.dmXOMascot{position:absolute;width:48px;height:48px;object-fit:cover;object-position:center 25%;left:-1px;top:-1px;border-radius:13px}
+.dmCameraBadge{position:absolute;right:1px;bottom:1px;width:18px;height:18px;border-radius:7px;background:#071009;display:grid;place-items:center;font-size:12px;line-height:1;border:1px solid var(--accent);z-index:2}
+.dmXOText,.dmXOCamera{display:none!important}
 </style></head>
 <body>
 <div id="authGate">
@@ -838,7 +843,7 @@ header #messagesBtn.exofDmButton:active{
 <section id="dmChat" class="page exofDmPage">
 <div class="dmChatHead"><button id="dmChatBack" class="dmBack">‹</button><div id="dmChatPerson" class="dmChatPerson"></div></div>
 <div id="dmMessages" class="dmMessages"></div>
-<div class="dmComposer"><button id="dmPhotoBtn" class="dmXOPhotoBtn" title="Choose photo"><span class="dmXOText">XO</span><span class="dmXOCamera">📷</span></button><button id="dmVoiceBtn">🎙</button><input id="dmText" placeholder="Message..."><button id="dmSendBtn" class="dmSend">➤</button><button id="dmBuzzBtn" class="dmBuzz">〽</button></div>
+<div class="dmComposer"><button id="dmPhotoBtn" class="dmXOPhotoBtn" title="Choose photo" aria-label="Choose photo"><img src="xo-camera-mascot.png" class="dmXOMascot" alt=""><span class="dmCameraBadge">📷</span></button><button id="dmVoiceBtn">🎙</button><input id="dmText" placeholder="Message..."><button id="dmSendBtn" class="dmSend">➤</button><button id="dmBuzzBtn" class="dmBuzz">〽</button></div>
 <div id="dmPhotoConfirm" class="dmPhotoConfirm" hidden><div class="dmPhotoConfirmCard"><img id="dmPhotoPreview" alt="Selected photo"><div class="dmPhotoConfirmInfo"><b>Photo selected</b><small>Send this photo to the conversation?</small></div><div class="dmPhotoConfirmActions"><button id="dmPhotoCancel" type="button">CANCEL</button><button id="dmPhotoSend" type="button">SEND</button></div></div></div><input id="dmPhotoInput" type="file" accept="image/*" hidden>
 <div id="dmVoiceStatus" class="dmVoiceStatus"></div>
 </section>
