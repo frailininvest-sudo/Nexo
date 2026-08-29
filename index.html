@@ -1020,7 +1020,7 @@ body.dmHoldOpen{overflow:hidden}
 </div></section>
 <section id="publicProfile" class="page publicProfile">
 <div id="publicProfileShell" class="profileShell"><div id="publicProfileBg" class="profileBg"></div><div class="profileShade"></div><div class="profileContent"><div id="publicCover" class="cover"></div><div id="publicAvatar" class="profileAva">E</div><div id="publicName" class="name">EXOF user</div><div class="exofPublicMetaLine"><p id="publicHandle" class="bio">@user</p><span id="publicOfficialRole" class="exofPublicOfficialRole" hidden></span></div><p id="publicBio" class="bio" style="margin-top:4px"></p><div class="exofPublicActions"><button id="publicFollowBtn" class="followBtn" type="button" style="display:none">FOLLOW</button><button id="publicDmBtn" class="followBtn exofPublicDmBtn" type="button" style="display:none"><img src="exof-dm-icon.png" alt=""> EXOF DM</button></div><button id="publicBlockBtn" type="button" style="display:none">BLOCK USER</button><div class="stats"><div><b id="publicFollowers">0</b><small>FOLLOWERS</small></div><div><b id="publicFollowing">0</b><small>FOLLOWING</small></div><div><b id="publicDropCount">0</b><small>DROPS</small></div></div><div class="module" id="publicProfileTrackModule"><div class="track"><div><small class="mint">PROFILE TRACK</small><h4 id="publicProfileTrackTitle">No track selected</h4><span class="meta" id="publicProfileTrackArtist">No public track selected</span></div><button class="play" id="publicProfileTrackPlay" type="button">▶</button></div><div id="publicProfileTrackPlayer" style="display:none"></div></div><div class="module"><h4>♥ Favorite Drops</h4><div class="worldGrid"><div class="world"></div><div class="world"></div></div></div></div></div>
-<div style="padding:10px 16px 110px"><button class="secondary" data-go="search" style="margin-bottom:12px">← BACK TO SEARCH</button><div id="publicDropsList"><div class="emptyState">No Drops yet.</div></div></div></section>
+<div style="padding:10px 16px 110px"><button class="secondary" id="publicProfileBackBtn" type="button" style="margin-bottom:12px">← BACK TO SEARCH</button><div id="publicDropsList"><div class="emptyState">No Drops yet.</div></div></div></section>
 <section id="messages" class="page exofDmPage">
 <div class="dmTitleRow"><div class="title">Messages</div><button id="dmComposeBtn" class="dmCompose" aria-label="New message"><span class="pencil green">✎</span><span class="pencil white">✎</span></button></div>
 <input id="dmSearch" class="dmSearch" placeholder="Search messages">
@@ -3835,8 +3835,22 @@ async function publish(){
   msg.textContent=e.message||'Could not publish Chain.';
  }finally{btn.disabled=!chainFile;if(draft)btn.textContent=draft.mode==='continue'?'ADD TO CHAIN 🔗':'CREATE GLOBAL CHAIN 🌎'}
 }
+let exofChainProfileReturn=null;
+document.getElementById('publicProfileBackBtn')?.addEventListener('click',async()=>{
+ const ctx=exofChainProfileReturn;
+ exofChainProfileReturn=null;
+ const btn=document.getElementById('publicProfileBackBtn');if(btn)btn.textContent='← BACK TO SEARCH';
+ if(ctx?.chain){
+   go('search');
+   await open(ctx.chain);
+   return;
+ }
+ go('search');
+});
 function openChainContributor(uid,username){
  if(!uid)return;
+ exofChainProfileReturn=active?{chainId:active.id,chain:active}:null;
+ const backBtn=document.getElementById('publicProfileBackBtn');if(backBtn)backBtn.textContent='← BACK TO CHAIN';
  M('exChainModal').hidden=true;
  const input=document.getElementById('userSearchInput'),searchBtn=document.getElementById('userSearchBtn'),results=document.getElementById('searchResults');
  if(!input||!searchBtn||!results)return;
