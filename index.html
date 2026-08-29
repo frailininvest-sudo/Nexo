@@ -830,6 +830,8 @@ body.dmHoldOpen{overflow:hidden}
   z-index:4!important;
 }
 #profile .exofProfileAbout[hidden]{display:none!important}
+#profile .exofProfileAbout a,#publicProfile #publicBio a{color:var(--accent)!important;text-decoration:underline;text-underline-offset:2px;cursor:pointer;overflow-wrap:anywhere}
+#publicProfile #publicBio{white-space:pre-wrap;overflow-wrap:anywhere}
 </style>
 </head>
 <body><div id="exofBuzzToast"></div>
@@ -1111,6 +1113,33 @@ function exofHydrateTrackFromAccount(user){
   }catch(e){console.warn('Track hydrate:',e)}
 }
 
+function exofRenderBioWithLinks(el,text){
+  if(!el) return;
+  el.textContent='';
+  const raw=String(text||'');
+  if(!raw) return;
+  const urlRe=/(https?:\/\/[^\s<]+|www\.[^\s<]+|(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:com|net|org|io|co|app|dev|me|tv|gg|us|info|xyz)(?:\/[^\s<]*)?)/gi;
+  let last=0,m;
+  while((m=urlRe.exec(raw))){
+    if(m.index>last) el.appendChild(document.createTextNode(raw.slice(last,m.index)));
+    let shown=m[0];
+    let trail='';
+    while(/[.,!?;:)]$/.test(shown)){trail=shown.slice(-1)+trail;shown=shown.slice(0,-1)}
+    if(shown){
+      const a=document.createElement('a');
+      a.textContent=shown;
+      a.href=/^https?:\/\//i.test(shown)?shown:(/^www\./i.test(shown)?'https://'+shown:'https://'+shown);
+      a.target='_blank';
+      a.rel='noopener noreferrer';
+      a.addEventListener('click',e=>e.stopPropagation());
+      el.appendChild(a);
+    }
+    if(trail) el.appendChild(document.createTextNode(trail));
+    last=m.index+m[0].length;
+  }
+  if(last<raw.length) el.appendChild(document.createTextNode(raw.slice(last)));
+}
+
 function paintProfile(user,profile){
   if(!user) return;
   setTimeout(async function(){exofHydrateTrackFromAccount(user);await exofLoadTrackFromDB();},0);
@@ -1128,7 +1157,7 @@ function paintProfile(user,profile){
   setText('realProfileBio','@'+username);
   const aboutEl=document.getElementById('realProfileAbout');
   if(aboutEl){
-    aboutEl.textContent=bio;
+    exofRenderBioWithLinks(aboutEl,bio);
     aboutEl.hidden=!bio;
   }
   const officialRole=(profile&&profile.official_role||'').trim();
@@ -1479,7 +1508,7 @@ async function openPublicProfile(userId,opts={}){
     publicRoleEl.hidden=!publicRole;
     publicRoleEl.textContent=publicRole;
   }
-  document.getElementById('publicBio').textContent=u.bio||'';
+  exofRenderBioWithLinks(document.getElementById('publicBio'),u.bio||'');
   await exofLoadPublicProfileTrack(u);
   await refreshFollowUI(userId);
   const list=document.getElementById('publicDropsList');
