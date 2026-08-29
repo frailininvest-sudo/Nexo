@@ -163,6 +163,9 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 #publicProfile .exofPublicActions #publicFollowBtn,#publicProfile .exofPublicActions #publicDmBtn{flex:1;margin-top:0;min-width:0}
 #publicProfile .exofPublicDmBtn{display:none;align-items:center;justify-content:center;gap:7px}
 #publicProfile .exofPublicDmBtn img{width:20px;height:20px;object-fit:contain}
+
+/* EXOF V1.24.9 — Comment @Mentions */
+.exofCommentForm{position:relative}.exofMentionPicker{position:absolute;left:0;right:0;bottom:48px;z-index:30;background:#0b0f0d;border:1px solid rgba(73,255,135,.28);border-radius:14px;max-height:210px;overflow:auto;box-shadow:0 14px 36px rgba(0,0,0,.5);padding:6px}.exofMentionChoice{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;color:#fff;padding:9px 10px;border-radius:10px;text-align:left}.exofMentionChoice:hover,.exofMentionChoice:focus{background:rgba(73,255,135,.10);outline:none}.exofMentionChoice img{width:34px;height:34px;border-radius:50%;object-fit:cover;background:#172019}.exofMentionChoice b{display:block;font-size:13px}.exofMentionChoice small{display:block;color:#8e9a92;font-size:11px}.exofMentionLink{color:var(--accent,#49ff87);font-weight:800;cursor:pointer}
 </style>
 
 
@@ -1591,10 +1594,31 @@ async function exofToggleLike(dropId){
 async function exofLikeCount(dropId){
   const {count}=await sb.from('drop_likes').select('*',{count:'exact',head:true}).eq('drop_id',dropId); return count||0;
 }
+function exofRenderCommentBody(body){
+ const raw=String(body||''); let out='',last=0; const re=/(^|\s)@([A-Za-z0-9._]{1,40})/g; let m;
+ while((m=re.exec(raw))){const start=m.index+m[1].length;out+=escapeHtml(raw.slice(last,start));out+='<span class="exofMentionLink" data-mention-username="'+escapeHtml(m[2])+'">@'+escapeHtml(m[2])+'</span>';last=start+m[0].length-m[1].length}
+ out+=escapeHtml(raw.slice(last));return out;
+}
+async function exofResolveMentionProfiles(body){
+ const names=[...new Set([...String(body||'').matchAll(/(^|\s)@([A-Za-z0-9._]{1,40})/g)].map(m=>m[2].toLowerCase()))];if(!names.length)return [];
+ const {data,error}=await sb.from('profiles').select('id,username,display_name,avatar_url').in('username',names);if(error)return [];return (data||[]).filter(x=>x.id!==currentUser?.id);
+}
+async function exofSyncCommentMentions(commentId,dropId,body){
+ if(!currentUser||!commentId)return;const targets=await exofResolveMentionProfiles(body),wanted=new Set(targets.map(x=>x.id));const old=await sb.from('comment_mentions').select('mentioned_user_id').eq('comment_id',commentId);
+ for(const r of(old.data||[])){if(!wanted.has(r.mentioned_user_id)){await sb.from('comment_mentions').delete().eq('comment_id',commentId).eq('mentioned_user_id',r.mentioned_user_id);await sb.from('notifications').delete().eq('user_id',r.mentioned_user_id).eq('actor_id',currentUser.id).eq('type','mention').eq('comment_id',commentId)}}
+ for(const t of targets){const ins=await sb.from('comment_mentions').upsert({comment_id:commentId,drop_id:dropId,mentioned_user_id:t.id,actor_id:currentUser.id},{onConflict:'comment_id,mentioned_user_id'});if(!ins.error){const exists=await sb.from('notifications').select('id').eq('user_id',t.id).eq('actor_id',currentUser.id).eq('type','mention').eq('comment_id',commentId).maybeSingle();if(!exists.data)await sb.from('notifications').insert({user_id:t.id,actor_id:currentUser.id,type:'mention',drop_id:dropId,comment_id:commentId})}}
+}
+async function exofOpenMentionProfile(username){const {data}=await sb.from('profiles').select('id').ilike('username',username).maybeSingle();if(!data?.id)return;data.id===currentUser?.id?go('profile'):openPublicProfile(data.id)}
+function exofAttachMentionPicker(input){
+ const form=input.closest('.exofCommentForm');if(!form)return;let picker=null,timer=0;const close=()=>{picker?.remove();picker=null};
+ const update=()=>{clearTimeout(timer);timer=setTimeout(async()=>{const pos=input.selectionStart??input.value.length,before=input.value.slice(0,pos),m=before.match(/(?:^|\s)@([A-Za-z0-9._]{0,40})$/);if(!m)return close();const q=m[1];let req=sb.from('profiles').select('id,username,display_name,avatar_url').neq('id',currentUser?.id||'').limit(8);if(q)req=req.ilike('username',q+'%');const {data,error}=await req;if(error||!data?.length)return close();close();picker=document.createElement('div');picker.className='exofMentionPicker';picker.innerHTML=data.map(p=>'<button type="button" class="exofMentionChoice" data-u="'+escapeHtml(p.username||'')+'"><img src="'+escapeHtml(p.avatar_url||'')+'"><span><b>@'+escapeHtml(p.username||'user')+'</b><small>'+escapeHtml(p.display_name||'')+'</small></span></button>').join('');form.appendChild(picker);picker.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{const u=b.dataset.u,start=before.lastIndexOf('@'),after=input.value.slice(pos);input.value=input.value.slice(0,start)+'@'+u+' '+after;input.focus();input.setSelectionRange(start+u.length+2,start+u.length+2);close()})},120)};
+ input.addEventListener('input',update);input.addEventListener('keyup',e=>{if(e.key==='Escape')close()});input.addEventListener('blur',()=>setTimeout(close,180));
+}
 async function exofAddComment(dropId,body){
  body=(body||'').trim(); if(!currentUser||!body)return;
  const cr=await sb.from('drop_comments').insert({drop_id:dropId,user_id:currentUser.id,body}).select('id').single();
  if(cr.error)throw cr.error;
+ await exofSyncCommentMentions(cr.data?.id,dropId,body);
  const dr=await sb.from('drops').select('user_id').eq('id',dropId).maybeSingle();
  if(dr.data?.user_id && dr.data.user_id!==currentUser.id)
    await sb.from('notifications').insert({user_id:dr.data.user_id,actor_id:currentUser.id,type:'comment',drop_id:dropId,comment_id:cr.data?.id||null});
@@ -1944,20 +1968,21 @@ async function renderComments(dropId,box,onCountChange){
     return '<div class="exofCommentRow" data-comment-id="'+escapeHtml(String(c.id))+'">'+
       '<div class="exofCommentTop"><div class="exofCommentAuthor" data-comment-user="'+escapeHtml(c.user_id)+'"><div class="exofCommentAvatar" style="'+(av?'background-image:url(&quot;'+escapeHtml(av)+'&quot;);color:transparent':'')+'">'+escapeHtml(nm.charAt(0).toUpperCase())+'</div><b>'+escapeHtml(nm)+'</b>'+exofOfficialRoleBadge(cp)+'<small class="meta">@'+escapeHtml(cp.username||'user')+'</small><small class="meta exofCommentTime" data-comment-time="'+escapeHtml(c.created_at||'')+'">'+escapeHtml(exofCommentRelativeTime(c.created_at))+'</small></div>'+
       (canDelete?'<button class="exofCommentMenuBtn" type="button" aria-label="Comment options">•••</button>':'')+'</div>'+
-      '<div class="exofCommentBody">'+escapeHtml(c.body)+'</div>'+
+      '<div class="exofCommentBody">'+exofRenderCommentBody(c.body)+'</div>'+
       (canDelete?'<div class="exofCommentMenu" hidden>'+(isCommentAuthor?'<button data-comment-action="edit" type="button">EDIT</button>':'')+'<button data-comment-action="delete" type="button">DELETE</button></div>':'')+
       '</div>'
   }).join(''):'<div class="meta">No comments yet.</div>';
   box.innerHTML=html+'<div class="exofCommentForm"><input type="text" maxlength="300" placeholder="Write a comment…"><button class="primary" type="button">POST</button></div>';
   exofUpdateCommentTimes(box);
   box.querySelectorAll('[data-comment-user]').forEach(el=>el.addEventListener('click',()=>(el.dataset.commentUser===currentUser?.id?go('profile'):openPublicProfile(el.dataset.commentUser))));
+  box.querySelectorAll('[data-mention-username]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();exofOpenMentionProfile(el.dataset.mentionUsername)}));
   box.querySelectorAll('.exofCommentMenuBtn').forEach(btn=>btn.onclick=e=>{e.stopPropagation();const menu=btn.closest('.exofCommentRow').querySelector('.exofCommentMenu');box.querySelectorAll('.exofCommentMenu').forEach(m=>{if(m!==menu)m.hidden=true});menu.hidden=!menu.hidden});
   box.querySelectorAll('[data-comment-action="edit"]').forEach(btn=>btn.onclick=async()=>{
     const row=btn.closest('.exofCommentRow'), body=row.querySelector('.exofCommentBody');
     const next=prompt('Edit comment:',body.textContent||''); if(next===null)return;
     const clean=next.trim().slice(0,300); if(!clean)return alert('Comment cannot be empty.');
     const {error}=await sb.rpc('exof_edit_comment',{p_comment_id:row.dataset.commentId,p_body:clean});
-    if(error)return alert(error.message); await renderComments(dropId,box,onCountChange);
+    if(error)return alert(error.message); await exofSyncCommentMentions(row.dataset.commentId,dropId,clean); await renderComments(dropId,box,onCountChange);
   });
   box.querySelectorAll('[data-comment-action="delete"]').forEach(btn=>btn.onclick=async()=>{
     if(!confirm('Delete this comment?'))return;
@@ -1965,6 +1990,7 @@ async function renderComments(dropId,box,onCountChange){
     if(error)return alert(error.message); await renderComments(dropId,box,onCountChange); if(onCountChange)onCountChange(await exofCommentCount(dropId));
   });
   const input=box.querySelector('.exofCommentForm input'),btn=box.querySelector('.exofCommentForm button');
+  exofAttachMentionPicker(input);
   const post=async()=>{if(!input.value.trim())return;btn.disabled=true;try{await exofAddComment(dropId,input.value.trim());await renderComments(dropId,box,onCountChange);if(onCountChange)onCountChange(await exofCommentCount(dropId))}catch(e){alert(e.message)}finally{btn.disabled=false}};
   btn.onclick=post; input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();post()}};
  }catch(e){box.innerHTML='<div class="meta">'+escapeHtml(e.message||'Could not load comments.')+'</div>'}
@@ -2644,7 +2670,7 @@ window.EXOF_PRIVACY_API={
    const box=$('exofActivityRecent'),empty=$('exofActivityRecentEmpty');box.innerHTML='';empty.hidden=true;
    try{
      const user=await me();
-     const {data,error}=await sb().from('notifications').select('*').eq('user_id',user.id).in('type',['like','comment','follow','follow_accepted']).order('created_at',{ascending:false}).limit(50);
+     const {data,error}=await sb().from('notifications').select('*').eq('user_id',user.id).in('type',['like','comment','mention','follow','follow_accepted']).order('created_at',{ascending:false}).limit(50);
      if(error)throw error;if(!data?.length){empty.hidden=false;return}
      const pm=await profiles(data.map(n=>n.actor_id).filter(Boolean));
      const dropIds=[...new Set(data.map(n=>n.drop_id).filter(Boolean))];
@@ -2656,7 +2682,7 @@ window.EXOF_PRIVACY_API={
        const p=pm.get(n.actor_id)||{},d=drops.get(String(n.drop_id))||{},el=document.createElement('div');el.className='exofActivityRow recent';
        let action=n.type==='like'?'liked your Drop':
          n.type==='follow'?'started following you':
-         n.type==='follow_accepted'?'accepted your follow request':'commented';
+         n.type==='follow_accepted'?'accepted your follow request':n.type==='mention'?'mentioned you in a comment':'commented';
        if(n.type==='comment'){const body=comments.get(String(n.comment_id));if(body)action+=': '+body}
        let thumb='';
        if(n.type!=='follow'&&n.type!=='follow_accepted'&&d.media_url){
@@ -2678,6 +2704,7 @@ window.EXOF_PRIVACY_API={
            openPublicProfile(uid);
          }
        }));
+       if((n.type==='mention'||n.type==='comment'||n.type==='like')&&n.drop_id){el.style.cursor='pointer';el.addEventListener('click',async e=>{if(e.target.closest('[data-profile-user]'))return;page().hidden=true;document.body.style.overflow='';go('home');try{await loadDrops()}catch(_e){}let tries=0;const jump=()=>{const card=[...document.querySelectorAll('.card.post[data-drop-id]')].find(x=>String(x.dataset.dropId)===String(n.drop_id));if(card){card.scrollIntoView({behavior:'smooth',block:'center'});if(n.type==='mention'||n.type==='comment'){const comments=card.querySelector('.exofComments');if(comments&&comments.style.display==='none')card.querySelector('.commentBtn')?.click()}return}if(++tries<12)setTimeout(jump,150)};setTimeout(jump,80)})}
        box.appendChild(el);
      });
      await sb().from('notifications').update({is_read:true}).eq('user_id',user.id).eq('is_read',false);
