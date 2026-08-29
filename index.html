@@ -696,6 +696,7 @@ header #messagesBtn.exofDmButton:active{
 #exofBuzzToast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .dmBuzzCooldown{opacity:.55!important;pointer-events:none!important}
 .dmRequestLimitNotice{font-size:11px;color:#aeb5af;text-align:center;padding:6px 10px}.dmRequestLimitNotice strong{color:var(--accent)}
+.dmSenderRequestNotice{font-size:11px;color:#8f9791;text-align:center;padding:7px 14px 2px;line-height:1.25}.dmSenderRequestNotice strong{color:#cbd1cc;font-weight:700}.dmSenderRequestLocked{margin:8px 14px 0;padding:13px 16px;border-top:1px solid #202622;color:#9da49f;text-align:center;font-size:12px;line-height:1.35}.dmSenderRequestLocked strong{display:block;color:#fff;font-size:13px;margin-bottom:3px}.dmComposer.exofRequestLocked{display:none!important}
 </style><style id="exofVoiceHoldV1176">#dmVoiceBtn{touch-action:none;user-select:none;-webkit-user-select:none}#dmVoiceBtn.dmRecording{border-radius:50%;box-shadow:0 0 0 2px var(--accent),0 0 18px rgba(76,255,38,.35);animation:voicePulse .8s infinite}@keyframes voicePulse{50%{transform:scale(1.12)}}.dmComposer{position:relative}.dmVoiceStatus.recording{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);z-index:20;background:#090d0a;border:1px solid var(--accent);border-radius:14px;padding:7px 12px;color:#fff;font-weight:900;white-space:nowrap}.dmVoicePreview{position:absolute;left:8px;right:8px;bottom:58px;height:50px;background:#111512;border:1px solid #29372d;border-radius:24px;z-index:30;display:flex;align-items:center;gap:9px;padding:5px 9px}.dmVoicePreview[hidden]{display:none!important}.dmVoicePreview button{width:38px;height:38px;border-radius:50%;border:0;background:rgba(76,255,38,.12);color:var(--accent);font-size:18px}.dmVoicePreview #dmVoiceDelete{background:transparent;color:#fff;font-size:25px}.dmVoiceWave{flex:1;color:var(--accent);font-size:19px;letter-spacing:1px;overflow:hidden;white-space:nowrap}.dmVoicePreview span{font-size:12px;color:#ddd}</style><style id="exofVoiceComposerFixV1177">
 .dmComposer{position:sticky!important;bottom:0!important;display:flex!important;align-items:center!important;gap:7px!important}
 .dmVoicePreview{position:static!important;inset:auto!important;bottom:auto!important;height:44px!important;min-width:0!important;flex:1 1 auto!important;background:#111512!important;border:1px solid #29372d!important;border-radius:22px!important;display:flex!important;align-items:center!important;gap:7px!important;padding:3px 7px!important;box-shadow:none!important;z-index:auto!important}
@@ -3244,17 +3245,32 @@ async function dmRequestSentCount(uid){
 async function dmUpdateRequestComposer(){
  const comp=document.querySelector('#dmChat .dmComposer'),status=document.getElementById('dmVoiceStatus');if(!comp||!dmActiveUser)return;
  comp.querySelector('.dmRequestLimitNotice')?.remove();
+ document.querySelectorAll('#dmChat .dmSenderRequestNotice,#dmChat .dmSenderRequestLocked').forEach(x=>x.remove());
+ comp.classList.remove('exofRequestLocked');
  const req=await dmPendingRequestForPair(dmActiveUser);if(!req){comp.querySelectorAll('button,input').forEach(x=>x.disabled=false);return}
- const note=document.createElement('div');note.className='dmRequestLimitNotice';
  if(req.recipient_id===dmCurrentUser.id){
+   // Receiver UI intentionally stays exactly as before.
+   const note=document.createElement('div');note.className='dmRequestLimitNotice';
    note.innerHTML='<strong>Message request</strong> · Accept from Requests to reply.';
    comp.querySelectorAll('button,input').forEach(x=>x.disabled=true);
+   comp.appendChild(note);
  }else{
+   // Sender gets a cleaner Instagram-style pending state without changing receiver UI.
    const st=await dmRequestSentCount(dmActiveUser),left=Math.max(0,3-st.count);
-   note.innerHTML=left?`Message request pending · <strong>${left} of 3 messages left</strong>`:'Message request pending · <strong>3 message limit reached</strong>';
-   comp.querySelectorAll('button,input').forEach(x=>x.disabled=left===0);
+   if(left>0){
+     comp.querySelectorAll('button,input').forEach(x=>x.disabled=false);
+     const note=document.createElement('div');note.className='dmSenderRequestNotice';
+     note.innerHTML=`<strong>${left}</strong> message${left===1?'':'s'} left until your request is accepted`;
+     comp.insertAdjacentElement('afterend',note);
+   }else{
+     comp.querySelectorAll('button,input').forEach(x=>x.disabled=true);
+     comp.classList.add('exofRequestLocked');
+     const note=document.createElement('div');note.className='dmSenderRequestLocked';
+     note.innerHTML='<strong>Message request sent</strong>You can send more messages after this person accepts your request.';
+     comp.insertAdjacentElement('afterend',note);
+   }
  }
- comp.appendChild(note);if(status)status.textContent='';
+ if(status)status.textContent='';
 }
 async function dmMarkConversationRead(uid){
  if(!dmCurrentUser?.id||!uid)return;
