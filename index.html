@@ -155,6 +155,12 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 .exofActivityEmpty{text-align:center;color:#7e8780;padding:35px 15px}
 .exofActivityIcon{position:relative;font-size:27px;line-height:1}.exofActivityX{position:absolute;right:-4px;bottom:-2px;color:var(--accent);font-size:13px;font-weight:1000;text-shadow:0 0 6px #000}
 .exofActivityBadge{position:absolute;right:-7px;top:-7px;min-width:17px;height:17px;padding:0 4px;border-radius:10px;background:var(--accent);color:#061006;font-size:10px;font-weight:1000;display:none;align-items:center;justify-content:center;border:2px solid #020604}
+
+/* V1.23.1 — Public Profile → EXOF DM */
+#publicProfile .exofPublicActions{display:flex;gap:10px;align-items:stretch;margin-top:10px}
+#publicProfile .exofPublicActions #publicFollowBtn,#publicProfile .exofPublicActions #publicDmBtn{flex:1;margin-top:0;min-width:0}
+#publicProfile .exofPublicDmBtn{display:none;align-items:center;justify-content:center;gap:7px}
+#publicProfile .exofPublicDmBtn img{width:20px;height:20px;object-fit:contain}
 </style>
 
 
@@ -981,7 +987,7 @@ body.dmHoldOpen{overflow:hidden}
 </div></div>
 </div></section>
 <section id="publicProfile" class="page publicProfile">
-<div id="publicProfileShell" class="profileShell"><div id="publicProfileBg" class="profileBg"></div><div class="profileShade"></div><div class="profileContent"><div id="publicCover" class="cover"></div><div id="publicAvatar" class="profileAva">E</div><div id="publicName" class="name">EXOF user</div><div class="exofPublicMetaLine"><p id="publicHandle" class="bio">@user</p><span id="publicOfficialRole" class="exofPublicOfficialRole" hidden></span></div><p id="publicBio" class="bio" style="margin-top:4px"></p><button id="publicFollowBtn" class="followBtn" type="button" style="display:none">FOLLOW</button><button id="publicBlockBtn" type="button" style="display:none">BLOCK USER</button><div class="stats"><div><b id="publicFollowers">0</b><small>FOLLOWERS</small></div><div><b id="publicFollowing">0</b><small>FOLLOWING</small></div><div><b id="publicDropCount">0</b><small>DROPS</small></div></div><div class="module" id="publicProfileTrackModule"><div class="track"><div><small class="mint">PROFILE TRACK</small><h4 id="publicProfileTrackTitle">No track selected</h4><span class="meta" id="publicProfileTrackArtist">No public track selected</span></div><button class="play" id="publicProfileTrackPlay" type="button">▶</button></div><div id="publicProfileTrackPlayer" style="display:none"></div></div><div class="module"><h4>♥ Favorite Drops</h4><div class="worldGrid"><div class="world"></div><div class="world"></div></div></div></div></div>
+<div id="publicProfileShell" class="profileShell"><div id="publicProfileBg" class="profileBg"></div><div class="profileShade"></div><div class="profileContent"><div id="publicCover" class="cover"></div><div id="publicAvatar" class="profileAva">E</div><div id="publicName" class="name">EXOF user</div><div class="exofPublicMetaLine"><p id="publicHandle" class="bio">@user</p><span id="publicOfficialRole" class="exofPublicOfficialRole" hidden></span></div><p id="publicBio" class="bio" style="margin-top:4px"></p><div class="exofPublicActions"><button id="publicFollowBtn" class="followBtn" type="button" style="display:none">FOLLOW</button><button id="publicDmBtn" class="followBtn exofPublicDmBtn" type="button" style="display:none"><img src="exof-dm-icon.png" alt=""> EXOF DM</button></div><button id="publicBlockBtn" type="button" style="display:none">BLOCK USER</button><div class="stats"><div><b id="publicFollowers">0</b><small>FOLLOWERS</small></div><div><b id="publicFollowing">0</b><small>FOLLOWING</small></div><div><b id="publicDropCount">0</b><small>DROPS</small></div></div><div class="module" id="publicProfileTrackModule"><div class="track"><div><small class="mint">PROFILE TRACK</small><h4 id="publicProfileTrackTitle">No track selected</h4><span class="meta" id="publicProfileTrackArtist">No public track selected</span></div><button class="play" id="publicProfileTrackPlay" type="button">▶</button></div><div id="publicProfileTrackPlayer" style="display:none"></div></div><div class="module"><h4>♥ Favorite Drops</h4><div class="worldGrid"><div class="world"></div><div class="world"></div></div></div></div></div>
 <div style="padding:10px 16px 110px"><button class="secondary" data-go="search" style="margin-bottom:12px">← BACK TO SEARCH</button><div id="publicDropsList"><div class="emptyState">No Drops yet.</div></div></div></section>
 <section id="messages" class="page exofDmPage">
 <div class="dmTitleRow"><div class="title">Messages</div><button id="dmComposeBtn" class="dmCompose" aria-label="New message"><span class="pencil green">✎</span><span class="pencil white">✎</span></button></div>
@@ -1468,6 +1474,8 @@ async function openPublicProfile(userId,opts={}){
       ${d.caption?`<p style="margin:10px 2px 2px">${escapeHtml(d.caption)}</p>`:''}
     </article>`).join('');
   activePublicUserId=userId;
+  const publicDmBtn=document.getElementById('publicDmBtn');
+  if(publicDmBtn){publicDmBtn.dataset.uid=userId;publicDmBtn.style.display=(currentUser&&userId!==currentUser.id)?'flex':'none';}
 }
 document.getElementById('userSearchBtn')?.addEventListener('click',searchUsers);
 document.getElementById('userSearchInput')?.addEventListener('keydown',e=>{if(e.key==='Enter') searchUsers();});
@@ -2498,7 +2506,7 @@ window.EXOF_PRIVACY_API={
  $('publicBlockBtn')?.addEventListener('click',async()=>{const uid=$('publicBlockBtn').dataset.uid;if(!uid)return;if(!confirm('Block this user? They will no longer be able to interact with you.'))return;try{await api().block(uid);alert('User blocked.');if(window.exofGo)window.exofGo('search')}catch(e){alert(e.message)}});
 
  // Update privacy state whenever public profile navigation settles.
- document.addEventListener('click',()=>setTimeout(async()=>{const page=$('publicProfile');if(!page?.classList.contains('active'))return;const uid=(new URLSearchParams(location.search)).get('user');if(!uid)return;window.activePublicUserId=uid;follow.dataset.uid=uid;const block=$('publicBlockBtn');block.dataset.uid=uid;block.style.display='block';try{const r=await api().relation(uid);if(r.blockedByMe){follow.style.display='none';block.textContent='UNBLOCK IN SETTINGS';return}if(r.blockedByThem){follow.style.display='none';block.style.display='none';return}follow.style.display='block';follow.textContent=r.following?'FOLLOWING':r.requested?'REQUESTED':'FOLLOW';follow.dataset.following=r.following?'1':'0';const list=$('publicDropsList');if(r.private&&!r.following){list.innerHTML='<div class="exofPrivateNotice"><div style="font-size:32px">🔒</div><h3>PRIVATE ACCOUNT</h3><p style="color:#818983">Follow this account to see their Drops.</p></div>';}}catch(e){console.error(e)}},180),true);
+ document.addEventListener('click',()=>setTimeout(async()=>{const page=$('publicProfile');if(!page?.classList.contains('active'))return;const uid=(new URLSearchParams(location.search)).get('user');if(!uid)return;window.activePublicUserId=uid;follow.dataset.uid=uid;const block=$('publicBlockBtn');block.dataset.uid=uid;block.style.display='block';try{const r=await api().relation(uid);const dmBtn=$('publicDmBtn');if(r.blockedByMe){follow.style.display='none';if(dmBtn)dmBtn.style.display='none';block.textContent='UNBLOCK IN SETTINGS';return}if(r.blockedByThem){follow.style.display='none';if(dmBtn)dmBtn.style.display='none';block.style.display='none';return}follow.style.display='block';if(dmBtn&&uid!==currentUser?.id)dmBtn.style.display='flex';follow.textContent=r.following?'FOLLOWING':r.requested?'REQUESTED':'FOLLOW';follow.dataset.following=r.following?'1':'0';const list=$('publicDropsList');if(r.private&&!r.following){list.innerHTML='<div class="exofPrivateNotice"><div style="font-size:32px">🔒</div><h3>PRIVATE ACCOUNT</h3><p style="color:#818983">Follow this account to see their Drops.</p></div>';}}catch(e){console.error(e)}},180),true);
 })();
 </script>
 
@@ -3358,6 +3366,16 @@ async function dmLoadList(tab='primary',filter=''){
 }
 async function dmOpen(uid){
  await dmGetCurrentUser();dmActiveUser=uid;const pr=await dmProfile(uid);dmAddRecent(pr);const h=document.getElementById('dmChatPerson');h.innerHTML=`${pr?.avatar_url?`<img src="${pr.avatar_url}">`:''}<div><b>${dmEsc(pr?.display_name||pr?.username||'User')}</b><div class="dmHandle">@${dmEsc(pr?.username||'')}</div></div>`;await dmSb.from('direct_messages').update({read:true}).eq('sender_id',uid).eq('recipient_id',dmCurrentUser.id);await dmLoadMessages();dmShowPage('dmChat');dmRefreshHeaderBadge()}
+document.getElementById('publicDmBtn')?.addEventListener('click',async()=>{
+ const uid=document.getElementById('publicDmBtn')?.dataset.uid||window.activePublicUserId;
+ if(!uid)return;
+ try{
+   await dmGetCurrentUser();
+   if(dmCurrentUser?.id===uid)return;
+   await dmOpen(uid);
+ }catch(err){console.error('EXOF Profile → DM',err);alert('Could not open EXOF DM. Please try again.')}
+});
+
 async function dmLoadMessages(){
  const box=document.getElementById('dmMessages');if(!box||!dmActiveUser)return;
  const state=await dmConversationState(dmActiveUser),cutoffMs=state?.cleared_at?new Date(state.cleared_at).getTime():0;
