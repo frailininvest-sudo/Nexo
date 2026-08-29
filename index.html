@@ -158,7 +158,7 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 
 /* V1.23.1 — Public Profile → EXOF DM */
 #publicProfile .exofPublicBackBar{position:sticky;top:0;z-index:80;padding:10px 16px 6px;background:linear-gradient(180deg,#050706 72%,rgba(5,7,6,.86) 88%,rgba(5,7,6,0));}
-#publicProfile .exofPublicBackBar #publicProfileBackBtn{width:auto;min-width:150px;margin:0;padding:9px 12px;border-radius:12px;font-size:10px;font-weight:900;}
+#publicProfile .exofPublicBackBar #publicProfileBackBtn{width:38px;height:38px;min-width:38px;margin:0;padding:0;border-radius:50%;font-size:20px;font-weight:900;display:grid;place-items:center;line-height:1;}
 #publicProfile .exofPublicActions{display:flex;gap:10px;align-items:stretch;margin-top:10px}
 #publicProfile .exofPublicActions #publicFollowBtn,#publicProfile .exofPublicActions #publicDmBtn{flex:1;margin-top:0;min-width:0}
 #publicProfile .exofPublicDmBtn{display:none;align-items:center;justify-content:center;gap:7px}
@@ -1021,7 +1021,7 @@ body.dmHoldOpen{overflow:hidden}
 </div></div>
 </div></section>
 <section id="publicProfile" class="page publicProfile">
-<div class="exofPublicBackBar"><button class="secondary" id="publicProfileBackBtn" type="button">← BACK TO SEARCH</button></div>
+<div class="exofPublicBackBar"><button class="secondary" id="publicProfileBackBtn" type="button" aria-label="Back">←</button></div>
 <div id="publicProfileShell" class="profileShell"><div id="publicProfileBg" class="profileBg"></div><div class="profileShade"></div><div class="profileContent"><div id="publicCover" class="cover"></div><div id="publicAvatar" class="profileAva">E</div><div id="publicName" class="name">EXOF user</div><div class="exofPublicMetaLine"><p id="publicHandle" class="bio">@user</p><span id="publicOfficialRole" class="exofPublicOfficialRole" hidden></span></div><p id="publicBio" class="bio" style="margin-top:4px"></p><div class="exofPublicActions"><button id="publicFollowBtn" class="followBtn" type="button" style="display:none">FOLLOW</button><button id="publicDmBtn" class="followBtn exofPublicDmBtn" type="button" style="display:none"><img src="exof-dm-icon.png" alt=""> EXOF DM</button></div><button id="publicBlockBtn" type="button" style="display:none">BLOCK USER</button><div class="stats"><div><b id="publicFollowers">0</b><small>FOLLOWERS</small></div><div><b id="publicFollowing">0</b><small>FOLLOWING</small></div><div><b id="publicDropCount">0</b><small>DROPS</small></div></div><div class="module" id="publicProfileTrackModule"><div class="track"><div><small class="mint">PROFILE TRACK</small><h4 id="publicProfileTrackTitle">No track selected</h4><span class="meta" id="publicProfileTrackArtist">No public track selected</span></div><button class="play" id="publicProfileTrackPlay" type="button">▶</button></div><div id="publicProfileTrackPlayer" style="display:none"></div></div><div class="module"><h4>♥ Favorite Drops</h4><div class="worldGrid"><div class="world"></div><div class="world"></div></div></div></div></div>
 <div style="padding:10px 16px 110px"><div id="publicDropsList"><div class="emptyState">No Drops yet.</div></div></div></section>
 <section id="messages" class="page exofDmPage">
@@ -3842,18 +3842,16 @@ let exofChainProfileReturn=null;
 document.getElementById('publicProfileBackBtn')?.addEventListener('click',async()=>{
  const ctx=exofChainProfileReturn;
  exofChainProfileReturn=null;
- const btn=document.getElementById('publicProfileBackBtn');if(btn)btn.textContent='← BACK TO SEARCH';
+ const searchNav=document.querySelector('[data-go="search"]');
+ if(searchNav) searchNav.click();
  if(ctx?.chain){
-   go('search');
+   await new Promise(r=>setTimeout(r,80));
    await open(ctx.chain);
-   return;
  }
- go('search');
 });
 function openChainContributor(uid,username){
  if(!uid)return;
  exofChainProfileReturn=active?{chainId:active.id,chain:active}:null;
- const backBtn=document.getElementById('publicProfileBackBtn');if(backBtn)backBtn.textContent='← BACK TO CHAIN';
  M('exChainModal').hidden=true;
  const input=document.getElementById('userSearchInput'),searchBtn=document.getElementById('userSearchBtn'),results=document.getElementById('searchResults');
  if(!input||!searchBtn||!results)return;
