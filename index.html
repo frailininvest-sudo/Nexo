@@ -3284,15 +3284,30 @@ async function dmLoadList(tab='primary',filter=''){
  if(error){box.innerHTML='<div class="emptyState">'+dmEsc(error.message)+'</div>';return}
  const cleared=new Map((states||[]).map(x=>[x.other_user_id,x.cleared_at?new Date(x.cleared_at).getTime():0]));
  const archived=dmLocalSet('exof_dm_archived_'+dmCurrentUser.id),blocked=dmLocalSet('exof_dm_blocked_'+dmCurrentUser.id);
- const latest=new Map();
+ // Build each conversation from every message still visible to THIS account.
+ // A thread is a request only when all visible messages are still requests. Once
+ // a conversation has been accepted/primary, a later row with a stale request
+ // flag must not make the whole thread disappear after refresh.
+ const grouped=new Map();
  for(const m of data||[]){
-   const other=m.sender_id===dmCurrentUser.id?m.recipient_id:m.sender_id,request=!!m.is_request;
-   if((tab==='requests')!==request||archived.has(other)||blocked.has(other))continue;
-   if(new Date(m.created_at).getTime()<= (cleared.get(other)||0))continue;
-   if(!latest.has(other))latest.set(other,m)
+   const other=m.sender_id===dmCurrentUser.id?m.recipient_id:m.sender_id;
+   if(archived.has(other)||blocked.has(other))continue;
+   const cutoff=cleared.get(other)||0;
+   if(new Date(m.created_at).getTime()<=cutoff)continue;
+   if(!grouped.has(other))grouped.set(other,[]);
+   grouped.get(other).push(m);
  }
  const rows=[];
- for(const [uid,m] of latest){const pr=await dmProfile(uid);if(!pr)continue;const q=filter.trim().replace(/^@/,'').toLowerCase();if(q&&!(`${pr.username||''} ${pr.display_name||''}`.toLowerCase().includes(q)))continue;const cutoff=cleared.get(uid)||0;const unread=(data||[]).filter(x=>x.sender_id===uid&&x.recipient_id===dmCurrentUser.id&&!x.read&&!!x.is_request===(tab==='requests')&&new Date(x.created_at).getTime()>cutoff).length;rows.push([uid,m,pr,unread])}
+ for(const [uid,msgs] of grouped){
+   if(!msgs.length)continue;
+   const isRequestThread=msgs.every(x=>!!x.is_request);
+   if((tab==='requests')!==isRequestThread)continue;
+   const m=msgs[0]; // query is newest first
+   const pr=await dmProfile(uid);if(!pr)continue;
+   const q=filter.trim().replace(/^@/,'').toLowerCase();if(q&&!(`${pr.username||''} ${pr.display_name||''}`.toLowerCase().includes(q)))continue;
+   const unread=msgs.filter(x=>x.sender_id===uid&&x.recipient_id===dmCurrentUser.id&&!x.read).length;
+   rows.push([uid,m,pr,unread])
+ }
  if(!rows.length){box.innerHTML='<div class="emptyState">'+(filter?'No matching conversations.':tab==='requests'?'No message requests.':'No messages yet.')+'</div>';return}
  box.innerHTML='';
  for(const [uid,m,pr,unread] of rows){const row=document.createElement('div');row.className='dmThread';row.innerHTML=dmThreadMarkup(pr,m,unread,tab,uid);
@@ -3303,14 +3318,15 @@ async function dmOpen(uid){
  await dmGetCurrentUser();dmActiveUser=uid;const pr=await dmProfile(uid);dmAddRecent(pr);const h=document.getElementById('dmChatPerson');h.innerHTML=`${pr?.avatar_url?`<img src="${pr.avatar_url}">`:''}<div><b>${dmEsc(pr?.display_name||pr?.username||'User')}</b><div class="dmHandle">@${dmEsc(pr?.username||'')}</div></div>`;await dmSb.from('direct_messages').update({read:true}).eq('sender_id',uid).eq('recipient_id',dmCurrentUser.id);await dmLoadMessages();dmShowPage('dmChat');dmRefreshHeaderBadge()}
 async function dmLoadMessages(){
  const box=document.getElementById('dmMessages');if(!box||!dmActiveUser)return;
- const state=await dmConversationState(dmActiveUser),cutoff=state?.cleared_at||null;
- let q=dmSb.from('direct_messages').select('*').or(`and(sender_id.eq.${dmCurrentUser.id},recipient_id.eq.${dmActiveUser}),and(sender_id.eq.${dmActiveUser},recipient_id.eq.${dmCurrentUser.id})`).eq('is_request',false).order('created_at');
- if(cutoff)q=q.gt('created_at',cutoff);
- const {data,error}=await q;
+ const state=await dmConversationState(dmActiveUser),cutoffMs=state?.cleared_at?new Date(state.cleared_at).getTime():0;
+ // Fetch the pair, then apply this account's clear boundary locally. This avoids
+ // the old history reappearing because of request-state or timestamp query races.
+ const {data,error}=await dmSb.from('direct_messages').select('*').or(`and(sender_id.eq.${dmCurrentUser.id},recipient_id.eq.${dmActiveUser}),and(sender_id.eq.${dmActiveUser},recipient_id.eq.${dmCurrentUser.id})`).order('created_at');
  if(error){box.innerHTML='<div class="emptyState">'+dmEsc(error.message)+'</div>';return}
+ const visible=(data||[]).filter(m=>new Date(m.created_at).getTime()>cutoffMs);
  box.innerHTML='';
- if(!(data||[]).length){box.innerHTML='<div class="emptyState">No messages yet. Start a new conversation.</div>';return}
- for(const m of data||[]){const b=document.createElement('div');b.className='dmBubble '+(m.sender_id===dmCurrentUser.id?'mine':'');if(m.media_type==='image')b.innerHTML=`<img src="${m.media_url}">`;else if(m.media_type==='video')b.innerHTML=`<video controls src="${m.media_url}"></video>`;else if(m.media_type==='voice')b.innerHTML=`<audio controls src="${m.media_url}"></audio>`;else b.textContent=m.body||'';const meta=document.createElement('div');meta.className='dmMsgMeta';meta.textContent=new Date(m.created_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});b.appendChild(meta);box.appendChild(b)}box.scrollTop=box.scrollHeight
+ if(!visible.length){box.innerHTML='<div class="emptyState">No messages yet. Start a new conversation.</div>';return}
+ for(const m of visible){const b=document.createElement('div');b.className='dmBubble '+(m.sender_id===dmCurrentUser.id?'mine':'');if(m.media_type==='image')b.innerHTML=`<img src="${m.media_url}">`;else if(m.media_type==='video')b.innerHTML=`<video controls src="${m.media_url}"></video>`;else if(m.media_type==='voice')b.innerHTML=`<audio controls src="${m.media_url}"></audio>`;else b.textContent=m.body||'';const meta=document.createElement('div');meta.className='dmMsgMeta';meta.textContent=new Date(m.created_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});b.appendChild(meta);box.appendChild(b)}box.scrollTop=box.scrollHeight
 }
 async function dmIsFollowing(uid){const {data}=await dmSb.from('follows').select('follower_id').eq('follower_id',dmCurrentUser.id).eq('following_id',uid).maybeSingle();return !!data}
 async function dmSend(body='',file=null,type='text'){
