@@ -3192,10 +3192,52 @@ async function dmRefreshHeaderBadge(){
 }
 function dmLocalSet(key){try{return new Set(JSON.parse(localStorage.getItem(key)||'[]'))}catch(_){return new Set()}}
 function dmLocalSave(key,set){localStorage.setItem(key,JSON.stringify([...set]))}
-function dmRecentKey(){return 'exof_dm_recent_'+(dmCurrentUser?.id||'guest')}
-function dmGetRecents(){try{return JSON.parse(localStorage.getItem(dmRecentKey())||'[]')}catch(_){return []}}
-function dmAddRecent(pr){if(!pr?.id)return;let a=dmGetRecents().filter(x=>x.id!==pr.id);a.unshift({id:pr.id,username:pr.username||'',display_name:pr.display_name||'',avatar_url:pr.avatar_url||''});localStorage.setItem(dmRecentKey(),JSON.stringify(a.slice(0,10)))}
-function dmRemoveRecent(id){localStorage.setItem(dmRecentKey(),JSON.stringify(dmGetRecents().filter(x=>x.id!==id)))}
+// V1.23.0: DM New Message recents are account-synced through Supabase + Realtime.
+let dmRecentCache=[],dmRecentChannel=null,dmRecentChannelUser=null;
+function dmGetRecents(){return dmRecentCache}
+async function dmLoadRecents(){
+ await dmGetCurrentUser();
+ if(!dmCurrentUser){dmRecentCache=[];return dmRecentCache}
+ const {data:rows,error}=await dmSb.from('dm_search_recents').select('profile_id,searched_at').eq('user_id',dmCurrentUser.id).order('searched_at',{ascending:false}).limit(10);
+ if(error){console.warn('EXOF DM recent load',error);return dmRecentCache}
+ const ids=(rows||[]).map(x=>x.profile_id).filter(Boolean);
+ if(!ids.length){dmRecentCache=[];return dmRecentCache}
+ const {data:profiles,error:pe}=await dmSb.from('profiles').select('id,username,display_name,avatar_url').in('id',ids);
+ if(pe){console.warn('EXOF DM recent profiles',pe);return dmRecentCache}
+ const map=new Map((profiles||[]).map(x=>[String(x.id),x]));
+ dmRecentCache=ids.map(id=>map.get(String(id))).filter(Boolean);
+ return dmRecentCache
+}
+async function dmAddRecent(pr){
+ if(!pr?.id)return;
+ await dmGetCurrentUser();if(!dmCurrentUser)return;
+ dmRecentCache=[{id:pr.id,username:pr.username||'',display_name:pr.display_name||'',avatar_url:pr.avatar_url||''},...dmRecentCache.filter(x=>String(x.id)!==String(pr.id))].slice(0,10);
+ const {error}=await dmSb.from('dm_search_recents').upsert({user_id:dmCurrentUser.id,profile_id:pr.id,searched_at:new Date().toISOString()},{onConflict:'user_id,profile_id'});
+ if(error)console.warn('EXOF DM recent add',error);
+}
+async function dmRemoveRecent(id){
+ await dmGetCurrentUser();if(!dmCurrentUser)return;
+ dmRecentCache=dmRecentCache.filter(x=>String(x.id)!==String(id));
+ const {error}=await dmSb.from('dm_search_recents').delete().eq('user_id',dmCurrentUser.id).eq('profile_id',id);
+ if(error)console.warn('EXOF DM recent remove',error);
+}
+async function dmClearRecents(){
+ await dmGetCurrentUser();if(!dmCurrentUser)return;
+ dmRecentCache=[];
+ const {error}=await dmSb.from('dm_search_recents').delete().eq('user_id',dmCurrentUser.id);
+ if(error)console.warn('EXOF DM recent clear',error);
+}
+async function dmSetupRecentRealtime(){
+ await dmGetCurrentUser();if(!dmCurrentUser||dmRecentChannelUser===dmCurrentUser.id)return;
+ if(dmRecentChannel)try{await dmSb.removeChannel(dmRecentChannel)}catch(_){}
+ dmRecentChannelUser=dmCurrentUser.id;
+ dmRecentChannel=dmSb.channel('dm-search-recents-'+dmCurrentUser.id)
+  .on('postgres_changes',{event:'*',schema:'public',table:'dm_search_recents',filter:'user_id=eq.'+dmCurrentUser.id},async()=>{
+    await dmLoadRecents();
+    const page=document.getElementById('dmNew'),q=document.getElementById('dmUserSearch');
+    if(page?.classList.contains('active')&&!q?.value.trim())dmRenderRecents(false);
+  }).subscribe();
+}
 function dmThreadMarkup(pr,m,unread,tab,uid){
  const media=m?.media_type==='voice'?'🎙 Voice message':m?.media_url?'▧ Photo / video':dmEsc(m?.body||'Message');
  const time=m?.created_at?new Date(m.created_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'';
@@ -3261,7 +3303,7 @@ function dmInitHoldMenu(){
  document.getElementById('dmHoldDelete')?.addEventListener('click',async()=>{
    if(!dmHoldTarget)return;const {uid,row}=dmHoldTarget;
    if(!confirm('Delete this conversation for you? Your previous messages will no longer appear in this chat.'))return;
-   try{await dmClearConversation(uid);dmRemoveRecent(uid);row.remove();dmCloseHoldMenu();await dmRefreshHeaderBadge()}catch(err){alert(err?.message||String(err))}
+   try{await dmClearConversation(uid);await dmRemoveRecent(uid);row.remove();dmCloseHoldMenu();await dmRefreshHeaderBadge()}catch(err){alert(err?.message||String(err))}
  });
  document.getElementById('dmHoldBlock')?.addEventListener('click',async()=>{
    if(!dmHoldTarget)return;const {uid,row}=dmHoldTarget;
@@ -3339,7 +3381,7 @@ document.getElementById('dmComposeBtn')?.addEventListener('click',()=>{
  const page=document.getElementById('dmNew');
  if(page)page.classList.add('active');
  const q=document.getElementById('dmUserSearch');
- if(q){q.value='';dmRenderRecents();setTimeout(()=>q.focus(),80)}
+ if(q){q.value='';dmRenderRecents(true);setTimeout(()=>q.focus(),80)}
 });
 document.getElementById('dmNewBack')?.addEventListener('click',()=>{
  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -3348,22 +3390,31 @@ document.getElementById('dmNewBack')?.addEventListener('click',()=>{
 });
 document.getElementById('dmChatBack')?.addEventListener('click',()=>{dmShowPage('messages');dmLoadList('primary')});
 document.querySelectorAll('.dmTabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.dmTabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');dmLoadList(b.dataset.dmTab)});
-function dmRenderRecents(){
- const box=document.getElementById('dmUserResults');if(!box)return;const rec=dmGetRecents();
+async function dmRenderRecents(reload=true){
+ const box=document.getElementById('dmUserResults');if(!box)return;
+ if(reload)await dmLoadRecents();
+ await dmSetupRecentRealtime();
+ const rec=dmGetRecents();
  if(!rec.length){box.innerHTML='<div class="dmSearchEmpty">Start typing to find people on EXOF.</div>';return}
  box.innerHTML='<div class="dmRecentHead"><span>RECENT</span><button class="dmRecentClear">Clear all</button></div>';
- box.querySelector('.dmRecentClear').onclick=()=>{localStorage.removeItem(dmRecentKey());dmRenderRecents()};
- for(const pr of rec){const r=document.createElement('div');r.className='dmThread dmUserResult';r.innerHTML=`<div class="dmThreadContent">${pr.avatar_url?`<img class="dmAvatar" src="${pr.avatar_url}">`:'<div class="dmAvatar"></div>'}<div class="dmThreadMain"><div class="dmThreadTop"><b>${dmEsc(pr.display_name||pr.username)}</b></div><div class="dmHandle">@${dmEsc(pr.username)}</div></div><button class="dmRecentX">×</button></div>`;r.querySelector('.dmThreadContent').onclick=e=>{if(e.target.closest('.dmRecentX'))return;dmOpen(pr.id)};r.querySelector('.dmRecentX').onclick=e=>{e.stopPropagation();dmRemoveRecent(pr.id);r.remove()};box.appendChild(r)}
+ box.querySelector('.dmRecentClear').onclick=async()=>{await dmClearRecents();dmRenderRecents(false)};
+ for(const pr of rec){
+  const r=document.createElement('div');r.className='dmThread dmUserResult';
+  r.innerHTML=`<div class="dmThreadContent">${pr.avatar_url?`<img class="dmAvatar" src="${pr.avatar_url}">`:'<div class="dmAvatar"></div>'}<div class="dmThreadMain"><div class="dmThreadTop"><b>${dmEsc(pr.display_name||pr.username)}</b></div><div class="dmHandle">@${dmEsc(pr.username)}</div></div><button class="dmRecentX">×</button></div>`;
+  r.querySelector('.dmThreadContent').onclick=e=>{if(e.target.closest('.dmRecentX'))return;dmOpen(pr.id)};
+  r.querySelector('.dmRecentX').onclick=async e=>{e.stopPropagation();await dmRemoveRecent(pr.id);dmRenderRecents(false)};
+  box.appendChild(r)
+ }
 }
 let dmUserSearchTimer=null,dmUserSearchSeq=0;
 async function dmRunUserSearch(){
  await dmGetCurrentUser();const input=document.getElementById('dmUserSearch'),box=document.getElementById('dmUserResults');const q=(input?.value||'').trim().replace(/^@/,'');
- if(!q){dmRenderRecents();return}
+ if(!q){dmRenderRecents(true);return}
  const seq=++dmUserSearchSeq;box.innerHTML='<div class="dmSearchEmpty">Searching…</div>';const safe=q.replace(/[%_,]/g,'');
- try{const client=window.exofSupabase,base=client.supabaseUrl||client.rest?.url?.replace(/\/rest\/v1\/?$/,''),key=client.supabaseKey;const endpoint=base+'/rest/v1/profiles?select=id,username,display_name,avatar_url&or=(username.ilike.*'+encodeURIComponent(safe)+'*,display_name.ilike.*'+encodeURIComponent(safe)+'*)&order=username.asc&limit=20';const res=await fetch(endpoint,{headers:{apikey:key,Accept:'application/json'}});if(!res.ok)throw new Error('Supabase '+res.status);const data=await res.json();if(seq!==dmUserSearchSeq)return;const users=(data||[]).filter(u=>u.id!==dmCurrentUser.id);if(!users.length){box.innerHTML='<div class="dmSearchEmpty">No users found.</div>';return}box.innerHTML='';for(const pr of users){const r=document.createElement('button');r.type='button';r.className='dmThread dmUserResult';r.innerHTML=`${pr.avatar_url?`<img class="dmAvatar" src="${pr.avatar_url}">`:'<div class="dmAvatar"></div>'}<div class="dmThreadMain"><div class="dmThreadTop"><b>${dmEsc(pr.display_name||pr.username)}</b></div><div class="dmHandle">@${dmEsc(pr.username)}</div></div><span class="dmResultArrow">›</span>`;r.onclick=()=>{dmAddRecent(pr);dmOpen(pr.id)};box.appendChild(r)}}catch(err){box.innerHTML='<div class="dmSearchError"><b>SEARCH ERROR</b><small>'+dmEsc(err?.message||String(err))+'</small></div>'}
+ try{const client=window.exofSupabase,base=client.supabaseUrl||client.rest?.url?.replace(/\/rest\/v1\/?$/,''),key=client.supabaseKey;const endpoint=base+'/rest/v1/profiles?select=id,username,display_name,avatar_url&or=(username.ilike.*'+encodeURIComponent(safe)+'*,display_name.ilike.*'+encodeURIComponent(safe)+'*)&order=username.asc&limit=20';const res=await fetch(endpoint,{headers:{apikey:key,Accept:'application/json'}});if(!res.ok)throw new Error('Supabase '+res.status);const data=await res.json();if(seq!==dmUserSearchSeq)return;const users=(data||[]).filter(u=>u.id!==dmCurrentUser.id);if(!users.length){box.innerHTML='<div class="dmSearchEmpty">No users found.</div>';return}box.innerHTML='';for(const pr of users){const r=document.createElement('button');r.type='button';r.className='dmThread dmUserResult';r.innerHTML=`${pr.avatar_url?`<img class="dmAvatar" src="${pr.avatar_url}">`:'<div class="dmAvatar"></div>'}<div class="dmThreadMain"><div class="dmThreadTop"><b>${dmEsc(pr.display_name||pr.username)}</b></div><div class="dmHandle">@${dmEsc(pr.username)}</div></div><span class="dmResultArrow">›</span>`;r.onclick=async()=>{await dmAddRecent(pr);dmOpen(pr.id)};box.appendChild(r)}}catch(err){box.innerHTML='<div class="dmSearchError"><b>SEARCH ERROR</b><small>'+dmEsc(err?.message||String(err))+'</small></div>'}
 }
 document.getElementById('dmUserSearch')?.addEventListener('input',()=>{clearTimeout(dmUserSearchTimer);dmUserSearchTimer=setTimeout(dmRunUserSearch,180)});
-document.getElementById('dmUserSearch')?.addEventListener('focus',()=>{if(!document.getElementById('dmUserSearch').value.trim())dmRenderRecents()});
+document.getElementById('dmUserSearch')?.addEventListener('focus',()=>{if(!document.getElementById('dmUserSearch').value.trim())dmRenderRecents(true)});
 document.getElementById('dmSearch')?.addEventListener('focus',()=>{if(!document.getElementById('dmSearch').value.trim())dmLoadList(document.querySelector('.dmTabs button.on')?.dataset.dmTab||'primary')});
 document.getElementById('dmSearch')?.addEventListener('input',e=>dmLoadList(document.querySelector('.dmTabs button.on')?.dataset.dmTab||'primary',e.target.value));
 document.getElementById('dmSendBtn')?.addEventListener('click',async()=>{
