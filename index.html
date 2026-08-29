@@ -3809,6 +3809,16 @@ async function publish(){
   msg.textContent=e.message||'Could not publish Chain.';
  }finally{btn.disabled=!chainFile;if(draft)btn.textContent=draft.mode==='continue'?'ADD TO CHAIN 🔗':'CREATE GLOBAL CHAIN 🌎'}
 }
+function openChainContributor(uid,username){
+ if(!uid)return;
+ M('exChainModal').hidden=true;
+ const input=document.getElementById('userSearchInput'),searchBtn=document.getElementById('userSearchBtn'),results=document.getElementById('searchResults');
+ if(!input||!searchBtn||!results)return;
+ input.value=String(username||'').replace(/^@/,'');
+ searchBtn.click();
+ let tries=0;
+ const timer=setInterval(()=>{tries++;const exact=results.querySelector('[data-public-user="'+CSS.escape(String(uid))+'"]');if(exact){clearInterval(timer);exact.click();}else if(tries>=30){clearInterval(timer);console.warn('EXOF Chain contributor: profile not returned by Search');}},100);
+}
 function showChainMedia(url,type){
  const viewer=M('exChainMediaViewer'),stage=M('exChainMediaViewerStage');if(!viewer||!stage||!url)return;
  stage.innerHTML=type==='video'?`<video src="${E(url)}" controls autoplay playsinline></video>`:`<img src="${E(url)}" alt="Chain contribution">`;
