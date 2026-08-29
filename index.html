@@ -695,6 +695,7 @@ header #messagesBtn.exofDmButton:active{
 #exofBuzzToast{position:fixed;left:50%;top:78px;transform:translateX(-50%) translateY(-15px);z-index:100000;background:#071009;border:1px solid var(--accent);color:#fff;border-radius:16px;padding:10px 15px;font-weight:900;opacity:0;pointer-events:none;transition:.2s;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis}
 #exofBuzzToast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .dmBuzzCooldown{opacity:.55!important;pointer-events:none!important}
+.dmRequestLimitNotice{font-size:11px;color:#aeb5af;text-align:center;padding:6px 10px}.dmRequestLimitNotice strong{color:var(--accent)}
 </style><style id="exofVoiceHoldV1176">#dmVoiceBtn{touch-action:none;user-select:none;-webkit-user-select:none}#dmVoiceBtn.dmRecording{border-radius:50%;box-shadow:0 0 0 2px var(--accent),0 0 18px rgba(76,255,38,.35);animation:voicePulse .8s infinite}@keyframes voicePulse{50%{transform:scale(1.12)}}.dmComposer{position:relative}.dmVoiceStatus.recording{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);z-index:20;background:#090d0a;border:1px solid var(--accent);border-radius:14px;padding:7px 12px;color:#fff;font-weight:900;white-space:nowrap}.dmVoicePreview{position:absolute;left:8px;right:8px;bottom:58px;height:50px;background:#111512;border:1px solid #29372d;border-radius:24px;z-index:30;display:flex;align-items:center;gap:9px;padding:5px 9px}.dmVoicePreview[hidden]{display:none!important}.dmVoicePreview button{width:38px;height:38px;border-radius:50%;border:0;background:rgba(76,255,38,.12);color:var(--accent);font-size:18px}.dmVoicePreview #dmVoiceDelete{background:transparent;color:#fff;font-size:25px}.dmVoiceWave{flex:1;color:var(--accent);font-size:19px;letter-spacing:1px;overflow:hidden;white-space:nowrap}.dmVoicePreview span{font-size:12px;color:#ddd}</style><style id="exofVoiceComposerFixV1177">
 .dmComposer{position:sticky!important;bottom:0!important;display:flex!important;align-items:center!important;gap:7px!important}
 .dmVoicePreview{position:static!important;inset:auto!important;bottom:auto!important;height:44px!important;min-width:0!important;flex:1 1 auto!important;background:#111512!important;border:1px solid #29372d!important;border-radius:22px!important;display:flex!important;align-items:center!important;gap:7px!important;padding:3px 7px!important;box-shadow:none!important;z-index:auto!important}
@@ -3223,6 +3224,38 @@ async function dmSubscribeTyping(){
     const row=payload.new||{};if(row.user_id===dmActiveUser)dmRenderTyping(row);
   }).subscribe();
 }
+async function dmPendingRequestForPair(uid){
+ if(!dmCurrentUser?.id||!uid)return null;
+ const {data,error}=await dmSb.from('dm_message_requests').select('requester_id,recipient_id,status,created_at,accepted_at').or(`and(requester_id.eq.${dmCurrentUser.id},recipient_id.eq.${uid}),and(requester_id.eq.${uid},recipient_id.eq.${dmCurrentUser.id})`).eq('status','pending').maybeSingle();
+ if(error){console.warn('EXOF pending request',error);return null}return data||null;
+}
+async function dmAcceptRequest(uid){
+ const {error}=await dmSb.rpc('exof_accept_dm_request',{p_requester_id:uid});
+ if(error)throw error;
+ await Promise.all([dmRefreshHeaderBadge(),dmRefreshRequestBadge()]);
+}
+async function dmRequestSentCount(uid){
+ const req=await dmPendingRequestForPair(uid);
+ if(!req||req.requester_id!==dmCurrentUser?.id)return {pending:false,count:0,isRequester:false,isRecipient:!!req};
+ const {count,error}=await dmSb.from('direct_messages').select('*',{count:'exact',head:true}).eq('sender_id',dmCurrentUser.id).eq('recipient_id',uid).gte('created_at',req.created_at);
+ if(error)console.warn('EXOF request sent count',error);
+ return {pending:true,count:count||0,isRequester:true,isRecipient:false};
+}
+async function dmUpdateRequestComposer(){
+ const comp=document.querySelector('#dmChat .dmComposer'),status=document.getElementById('dmVoiceStatus');if(!comp||!dmActiveUser)return;
+ comp.querySelector('.dmRequestLimitNotice')?.remove();
+ const req=await dmPendingRequestForPair(dmActiveUser);if(!req){comp.querySelectorAll('button,input').forEach(x=>x.disabled=false);return}
+ const note=document.createElement('div');note.className='dmRequestLimitNotice';
+ if(req.recipient_id===dmCurrentUser.id){
+   note.innerHTML='<strong>Message request</strong> · Accept from Requests to reply.';
+   comp.querySelectorAll('button,input').forEach(x=>x.disabled=true);
+ }else{
+   const st=await dmRequestSentCount(dmActiveUser),left=Math.max(0,3-st.count);
+   note.innerHTML=left?`Message request pending · <strong>${left} of 3 messages left</strong>`:'Message request pending · <strong>3 message limit reached</strong>';
+   comp.querySelectorAll('button,input').forEach(x=>x.disabled=left===0);
+ }
+ comp.appendChild(note);if(status)status.textContent='';
+}
 async function dmMarkConversationRead(uid){
  if(!dmCurrentUser?.id||!uid)return;
  const now=new Date().toISOString();
@@ -3232,9 +3265,9 @@ async function dmMarkConversationRead(uid){
 }
 async function dmRequestUnreadThreads(){
  if(!dmCurrentUser?.id)return 0;
- const {data,error}=await dmSb.from('direct_messages').select('sender_id').eq('recipient_id',dmCurrentUser.id).eq('read',false).eq('is_request',true);
+ const {count,error}=await dmSb.from('dm_message_requests').select('*',{count:'exact',head:true}).eq('recipient_id',dmCurrentUser.id).eq('status','pending');
  if(error){console.warn('EXOF request badge',error);return 0}
- return new Set((data||[]).map(x=>x.sender_id).filter(Boolean)).size;
+ return count||0;
 }
 async function dmRefreshRequestBadge(){
  const el=document.getElementById('dmRequestCount');if(!el)return;
@@ -3261,6 +3294,12 @@ function dmSubscribeRealtime(){
   .on('postgres_changes',{event:'*',schema:'public',table:'dm_conversation_states',filter:'user_id=eq.'+dmCurrentUser.id},async()=>{
     if(document.getElementById('messages')?.classList.contains('active'))await dmLoadList(document.querySelector('.dmTabs button.on')?.dataset.dmTab||'primary');
     if(document.getElementById('dmChat')?.classList.contains('active'))await dmLoadMessages();
+  })
+  .on('postgres_changes',{event:'*',schema:'public',table:'dm_message_requests'},async payload=>{
+    const r=payload.new||payload.old||{};if(r.requester_id!==dmCurrentUser.id&&r.recipient_id!==dmCurrentUser.id)return;
+    if(document.getElementById('messages')?.classList.contains('active'))await dmLoadList(document.querySelector('.dmTabs button.on')?.dataset.dmTab||'primary');
+    if(document.getElementById('dmChat')?.classList.contains('active'))await dmUpdateRequestComposer();
+    await Promise.all([dmRefreshHeaderBadge(),dmRefreshRequestBadge()]);
   }).subscribe();
 }
 async function dmConversationState(otherId){
@@ -3303,8 +3342,14 @@ function dmEsc(v){
 async function dmProfile(uid){const {data}=await dmSb.from('profiles').select('id,username,display_name,avatar_url').eq('id',uid).maybeSingle();return data}
 async function dmUnreadTotal(){
  if(!dmCurrentUser)return 0;
- const {count}=await dmSb.from('direct_messages').select('*',{count:'exact',head:true}).eq('recipient_id',dmCurrentUser.id).eq('read',false);
- return count||0;
+ const [{data:unread},{data:reqs}]=await Promise.all([
+   dmSb.from('direct_messages').select('sender_id').eq('recipient_id',dmCurrentUser.id).eq('read',false),
+   dmSb.from('dm_message_requests').select('requester_id').eq('recipient_id',dmCurrentUser.id).eq('status','pending')
+ ]);
+ const pending=new Set((reqs||[]).map(x=>x.requester_id));
+ const conversations=new Set((unread||[]).map(x=>x.sender_id).filter(x=>x&&!pending.has(x)));
+ pending.forEach(x=>conversations.add(x));
+ return conversations.size;
 }
 async function dmRefreshHeaderBadge(){
  const n=await dmUnreadTotal(),b=document.getElementById('exofDmHeaderBadge');
@@ -3440,48 +3485,31 @@ async function dmLoadList(tab='primary',filter=''){
  await dmGetCurrentUser();
  const box=document.getElementById('dmConversationList');if(!box||!dmCurrentUser)return;
  box.innerHTML='<div class="meta">Loading…</div>';
- const [{data,error},{data:states}]=await Promise.all([
+ const [{data,error},{data:states},{data:reqRows}]=await Promise.all([
    dmSb.from('direct_messages').select('id,sender_id,recipient_id,body,media_url,media_type,created_at,read,read_at,is_request').or(`sender_id.eq.${dmCurrentUser.id},recipient_id.eq.${dmCurrentUser.id}`).order('created_at',{ascending:false}).limit(250),
-   dmSb.from('dm_conversation_states').select('other_user_id,cleared_at').eq('user_id',dmCurrentUser.id)
+   dmSb.from('dm_conversation_states').select('other_user_id,cleared_at').eq('user_id',dmCurrentUser.id),
+   dmSb.from('dm_message_requests').select('requester_id,recipient_id,status,created_at').or(`requester_id.eq.${dmCurrentUser.id},recipient_id.eq.${dmCurrentUser.id}`)
  ]);
  if(error){box.innerHTML='<div class="emptyState">'+dmEsc(error.message)+'</div>';return}
  const cleared=new Map((states||[]).map(x=>[x.other_user_id,x.cleared_at?new Date(x.cleared_at).getTime():0]));
  const archived=dmLocalSet('exof_dm_archived_'+dmCurrentUser.id),blocked=dmLocalSet('exof_dm_blocked_'+dmCurrentUser.id);
- // Build each conversation from every message still visible to THIS account.
- // A thread is a request only when all visible messages are still requests. Once
- // a conversation has been accepted/primary, a later row with a stale request
- // flag must not make the whole thread disappear after refresh.
+ const requestByOther=new Map();
+ for(const r of reqRows||[]){const other=r.requester_id===dmCurrentUser.id?r.recipient_id:r.requester_id;requestByOther.set(other,r)}
  const grouped=new Map();
- for(const m of data||[]){
-   const other=m.sender_id===dmCurrentUser.id?m.recipient_id:m.sender_id;
-   if(archived.has(other)||blocked.has(other))continue;
-   const cutoff=cleared.get(other)||0;
-   if(new Date(m.created_at).getTime()<=cutoff)continue;
-   if(!grouped.has(other))grouped.set(other,[]);
-   grouped.get(other).push(m);
- }
+ for(const m of data||[]){const other=m.sender_id===dmCurrentUser.id?m.recipient_id:m.sender_id;if(archived.has(other)||blocked.has(other))continue;const cutoff=cleared.get(other)||0;if(new Date(m.created_at).getTime()<=cutoff)continue;if(!grouped.has(other))grouped.set(other,[]);grouped.get(other).push(m)}
  const rows=[];
- for(const [uid,msgs] of grouped){
-   if(!msgs.length)continue;
-   const isRequestThread=msgs.every(x=>!!x.is_request);
-   if((tab==='requests')!==isRequestThread)continue;
-   const m=msgs[0]; // query is newest first
-   const pr=await dmProfile(uid);if(!pr)continue;
-   const q=filter.trim().replace(/^@/,'').toLowerCase();if(q&&!(`${pr.username||''} ${pr.display_name||''}`.toLowerCase().includes(q)))continue;
-   const unread=msgs.filter(x=>x.sender_id===uid&&x.recipient_id===dmCurrentUser.id&&!x.read).length;
-   rows.push([uid,m,pr,unread])
- }
+ for(const [uid,msgs] of grouped){if(!msgs.length)continue;const req=requestByOther.get(uid);const recipientPending=!!(req&&req.status==='pending'&&req.recipient_id===dmCurrentUser.id);if((tab==='requests')!==recipientPending)continue;const m=msgs[0],pr=await dmProfile(uid);if(!pr)continue;const q=filter.trim().replace(/^@/,'').toLowerCase();if(q&&!(`${pr.username||''} ${pr.display_name||''}`.toLowerCase().includes(q)))continue;const hasUnread=msgs.some(x=>x.sender_id===uid&&x.recipient_id===dmCurrentUser.id&&!x.read);rows.push([uid,m,pr,hasUnread?1:0,req])}
  if(!rows.length){box.innerHTML='<div class="emptyState">'+(filter?'No matching conversations.':tab==='requests'?'No message requests.':'No messages yet.')+'</div>';return}
  box.innerHTML='';
- for(const [uid,m,pr,unread] of rows){const row=document.createElement('div');row.className='dmThread';row.innerHTML=dmThreadMarkup(pr,m,unread,tab,uid);
-  if(tab==='requests'){row.querySelector('.accept').onclick=async e=>{e.stopPropagation();await dmSb.from('direct_messages').update({is_request:false}).or(`and(sender_id.eq.${uid},recipient_id.eq.${dmCurrentUser.id}),and(sender_id.eq.${dmCurrentUser.id},recipient_id.eq.${uid})`);dmLoadList('requests')};row.querySelector('.delete').onclick=async e=>{e.stopPropagation();await dmSb.from('direct_messages').delete().eq('sender_id',uid).eq('recipient_id',dmCurrentUser.id).eq('is_request',true);dmLoadList('requests')}}
+ for(const [uid,m,pr,unread,req] of rows){const row=document.createElement('div');row.className='dmThread';row.innerHTML=dmThreadMarkup(pr,m,unread,tab,uid);
+  if(tab==='requests'){row.querySelector('.accept').onclick=async e=>{e.stopPropagation();try{await dmAcceptRequest(uid);await dmLoadList('requests')}catch(err){alert(err?.message||String(err))}};row.querySelector('.delete').onclick=async e=>{e.stopPropagation();try{await dmSb.rpc('exof_delete_dm_request',{p_requester_id:uid});await dmLoadList('requests')}catch(err){alert(err?.message||String(err))}}}
   dmWireSwipe(row,uid,tab);box.appendChild(row)}
 }
 let dmChatReturnContext=null;
 async function dmOpen(uid,opts={}){
  await dmGetCurrentUser();
  dmChatReturnContext=(opts.fromProfile&&uid)?{type:'profile',userId:uid}:null;
- dmActiveUser=uid;const pr=await dmProfile(uid);dmAddRecent(pr);const h=document.getElementById('dmChatPerson');h.innerHTML=`${pr?.avatar_url?`<img src="${pr.avatar_url}">`:''}<div><b>${dmEsc(pr?.display_name||pr?.username||'User')}</b><div class="dmHandle">@${dmEsc(pr?.username||'')}</div></div>`;await dmMarkConversationRead(uid);await dmLoadMessages();dmShowPage('dmChat');await dmLoadTyping();dmRefreshHeaderBadge()}
+ dmActiveUser=uid;const pr=await dmProfile(uid);dmAddRecent(pr);const h=document.getElementById('dmChatPerson');h.innerHTML=`${pr?.avatar_url?`<img src="${pr.avatar_url}">`:''}<div><b>${dmEsc(pr?.display_name||pr?.username||'User')}</b><div class="dmHandle">@${dmEsc(pr?.username||'')}</div></div>`;await dmMarkConversationRead(uid);await dmLoadMessages();dmShowPage('dmChat');await dmLoadTyping();await dmUpdateRequestComposer();dmRefreshHeaderBadge()}
 document.getElementById('publicDmBtn')?.addEventListener('click',async()=>{
  const uid=document.getElementById('publicDmBtn')?.dataset.uid||window.activePublicUserId;
  if(!uid)return;
@@ -3507,8 +3535,12 @@ async function dmLoadMessages(){
 async function dmIsFollowing(uid){const {data}=await dmSb.from('follows').select('follower_id').eq('follower_id',dmCurrentUser.id).eq('following_id',uid).maybeSingle();return !!data}
 async function dmSend(body='',file=null,type='text'){
  await dmGetCurrentUser();
- if(!dmCurrentUser||!dmActiveUser)return;let url=null;if(file){const ext=(file.name?.split('.').pop()||'webm').replace(/[^a-z0-9]/gi,'');const path=`${dmCurrentUser.id}/dm-${Date.now()}.${ext}`;const up=await dmSb.storage.from('drop-media').upload(path,file,{contentType:file.type});if(up.error)throw up.error;url=dmSb.storage.from('drop-media').getPublicUrl(path).data.publicUrl}
- const follows=await dmIsFollowing(dmActiveUser);const {error}=await dmSb.from('direct_messages').insert({sender_id:dmCurrentUser.id,recipient_id:dmActiveUser,body:body||null,media_url:url,media_type:type,read:false,is_request:!follows});if(error)throw error;await dmSetTyping(false);await dmLoadMessages()
+ if(!dmCurrentUser||!dmActiveUser)return;
+ const pending=await dmPendingRequestForPair(dmActiveUser);
+ if(pending&&pending.recipient_id===dmCurrentUser.id)throw new Error('Accept this message request before replying.');
+ if(pending&&pending.requester_id===dmCurrentUser.id){const st=await dmRequestSentCount(dmActiveUser);if(st.count>=3)throw new Error('You can send up to 3 messages until this person accepts your request.');}
+ let url=null;if(file){const ext=(file.name?.split('.').pop()||'webm').replace(/[^a-z0-9]/gi,'');const path=`${dmCurrentUser.id}/dm-${Date.now()}.${ext}`;const up=await dmSb.storage.from('drop-media').upload(path,file,{contentType:file.type});if(up.error)throw up.error;url=dmSb.storage.from('drop-media').getPublicUrl(path).data.publicUrl}
+ const {error}=await dmSb.from('direct_messages').insert({sender_id:dmCurrentUser.id,recipient_id:dmActiveUser,body:body||null,media_url:url,media_type:type,read:false,is_request:false});if(error)throw error;await dmSetTyping(false);await dmLoadMessages();await dmUpdateRequestComposer();await Promise.all([dmRefreshHeaderBadge(),dmRefreshRequestBadge()])
 }
 document.getElementById('dmComposeBtn')?.addEventListener('click',()=>{
  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
