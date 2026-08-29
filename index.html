@@ -660,6 +660,7 @@ header #messagesBtn.exofDmButton:active{
 .dmThread{display:flex;align-items:center;gap:10px;padding:12px 2px;border-bottom:1px solid #18221b;cursor:pointer}.dmAvatar{width:48px;height:48px;border-radius:50%;object-fit:cover;background:#172019}.dmThreadMain{min-width:0;flex:1}.dmThreadTop{display:flex;gap:6px;align-items:center}.dmThreadTop b{font-size:15px}.dmHandle,.dmTime,.dmPreview{color:#9ba39d;font-size:11px}.dmPreview{margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dmUnread{display:flex;align-items:center;justify-content:center;min-width:27px;height:27px;border-radius:50%;background:var(--accent);color:#051005;font-weight:950;animation:dmUnreadBeat 1.45s ease-in-out infinite;box-shadow:0 0 12px color-mix(in srgb,var(--accent) 55%,transparent)}@keyframes dmUnreadBeat{0%,65%,100%{transform:scale(1)}72%{transform:scale(1.18)}80%{transform:scale(.96)}88%{transform:scale(1.1)}}
 .dmBack{border:1px solid #26332a;background:#060806;color:#fff;width:36px;height:36px;border-radius:50%;font-size:25px}.dmChatPerson{flex:1;display:flex;align-items:center;gap:8px}.dmChatPerson img{width:38px;height:38px;border-radius:50%;object-fit:cover}.dmBuzzTop,.dmBuzz{border:0;background:#10240f;color:var(--accent);font-size:25px;border-radius:50%;width:39px;height:39px}
 .dmMessages{height:calc(100vh - 215px);overflow:auto;padding:12px 0;display:flex;flex-direction:column;gap:8px}.dmBubble{max-width:78%;padding:10px 12px;border-radius:17px;background:#171a18;align-self:flex-start;word-break:break-word}.dmBubble.mine{align-self:flex-end;background:var(--accent);color:#041004}.dmBubble img,.dmBubble video{max-width:100%;border-radius:12px;display:block}.dmMsgMeta{font-size:9px;opacity:.65;margin-top:4px}.dmComposer{position:sticky;bottom:72px;display:flex;align-items:center;gap:7px;background:#0b0e0c;border:1px solid #26332a;border-radius:22px;padding:6px}.dmComposer input{flex:1;min-width:0;border:0;background:#151917;color:#fff;border-radius:16px;padding:10px}.dmComposer button{border:0;background:none;color:var(--accent);font-size:20px}.dmComposer .dmSend{background:var(--accent);color:#061006;width:38px;height:38px;border-radius:50%}.dmVoiceStatus{font-size:11px;color:var(--accent);text-align:center;margin-top:5px}.dmRequestActions{display:flex;gap:6px}.dmRequestActions button{border:1px solid #34513a;background:#080b09;color:#fff;border-radius:9px;padding:6px 9px}.dmRequestActions .accept{border-color:var(--accent);color:var(--accent)}
+.dmSeen{font-size:10px;color:#8f9791;text-align:right;margin:2px 6px 0 auto;align-self:flex-end}.dmTyping{font-size:11px;color:#a7afa9;min-height:18px;padding:0 12px 3px;font-style:italic}.dmTabs #dmRequestCount:not(:empty){display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;margin-left:4px;border-radius:999px;background:var(--accent);color:#061006;font-size:10px;font-weight:950}
 .dmBuzzShake{animation:dmBuzzShake .55s linear 2}@keyframes dmBuzzShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
 </style><style id="exofDmComposeFixV161">
 .dmNewHint{margin:16px 0 2px;font-size:13px;color:#a5ada7}
@@ -1041,6 +1042,7 @@ body.dmHoldOpen{overflow:hidden}
 <section id="dmChat" class="page exofDmPage">
 <div class="dmChatHead"><button id="dmChatBack" class="dmBack">‹</button><div id="dmChatPerson" class="dmChatPerson"></div></div>
 <div id="dmMessages" class="dmMessages"></div>
+<div id="dmTypingIndicator" class="dmTyping"></div>
 <div class="dmComposer"><button id="dmPhotoBtn" class="dmXOPhotoBtn" title="Choose photo" aria-label="Choose photo"><img src="xo-camera-icon.png" class="dmXOMascot" alt=""></button><button id="dmVoiceBtn">🎙</button><input id="dmText" placeholder="Message..."><div id="dmVoicePreview" class="dmVoicePreview" hidden>
 <button id="dmVoicePlay" type="button" aria-label="Play voice preview">▶</button>
 <div class="dmVoiceWave">▂▅▃▇▄▆▃▅▇▄▃▆</div>
@@ -3183,7 +3185,8 @@ function dmBuzzStartCooldown(){
 }
 const dmSb=window.exofSupabase;
 let dmCurrentUser=null;
-let dmRealtimeChannel=null,dmStateRealtimeChannel=null;
+let dmRealtimeChannel=null,dmStateRealtimeChannel=null,dmTypingRealtimeChannel=null;
+let dmTypingStopTimer=null,dmTypingLastSent=0;
 
 function dmSubscribeBuzzes(){
  if(!dmSb||!dmCurrentUser?.id)return;
@@ -3196,6 +3199,47 @@ function dmSubscribeBuzzes(){
  })
  .subscribe();
 }
+async function dmSetTyping(isTyping){
+ if(!dmSb||!dmCurrentUser?.id||!dmActiveUser)return;
+ try{
+  await dmSb.from('dm_typing').upsert({user_id:dmCurrentUser.id,other_user_id:dmActiveUser,is_typing:!!isTyping,updated_at:new Date().toISOString()},{onConflict:'user_id,other_user_id'});
+ }catch(e){console.warn('EXOF typing state',e)}
+}
+function dmRenderTyping(row){
+ const el=document.getElementById('dmTypingIndicator');if(!el)return;
+ const fresh=row&&row.is_typing&&Date.now()-new Date(row.updated_at||0).getTime()<7000;
+ el.textContent=fresh?'Typing…':'';
+}
+async function dmLoadTyping(){
+ if(!dmActiveUser||!dmCurrentUser)return dmRenderTyping(null);
+ const {data}=await dmSb.from('dm_typing').select('is_typing,updated_at').eq('user_id',dmActiveUser).eq('other_user_id',dmCurrentUser.id).maybeSingle();
+ dmRenderTyping(data);
+}
+async function dmSubscribeTyping(){
+ if(!dmSb||!dmCurrentUser?.id)return;
+ try{if(dmTypingRealtimeChannel)await dmSb.removeChannel(dmTypingRealtimeChannel)}catch(_){}
+ dmTypingRealtimeChannel=dmSb.channel('exof-dm-typing-'+dmCurrentUser.id)
+  .on('postgres_changes',{event:'*',schema:'public',table:'dm_typing',filter:'other_user_id=eq.'+dmCurrentUser.id},payload=>{
+    const row=payload.new||{};if(row.user_id===dmActiveUser)dmRenderTyping(row);
+  }).subscribe();
+}
+async function dmMarkConversationRead(uid){
+ if(!dmCurrentUser?.id||!uid)return;
+ const now=new Date().toISOString();
+ const {error}=await dmSb.from('direct_messages').update({read:true,read_at:now}).eq('sender_id',uid).eq('recipient_id',dmCurrentUser.id).eq('read',false);
+ if(error)console.warn('EXOF mark read',error);
+ await Promise.all([dmRefreshHeaderBadge(),dmRefreshRequestBadge()]);
+}
+async function dmRequestUnreadThreads(){
+ if(!dmCurrentUser?.id)return 0;
+ const {data,error}=await dmSb.from('direct_messages').select('sender_id').eq('recipient_id',dmCurrentUser.id).eq('read',false).eq('is_request',true);
+ if(error){console.warn('EXOF request badge',error);return 0}
+ return new Set((data||[]).map(x=>x.sender_id).filter(Boolean)).size;
+}
+async function dmRefreshRequestBadge(){
+ const el=document.getElementById('dmRequestCount');if(!el)return;
+ const n=await dmRequestUnreadThreads();el.textContent=n?String(n):'';
+}
 function dmSubscribeRealtime(){
  if(!dmSb||!dmCurrentUser?.id)return;
  try{if(dmRealtimeChannel)dmSb.removeChannel(dmRealtimeChannel)}catch(_){}
@@ -3207,11 +3251,11 @@ function dmSubscribeRealtime(){
     if(document.getElementById('dmChat')?.classList.contains('active')&&dmActiveUser&&(row.sender_id===dmActiveUser||row.recipient_id===dmActiveUser)){
       await dmLoadMessages();
       if(row.sender_id===dmActiveUser&&row.recipient_id===dmCurrentUser.id&&!row.read){
-        await dmSb.from('direct_messages').update({read:true}).eq('id',row.id);
+        await dmSb.from('direct_messages').update({read:true,read_at:new Date().toISOString()}).eq('id',row.id);
       }
     }
     if(document.getElementById('messages')?.classList.contains('active'))await dmLoadList(document.querySelector('.dmTabs button.on')?.dataset.dmTab||'primary');
-    await dmRefreshHeaderBadge();
+    await Promise.all([dmRefreshHeaderBadge(),dmRefreshRequestBadge()]);
   }).subscribe();
  dmStateRealtimeChannel=dmSb.channel('exof-dm-state-'+dmCurrentUser.id)
   .on('postgres_changes',{event:'*',schema:'public',table:'dm_conversation_states',filter:'user_id=eq.'+dmCurrentUser.id},async()=>{
@@ -3237,6 +3281,8 @@ async function dmGetCurrentUser(){
   dmCurrentUser=data?.user||null;
   dmSubscribeBuzzes();
   dmSubscribeRealtime();
+  dmSubscribeTyping();
+  dmRefreshRequestBadge();
   return dmCurrentUser;
 }
 
@@ -3395,7 +3441,7 @@ async function dmLoadList(tab='primary',filter=''){
  const box=document.getElementById('dmConversationList');if(!box||!dmCurrentUser)return;
  box.innerHTML='<div class="meta">Loading…</div>';
  const [{data,error},{data:states}]=await Promise.all([
-   dmSb.from('direct_messages').select('id,sender_id,recipient_id,body,media_url,media_type,created_at,read,is_request').or(`sender_id.eq.${dmCurrentUser.id},recipient_id.eq.${dmCurrentUser.id}`).order('created_at',{ascending:false}).limit(250),
+   dmSb.from('direct_messages').select('id,sender_id,recipient_id,body,media_url,media_type,created_at,read,read_at,is_request').or(`sender_id.eq.${dmCurrentUser.id},recipient_id.eq.${dmCurrentUser.id}`).order('created_at',{ascending:false}).limit(250),
    dmSb.from('dm_conversation_states').select('other_user_id,cleared_at').eq('user_id',dmCurrentUser.id)
  ]);
  if(error){box.innerHTML='<div class="emptyState">'+dmEsc(error.message)+'</div>';return}
@@ -3435,7 +3481,7 @@ let dmChatReturnContext=null;
 async function dmOpen(uid,opts={}){
  await dmGetCurrentUser();
  dmChatReturnContext=(opts.fromProfile&&uid)?{type:'profile',userId:uid}:null;
- dmActiveUser=uid;const pr=await dmProfile(uid);dmAddRecent(pr);const h=document.getElementById('dmChatPerson');h.innerHTML=`${pr?.avatar_url?`<img src="${pr.avatar_url}">`:''}<div><b>${dmEsc(pr?.display_name||pr?.username||'User')}</b><div class="dmHandle">@${dmEsc(pr?.username||'')}</div></div>`;await dmSb.from('direct_messages').update({read:true}).eq('sender_id',uid).eq('recipient_id',dmCurrentUser.id);await dmLoadMessages();dmShowPage('dmChat');dmRefreshHeaderBadge()}
+ dmActiveUser=uid;const pr=await dmProfile(uid);dmAddRecent(pr);const h=document.getElementById('dmChatPerson');h.innerHTML=`${pr?.avatar_url?`<img src="${pr.avatar_url}">`:''}<div><b>${dmEsc(pr?.display_name||pr?.username||'User')}</b><div class="dmHandle">@${dmEsc(pr?.username||'')}</div></div>`;await dmMarkConversationRead(uid);await dmLoadMessages();dmShowPage('dmChat');await dmLoadTyping();dmRefreshHeaderBadge()}
 document.getElementById('publicDmBtn')?.addEventListener('click',async()=>{
  const uid=document.getElementById('publicDmBtn')?.dataset.uid||window.activePublicUserId;
  if(!uid)return;
@@ -3456,13 +3502,13 @@ async function dmLoadMessages(){
  const visible=(data||[]).filter(m=>new Date(m.created_at).getTime()>cutoffMs);
  box.innerHTML='';
  if(!visible.length){box.innerHTML='<div class="emptyState">No messages yet. Start a new conversation.</div>';return}
- for(const m of visible){const b=document.createElement('div');b.className='dmBubble '+(m.sender_id===dmCurrentUser.id?'mine':'');if(m.media_type==='image')b.innerHTML=`<img src="${m.media_url}">`;else if(m.media_type==='video')b.innerHTML=`<video controls src="${m.media_url}"></video>`;else if(m.media_type==='voice')b.innerHTML=`<audio controls src="${m.media_url}"></audio>`;else b.textContent=m.body||'';const meta=document.createElement('div');meta.className='dmMsgMeta';meta.textContent=new Date(m.created_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});b.appendChild(meta);box.appendChild(b)}box.scrollTop=box.scrollHeight
+ const lastSeen=[...visible].reverse().find(m=>m.sender_id===dmCurrentUser.id&&m.recipient_id===dmActiveUser&&m.read);for(const m of visible){const b=document.createElement('div');b.className='dmBubble '+(m.sender_id===dmCurrentUser.id?'mine':'');if(m.media_type==='image')b.innerHTML=`<img src="${m.media_url}">`;else if(m.media_type==='video')b.innerHTML=`<video controls src="${m.media_url}"></video>`;else if(m.media_type==='voice')b.innerHTML=`<audio controls src="${m.media_url}"></audio>`;else b.textContent=m.body||'';const meta=document.createElement('div');meta.className='dmMsgMeta';meta.textContent=new Date(m.created_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});b.appendChild(meta);box.appendChild(b);if(lastSeen&&m.id===lastSeen.id){const seen=document.createElement('div');seen.className='dmSeen';const when=new Date(m.read_at||m.created_at);seen.textContent='Seen '+when.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});box.appendChild(seen)}}box.scrollTop=box.scrollHeight
 }
 async function dmIsFollowing(uid){const {data}=await dmSb.from('follows').select('follower_id').eq('follower_id',dmCurrentUser.id).eq('following_id',uid).maybeSingle();return !!data}
 async function dmSend(body='',file=null,type='text'){
  await dmGetCurrentUser();
  if(!dmCurrentUser||!dmActiveUser)return;let url=null;if(file){const ext=(file.name?.split('.').pop()||'webm').replace(/[^a-z0-9]/gi,'');const path=`${dmCurrentUser.id}/dm-${Date.now()}.${ext}`;const up=await dmSb.storage.from('drop-media').upload(path,file,{contentType:file.type});if(up.error)throw up.error;url=dmSb.storage.from('drop-media').getPublicUrl(path).data.publicUrl}
- const follows=await dmIsFollowing(dmActiveUser);const {error}=await dmSb.from('direct_messages').insert({sender_id:dmCurrentUser.id,recipient_id:dmActiveUser,body:body||null,media_url:url,media_type:type,read:false,is_request:!follows});if(error)throw error;await dmLoadMessages()
+ const follows=await dmIsFollowing(dmActiveUser);const {error}=await dmSb.from('direct_messages').insert({sender_id:dmCurrentUser.id,recipient_id:dmActiveUser,body:body||null,media_url:url,media_type:type,read:false,is_request:!follows});if(error)throw error;await dmSetTyping(false);await dmLoadMessages()
 }
 document.getElementById('dmComposeBtn')?.addEventListener('click',()=>{
  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -3477,6 +3523,7 @@ document.getElementById('dmNewBack')?.addEventListener('click',()=>{
  dmLoadList('primary');
 });
 document.getElementById('dmChatBack')?.addEventListener('click',async()=>{
+ await dmSetTyping(false);
  const ctx=dmChatReturnContext;
  dmChatReturnContext=null;
  if(ctx?.type==='profile'&&ctx.userId){
@@ -3486,7 +3533,7 @@ document.getElementById('dmChatBack')?.addEventListener('click',async()=>{
  dmShowPage('messages');
  dmLoadList('primary');
 });
-document.querySelectorAll('.dmTabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.dmTabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');dmLoadList(b.dataset.dmTab)});
+document.querySelectorAll('.dmTabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.dmTabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');dmLoadList(b.dataset.dmTab);dmRefreshRequestBadge()});
 async function dmRenderRecents(reload=true){
  const box=document.getElementById('dmUserResults');if(!box)return;
  if(reload)await dmLoadRecents();
@@ -3534,6 +3581,8 @@ document.getElementById('dmSendBtn')?.addEventListener('click',async()=>{
  try{await dmSend(v);i.value=''}catch(err){console.error('EXOF message send error:',err);alert(err?.message||String(err))}
 });
 document.getElementById('dmText')?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();document.getElementById('dmSendBtn').click()}});
+document.getElementById('dmText')?.addEventListener('input',()=>{if(!dmActiveUser)return;const now=Date.now();if(now-dmTypingLastSent>700){dmTypingLastSent=now;dmSetTyping(true)}clearTimeout(dmTypingStopTimer);dmTypingStopTimer=setTimeout(()=>dmSetTyping(false),1800)});
+document.getElementById('dmText')?.addEventListener('blur',()=>{clearTimeout(dmTypingStopTimer);dmSetTyping(false)});
 let dmPendingPhoto=null,dmPendingPhotoUrl='';
 document.getElementById('dmPhotoBtn')?.addEventListener('click',()=>document.getElementById('dmPhotoInput').click());
 document.getElementById('dmPhotoInput')?.addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;dmPendingPhoto=f;if(dmPendingPhotoUrl)URL.revokeObjectURL(dmPendingPhotoUrl);dmPendingPhotoUrl=URL.createObjectURL(f);document.getElementById('dmPhotoPreview').src=dmPendingPhotoUrl;document.getElementById('dmPhotoConfirm').hidden=false});
@@ -3561,8 +3610,8 @@ async function dmBuzz(){
  dmBuzzStartCooldown(); dmBuzzEffect('Buzz sent');if(last&&Date.now()-new Date(last.created_at).getTime()<10*60*1000){alert('You can Buzz this person again in a few minutes.');return}const {error}=await dmSb.from('dm_buzzes').insert({sender_id:dmCurrentUser.id,recipient_id:dmActiveUser});if(error)return alert(error.message);document.getElementById('dmChat').classList.add('dmBuzzShake');setTimeout(()=>document.getElementById('dmChat').classList.remove('dmBuzzShake'),1200)}
 document.getElementById('dmBuzzBtn')?.addEventListener('click',dmBuzz);
 document.getElementById('messagesBtn')?.addEventListener('click',()=>setTimeout(()=>dmLoadList('primary'),50));
-setInterval(()=>{if(document.getElementById('dmChat')?.classList.contains('active'))dmLoadMessages();dmRefreshHeaderBadge()},5000);
-setTimeout(dmRefreshHeaderBadge,1200);setTimeout(()=>dmLoadList('primary'),1500);
+setInterval(()=>{if(document.getElementById('dmChat')?.classList.contains('active')){dmLoadMessages();dmLoadTyping()}dmRefreshHeaderBadge();dmRefreshRequestBadge()},5000);
+setTimeout(()=>{dmRefreshHeaderBadge();dmRefreshRequestBadge()},1200);setTimeout(()=>dmLoadList('primary'),1500);
 </script>
 <div id="dmHoldMenuBackdrop" hidden>
   <div id="dmHoldMenu" role="dialog" aria-modal="true">
