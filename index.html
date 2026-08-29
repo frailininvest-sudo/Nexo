@@ -800,6 +800,9 @@ body.dmHoldOpen{overflow:hidden}
 .exContinueChain{width:100%;height:44px}
 </style><style id="chains1221css">
 #search .exStartChainBtn{width:100%;height:42px;margin-top:10px}.exChainInput{width:100%;box-sizing:border-box;border:1px solid #29342d;border-radius:12px;background:#0b0e0c;color:#fff;padding:12px;margin-top:10px}.exChainText{min-height:80px;resize:none}#exStartChainModal .exChainSheet{max-height:94vh;overflow:auto}.exChainStepTop{display:grid;grid-template-columns:32px 1fr 32px;align-items:center;margin-bottom:14px}.exChainStepTop button{border:0;background:none;color:#fff;font-size:30px}.exChainStepTop b{text-align:center}.exChainInstruction{border-left:3px solid var(--accent);padding:9px 11px;background:#0d120f;border-radius:8px}.exChainPickerBtns{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:14px 0}.exChainPickerBtns button{height:70px;border:1px solid #2c3830;border-radius:14px;background:#0b0f0c;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:20px}.exChainPickerBtns b{font-size:10px;color:var(--accent)}.exChainMediaPreview{min-height:260px;border:1px dashed #344139;border-radius:16px;background:#080b09;display:grid;place-items:center;color:#727d75;font-size:10px;overflow:hidden;margin-bottom:12px}.exChainMediaPreview img,.exChainMediaPreview video{width:100%;max-height:420px;object-fit:contain;display:block}.exChainEntries{display:flex;gap:8px;overflow:auto;margin:15px 0}.exChainEntry{min-width:105px}.exChainEntryMedia{width:105px;height:130px;border-radius:12px;overflow:hidden;background:#111}.exChainEntryMedia img,.exChainEntryMedia video{width:100%;height:100%;object-fit:cover}.exChainEntry small{display:block;color:#89928c;font-size:8px;margin-top:4px}
+.exChainTime{display:block;color:#a8b0aa!important;font-size:8px!important;margin-top:4px!important;font-weight:800}.exChainTime.urgent{color:var(--accent)!important}
+.exChainCountdown{margin:10px 0 4px;padding:9px 11px;border:1px solid #2d3931;border-radius:12px;background:#0b100c;color:var(--accent);font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:space-between;gap:8px}.exChainCountdown small{color:#8c978f;font-size:8px;font-weight:700}.exChainCountdown.urgent{box-shadow:0 0 16px rgba(62,255,38,.12)}
+
 </style><style id="exofChainThumbFix1223">
 /* Keep Global Chain media contained inside its compact card. */
 #search .exChainCard{overflow:hidden;min-width:0}
@@ -998,7 +1001,7 @@ body.dmHoldOpen{overflow:hidden}
 <div id="exChainList" class="exChainList"><div class="exDiscoverEmpty">Loading global Chains…</div></div>
 <button type="button" class="primary exStartChainBtn" id="exStartChainBtn">＋ START A GLOBAL CHAIN</button>
 </div>
-<div id="exChainModal" class="exChainModal" hidden><div class="exChainSheet"><button type="button" class="exChainClose" id="exChainClose">×</button><div class="exChainHero">🔗🌎</div><h2 id="exChainTitle">Global Chain</h2><p id="exChainDesc"></p><div id="exChainEntries" class="exChainEntries"></div><button type="button" class="primary exContinueChain" id="exContinueChain">CONTINUE CHAIN</button></div></div>
+<div id="exChainModal" class="exChainModal" hidden><div class="exChainSheet"><button type="button" class="exChainClose" id="exChainClose">×</button><div class="exChainHero">🔗🌎</div><h2 id="exChainTitle">Global Chain</h2><p id="exChainDesc"></p><div id="exChainCountdown" class="exChainCountdown"><span>⏱ 24h left</span><small>Global Chains expire after 24 hours</small></div><div id="exChainEntries" class="exChainEntries"></div><button type="button" class="primary exContinueChain" id="exContinueChain">CONTINUE CHAIN</button></div></div>
 <div id="exStartChainModal" class="exChainModal" hidden><div class="exChainSheet">
 <button type="button" class="exChainClose" id="exStartChainClose">×</button><div class="exChainHero">🌎</div><h2 id="exChainStartHeading">Start a Global Chain</h2><p id="exChainStartSub">Anyone on EXOF can discover and continue it.</p>
 <div id="exChainInfoStep"><input id="exNewChainTitle" maxlength="80" placeholder="What is your Chain about?" class="exChainInput"><textarea id="exNewChainDesc" maxlength="220" placeholder="What should people upload?" class="exChainInput exChainText"></textarea><button type="button" class="primary exContinueChain" id="exCreateChain">CREATE CHAIN</button></div>
@@ -3708,18 +3711,48 @@ const chainSb = window.supabase.createClient(
 let active=null, draft=null, chainFile=null, chainObjectURL='';
 const M=id=>document.getElementById(id), E=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 async function user(){try{const {data}=await chainSb.auth.getUser();return data?.user||null}catch(_){return null}}
+const CHAIN_TTL_MS=24*60*60*1000;
+function expiresAt(c){return new Date(c.created_at).getTime()+CHAIN_TTL_MS}
+function remainingMs(c){return expiresAt(c)-Date.now()}
+function isLive(c){return remainingMs(c)>0 && c.status==='active'}
+function timeLeft(c){
+ const ms=Math.max(0,remainingMs(c));
+ if(ms<=0)return 'Expired';
+ const total=Math.floor(ms/1000),h=Math.floor(total/3600),m=Math.floor((total%3600)/60),sec=total%60;
+ if(h>0)return `${h}h ${m}m left`;
+ return `${m}m ${String(sec).padStart(2,'0')}s left`;
+}
+let chainTick=null;
+function paintTimers(){
+ document.querySelectorAll('[data-chain-expiry]').forEach(el=>{
+   const end=Number(el.dataset.chainExpiry),ms=end-Date.now();
+   if(ms<=0){const card=el.closest('.exChainCard');if(card)card.remove();return}
+   const total=Math.floor(ms/1000),h=Math.floor(total/3600),m=Math.floor((total%3600)/60),sec=total%60;
+   el.textContent=h>0?`⏱ ${h}h ${m}m left`:`⏱ ${m}m ${String(sec).padStart(2,'0')}s left`;
+   el.classList.toggle('urgent',h===0);
+ });
+ if(active){
+   const cd=M('exChainCountdown'),ms=remainingMs(active);
+   if(ms<=0){M('exChainModal').hidden=true;active=null;load();return}
+   if(cd){cd.querySelector('span').textContent='⏱ '+timeLeft(active);cd.classList.toggle('urgent',ms<3600000)}
+ }
+ const box=M('exChainList');if(box && !box.querySelector('.exChainCard') && !box.querySelector('.exDiscoverEmpty'))box.innerHTML='<div class="exDiscoverEmpty">No active Global Chains yet.<br>Start the first one 🌎</div>';
+}
+function startChainClock(){if(chainTick)clearInterval(chainTick);paintTimers();chainTick=setInterval(paintTimers,1000)}
 async function load(){
  const box=M('exChainList');if(!box)return;box.innerHTML='<div class="exDiscoverEmpty">Loading global Chains…</div>';
  try{
-  const {data,error}=await chainSb.from('chains').select('*').eq('status','active').order('created_at',{ascending:false}).limit(30);if(error)throw error;
-  if(!data?.length){box.innerHTML='<div class="exDiscoverEmpty">No Global Chains yet.<br>Start the first one 🌎</div>';return}
+  const {data:raw,error}=await chainSb.from('chains').select('*').eq('status','active').order('created_at',{ascending:false}).limit(60);if(error)throw error;
+  const data=(raw||[]).filter(isLive).slice(0,30);
+  if(!data.length){box.innerHTML='<div class="exDiscoverEmpty">No active Global Chains yet.<br>Start the first one 🌎</div>';return}
   const ids=data.map(c=>c.id),r=await chainSb.from('chain_entries').select('chain_id,media_url,media_type,user_id').in('chain_id',ids),entries=r.data||[];
-  box.innerHTML=data.map(c=>{const ce=entries.filter(e=>e.chain_id===c.id),f=ce[0],thumb=f?(f.media_type==='video'?`<video src="${E(f.media_url)}" muted playsinline></video>`:`<img src="${E(f.media_url)}">`):'🔗';return `<article class="exChainCard" data-c="${c.id}"><div class="exChainThumb">${thumb}</div><div class="exChainBody"><b>${E(c.title)}</b><small>${E(c.description||'Global EXOF Chain')}</small><strong>🌎 ${ce.length} ${ce.length===1?'person':'people'} continuing</strong></div><button type="button" class="exChainView">View Chain</button></article>`}).join('');
-  box.querySelectorAll('[data-c]').forEach(el=>el.onclick=()=>open(data.find(c=>c.id===el.dataset.c)));
+  box.innerHTML=data.map(c=>{const ce=entries.filter(e=>e.chain_id===c.id),f=ce[0],thumb=f?(f.media_type==='video'?`<video src="${E(f.media_url)}" muted playsinline></video>`:`<img src="${E(f.media_url)}">`):'🔗';return `<article class="exChainCard" data-c="${c.id}"><div class="exChainThumb">${thumb}</div><div class="exChainBody"><b>${E(c.title)}</b><small>${E(c.description||'Global EXOF Chain')}</small><strong>🌎 ${ce.length} ${ce.length===1?'person':'people'} continuing</strong><span class="exChainTime" data-chain-expiry="${expiresAt(c)}">⏱ ${E(timeLeft(c))}</span></div><button type="button" class="exChainView">View Chain</button></article>`}).join('');
+  box.querySelectorAll('[data-c]').forEach(el=>el.onclick=()=>open(data.find(c=>c.id===el.dataset.c)));paintTimers();
  }catch(e){console.error('Global Chains:',e);box.innerHTML='<div class="exDiscoverEmpty">Could not load Global Chains.</div>'}
 }
 async function open(c){
- active=c;M('exChainTitle').textContent=c.title;M('exChainDesc').textContent=c.description||'Anyone can continue this Chain.';M('exChainModal').hidden=false;
+ if(!c||!isLive(c)){await load();return alert('This Global Chain has expired.');}
+ active=c;M('exChainTitle').textContent=c.title;M('exChainDesc').textContent=c.description||'Anyone can continue this Chain.';M('exChainModal').hidden=false;paintTimers();
  const b=M('exChainEntries');b.innerHTML='<div class="exDiscoverEmpty">Loading Chain…</div>';
  const {data,error}=await chainSb.from('chain_entries').select('*').eq('chain_id',c.id).order('created_at',{ascending:true});
  if(error){b.innerHTML='<div class="exDiscoverEmpty">'+E(error.message)+'</div>';return}
@@ -3744,7 +3777,7 @@ function beginNew(){
  M('exNewChainTitle').hidden=true;M('exNewChainDesc').hidden=true;M('exCreateChain').hidden=true;M('exChainMediaStep').hidden=false;
 }
 function beginContinue(){
- if(!active)return;draft={mode:'continue',chain_id:active.id,title:active.title,description:active.description||''};resetMedia();
+ if(!active)return;if(!isLive(active)){M('exChainModal').hidden=true;active=null;load();return alert('This Global Chain has expired.');}draft={mode:'continue',chain_id:active.id,title:active.title,description:active.description||''};resetMedia();
  M('exChainModal').hidden=true;M('exStartChainModal').hidden=false;
  M('exNewChainTitle').hidden=true;M('exNewChainDesc').hidden=true;M('exCreateChain').hidden=true;M('exChainMediaStep').hidden=false;
  M('exChainInstruction').innerHTML='<b>'+E(active.title)+'</b><br>'+E(active.description||'Add your contribution to this Global Chain.');
@@ -3758,6 +3791,7 @@ async function publish(){
  const btn=M('exPublishGlobalChain'),msg=M('exChainPublishMsg');btn.disabled=true;btn.textContent='PUBLISHING…';msg.textContent='';
  let newChainId=null, uploadedPath=null;
  try{
+  if(draft.mode==='continue'){const ck=await chainSb.from('chains').select('id,status,created_at').eq('id',draft.chain_id).single();if(ck.error)throw ck.error;if(!isLive(ck.data))throw new Error('This Global Chain has expired.');}
   let chainId=draft.chain_id;
   if(draft.mode==='first'){
    const cr=await chainSb.from('chains').insert({creator_id:u.id,title:draft.title,description:draft.description,status:'active'}).select().single();if(cr.error)throw cr.error;chainId=cr.data.id;newChainId=chainId;
@@ -3800,7 +3834,7 @@ function init(){
  M('exChainCameraInput')?.addEventListener('change',e=>{showMedia(e.target.files?.[0]);e.target.value=''});
  M('exChainGalleryInput')?.addEventListener('change',e=>{showMedia(e.target.files?.[0]);e.target.value=''});
  M('exPublishGlobalChain')?.addEventListener('click',publish);
- load();
+ startChainClock();load();
 }
 document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
 })();
