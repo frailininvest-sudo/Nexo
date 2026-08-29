@@ -836,6 +836,16 @@ body.dmHoldOpen{overflow:hidden}
 #profile .exofProfileAbout a,#publicProfile #publicBio a{color:var(--accent)!important;text-decoration:underline;text-underline-offset:2px;cursor:pointer;overflow-wrap:anywhere}
 #publicProfile #publicBio{white-space:pre-wrap!important;overflow-wrap:anywhere}
 </style>
+
+<style id="exofChainContributorProfilesV1238">
+.exChainEntry{min-width:105px;cursor:default}
+.exChainEntryMedia{cursor:pointer}
+.exChainContributor{margin-top:5px;display:flex;align-items:center;gap:4px;min-width:0;cursor:pointer;color:#fff}
+.exChainContributorAvatar{width:17px;height:17px;min-width:17px;border-radius:50%;overflow:hidden;background:#172019;border:1px solid #304037;display:grid;place-items:center;color:var(--accent);font-size:7px;font-weight:900}
+.exChainContributorAvatar img{width:100%;height:100%;object-fit:cover;display:block}
+.exChainContributor b{min-width:0;max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:8px;color:#fff;font-weight:900}
+.exChainContributor small{display:inline!important;margin:0!important;color:#7f8982!important;font-size:7px!important;white-space:nowrap}
+</style>
 </head>
 <body><div id="exofBuzzToast"></div>
 <div id="authGate">
@@ -3756,8 +3766,24 @@ async function open(c){
  const b=M('exChainEntries');b.innerHTML='<div class="exDiscoverEmpty">Loading Chain…</div>';
  const {data,error}=await chainSb.from('chain_entries').select('*').eq('chain_id',c.id).order('created_at',{ascending:true});
  if(error){b.innerHTML='<div class="exDiscoverEmpty">'+E(error.message)+'</div>';return}
- b.innerHTML=data?.length?data.map((x,i)=>`<div class="exChainEntry" data-chain-media="${E(x.media_url)}" data-chain-type="${E(x.media_type)}"><div class="exChainEntryMedia">${x.media_type==='video'?`<video src="${E(x.media_url)}" muted playsinline></video>`:`<img src="${E(x.media_url)}">`}</div><small>#${i+1}</small></div>`).join(''):'<div class="exDiscoverEmpty">Be the first to continue.</div>';
- if(data?.length)b.querySelectorAll('[data-chain-media]').forEach(el=>el.addEventListener('click',()=>showChainMedia(el.dataset.chainMedia,el.dataset.chainType)));
+ const entries=data||[];
+ const userIds=[...new Set(entries.map(x=>x.user_id).filter(Boolean))];
+ const profileMap={};
+ if(userIds.length){
+   const pr=await chainSb.from('profiles').select('id,username,display_name,avatar_url').in('id',userIds);
+   if(pr.error)console.warn('Global Chains contributor profiles:',pr.error);
+   else (pr.data||[]).forEach(p=>profileMap[p.id]=p);
+ }
+ b.innerHTML=entries.length?entries.map((x,i)=>{
+   const p=profileMap[x.user_id]||{};
+   const username=p.username||p.display_name||'EXOF user';
+   const avatar=p.avatar_url?`<img src="${E(p.avatar_url)}" alt="">`:`<span>${E(String(username).charAt(0).toUpperCase()||'E')}</span>`;
+   return `<div class="exChainEntry"><div class="exChainEntryMedia" data-chain-media="${E(x.media_url)}" data-chain-type="${E(x.media_type)}">${x.media_type==='video'?`<video src="${E(x.media_url)}" muted playsinline></video>`:`<img src="${E(x.media_url)}">`}</div><div class="exChainContributor" data-chain-user="${E(x.user_id||'')}" data-chain-username="${E(username)}"><span class="exChainContributorAvatar">${avatar}</span><b>@${E(String(username).replace(/^@/,''))}</b><small>#${i+1}</small></div></div>`;
+ }).join(''):'<div class="exDiscoverEmpty">Be the first to continue.</div>';
+ if(entries.length){
+   b.querySelectorAll('[data-chain-media]').forEach(el=>el.addEventListener('click',()=>showChainMedia(el.dataset.chainMedia,el.dataset.chainType)));
+   b.querySelectorAll('[data-chain-user]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();openChainContributor(el.dataset.chainUser,el.dataset.chainUsername)}));
+ }
 }
 function resetMedia(){
  chainFile=null;if(chainObjectURL){URL.revokeObjectURL(chainObjectURL);chainObjectURL=''}M('exChainMediaPreview').innerHTML='CHOOSE A PHOTO OR VIDEO';M('exPublishGlobalChain').disabled=true;M('exChainPublishMsg').textContent='';
