@@ -3364,15 +3364,18 @@ async function dmLoadList(tab='primary',filter=''){
   if(tab==='requests'){row.querySelector('.accept').onclick=async e=>{e.stopPropagation();await dmSb.from('direct_messages').update({is_request:false}).or(`and(sender_id.eq.${uid},recipient_id.eq.${dmCurrentUser.id}),and(sender_id.eq.${dmCurrentUser.id},recipient_id.eq.${uid})`);dmLoadList('requests')};row.querySelector('.delete').onclick=async e=>{e.stopPropagation();await dmSb.from('direct_messages').delete().eq('sender_id',uid).eq('recipient_id',dmCurrentUser.id).eq('is_request',true);dmLoadList('requests')}}
   dmWireSwipe(row,uid,tab);box.appendChild(row)}
 }
-async function dmOpen(uid){
- await dmGetCurrentUser();dmActiveUser=uid;const pr=await dmProfile(uid);dmAddRecent(pr);const h=document.getElementById('dmChatPerson');h.innerHTML=`${pr?.avatar_url?`<img src="${pr.avatar_url}">`:''}<div><b>${dmEsc(pr?.display_name||pr?.username||'User')}</b><div class="dmHandle">@${dmEsc(pr?.username||'')}</div></div>`;await dmSb.from('direct_messages').update({read:true}).eq('sender_id',uid).eq('recipient_id',dmCurrentUser.id);await dmLoadMessages();dmShowPage('dmChat');dmRefreshHeaderBadge()}
+let dmChatReturnContext=null;
+async function dmOpen(uid,opts={}){
+ await dmGetCurrentUser();
+ dmChatReturnContext=(opts.fromProfile&&uid)?{type:'profile',userId:uid}:null;
+ dmActiveUser=uid;const pr=await dmProfile(uid);dmAddRecent(pr);const h=document.getElementById('dmChatPerson');h.innerHTML=`${pr?.avatar_url?`<img src="${pr.avatar_url}">`:''}<div><b>${dmEsc(pr?.display_name||pr?.username||'User')}</b><div class="dmHandle">@${dmEsc(pr?.username||'')}</div></div>`;await dmSb.from('direct_messages').update({read:true}).eq('sender_id',uid).eq('recipient_id',dmCurrentUser.id);await dmLoadMessages();dmShowPage('dmChat');dmRefreshHeaderBadge()}
 document.getElementById('publicDmBtn')?.addEventListener('click',async()=>{
  const uid=document.getElementById('publicDmBtn')?.dataset.uid||window.activePublicUserId;
  if(!uid)return;
  try{
    await dmGetCurrentUser();
    if(dmCurrentUser?.id===uid)return;
-   await dmOpen(uid);
+   await dmOpen(uid,{fromProfile:true});
  }catch(err){console.error('EXOF Profile → DM',err);alert('Could not open EXOF DM. Please try again.')}
 });
 
@@ -3406,7 +3409,16 @@ document.getElementById('dmNewBack')?.addEventListener('click',()=>{
  document.getElementById('messages')?.classList.add('active');
  dmLoadList('primary');
 });
-document.getElementById('dmChatBack')?.addEventListener('click',()=>{dmShowPage('messages');dmLoadList('primary')});
+document.getElementById('dmChatBack')?.addEventListener('click',async()=>{
+ const ctx=dmChatReturnContext;
+ dmChatReturnContext=null;
+ if(ctx?.type==='profile'&&ctx.userId){
+   await openPublicProfile(ctx.userId);
+   return;
+ }
+ dmShowPage('messages');
+ dmLoadList('primary');
+});
 document.querySelectorAll('.dmTabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.dmTabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');dmLoadList(b.dataset.dmTab)});
 async function dmRenderRecents(reload=true){
  const box=document.getElementById('dmUserResults');if(!box)return;
