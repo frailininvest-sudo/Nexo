@@ -157,6 +157,8 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 .exofActivityBadge{position:absolute;right:-7px;top:-7px;min-width:17px;height:17px;padding:0 4px;border-radius:10px;background:var(--accent);color:#061006;font-size:10px;font-weight:1000;display:none;align-items:center;justify-content:center;border:2px solid #020604}
 
 /* V1.23.1 — Public Profile → EXOF DM */
+#publicProfile .exofPublicBackBar{position:sticky;top:0;z-index:80;padding:10px 16px 6px;background:linear-gradient(180deg,#050706 72%,rgba(5,7,6,.86) 88%,rgba(5,7,6,0));}
+#publicProfile .exofPublicBackBar #publicProfileBackBtn{width:auto;min-width:150px;margin:0;padding:9px 12px;border-radius:12px;font-size:10px;font-weight:900;}
 #publicProfile .exofPublicActions{display:flex;gap:10px;align-items:stretch;margin-top:10px}
 #publicProfile .exofPublicActions #publicFollowBtn,#publicProfile .exofPublicActions #publicDmBtn{flex:1;margin-top:0;min-width:0}
 #publicProfile .exofPublicDmBtn{display:none;align-items:center;justify-content:center;gap:7px}
@@ -1019,8 +1021,9 @@ body.dmHoldOpen{overflow:hidden}
 </div></div>
 </div></section>
 <section id="publicProfile" class="page publicProfile">
+<div class="exofPublicBackBar"><button class="secondary" id="publicProfileBackBtn" type="button">← BACK TO SEARCH</button></div>
 <div id="publicProfileShell" class="profileShell"><div id="publicProfileBg" class="profileBg"></div><div class="profileShade"></div><div class="profileContent"><div id="publicCover" class="cover"></div><div id="publicAvatar" class="profileAva">E</div><div id="publicName" class="name">EXOF user</div><div class="exofPublicMetaLine"><p id="publicHandle" class="bio">@user</p><span id="publicOfficialRole" class="exofPublicOfficialRole" hidden></span></div><p id="publicBio" class="bio" style="margin-top:4px"></p><div class="exofPublicActions"><button id="publicFollowBtn" class="followBtn" type="button" style="display:none">FOLLOW</button><button id="publicDmBtn" class="followBtn exofPublicDmBtn" type="button" style="display:none"><img src="exof-dm-icon.png" alt=""> EXOF DM</button></div><button id="publicBlockBtn" type="button" style="display:none">BLOCK USER</button><div class="stats"><div><b id="publicFollowers">0</b><small>FOLLOWERS</small></div><div><b id="publicFollowing">0</b><small>FOLLOWING</small></div><div><b id="publicDropCount">0</b><small>DROPS</small></div></div><div class="module" id="publicProfileTrackModule"><div class="track"><div><small class="mint">PROFILE TRACK</small><h4 id="publicProfileTrackTitle">No track selected</h4><span class="meta" id="publicProfileTrackArtist">No public track selected</span></div><button class="play" id="publicProfileTrackPlay" type="button">▶</button></div><div id="publicProfileTrackPlayer" style="display:none"></div></div><div class="module"><h4>♥ Favorite Drops</h4><div class="worldGrid"><div class="world"></div><div class="world"></div></div></div></div></div>
-<div style="padding:10px 16px 110px"><button class="secondary" id="publicProfileBackBtn" type="button" style="margin-bottom:12px">← BACK TO SEARCH</button><div id="publicDropsList"><div class="emptyState">No Drops yet.</div></div></div></section>
+<div style="padding:10px 16px 110px"><div id="publicDropsList"><div class="emptyState">No Drops yet.</div></div></div></section>
 <section id="messages" class="page exofDmPage">
 <div class="dmTitleRow"><div class="title">Messages</div><button id="dmComposeBtn" class="dmCompose" aria-label="New message"><span class="pencil green">✎</span><span class="pencil white">✎</span></button></div>
 <input id="dmSearch" class="dmSearch" placeholder="Search messages">
