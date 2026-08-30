@@ -2634,7 +2634,7 @@ window.EXOF_PRIVACY_API={
 </script>
 
 <section id="exofActivityPage" class="exofActivityPage" hidden>
- <div class="exofActivityHead"><button id="exofActivityBack" class="exofFuncBack">‹</button><b>ACTIVITY</b></div>
+ <div class="exofActivityHead"><button id="exofActivityBack" class="exofFuncBack">‹</button><b>ACTIVITY</b><button id="exofActivityMarkAll" class="exofActivityMarkAll">MARK ALL READ</button></div>
  <div class="exofActivityBody">
   <div class="exofActivityTabs">
    <button id="exofActivityTabRequests" class="exofActivityTab">FOLLOW REQUESTS <span id="exofActivityRequestCount" class="exofActivityTabCount" hidden></span></button>
@@ -2650,7 +2650,16 @@ window.EXOF_PRIVACY_API={
   </div>
  </div>
 </section>
-<script id="exofActivityV1105">
+<style id="exofActivityV1252Style">
+.exofActivityMarkAll{margin-left:auto;border:0;background:transparent;color:var(--accent);font-size:10px;font-weight:900;letter-spacing:.5px;padding:10px 4px;cursor:pointer}
+.exofActivityDay{font-size:11px;font-weight:900;letter-spacing:1.2px;color:#8f9991;margin:18px 6px 8px;text-transform:uppercase}
+.exofActivityRow.unread{background:linear-gradient(110deg,#0b1710,#050806);border-color:#285c37;position:relative}
+.exofActivityRow.unread:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px color-mix(in srgb,var(--accent) 65%,transparent);position:absolute;left:5px;top:50%;transform:translateY(-50%)}
+.exofActivityRow.grouped .exofActivityAvatarStack{width:46px;min-width:46px;height:46px;position:relative}
+.exofActivityRow.grouped .exofActivityAvatarStack img{position:absolute;width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid #071008;background:#111}
+.exofActivityRow.grouped .exofActivityAvatarStack img:nth-child(1){left:0;top:0}.exofActivityRow.grouped .exofActivityAvatarStack img:nth-child(2){right:0;bottom:0}
+.exofActivityRow.grouped .exofActivityAvatarStack img:only-child{width:42px;height:42px;left:2px;top:2px}
+</style><script id="exofActivityV1105">
 (function(){
  const $=id=>document.getElementById(id), sb=()=>window.exofSupabase, priv=()=>window.EXOF_PRIVACY_API;
  const page=()=>document.getElementById('exofActivityPage');
@@ -2688,48 +2697,45 @@ window.EXOF_PRIVACY_API={
      });
    }catch(e){count.hidden=true;empty.hidden=false;empty.textContent=e.message||'Unable to load follow requests.'}
  }
+ async function markIdsRead(ids){
+   if(!ids?.length)return;try{const user=await me();await sb().from('notifications').update({is_read:true}).eq('user_id',user.id).in('id',ids);await updateBadge()}catch(e){}
+ }
+ function dayLabel(v){const d=new Date(v),now=new Date();const a=new Date(now.getFullYear(),now.getMonth(),now.getDate()),b=new Date(d.getFullYear(),d.getMonth(),d.getDate()),days=Math.round((a-b)/86400000);return days<=0?'TODAY':days===1?'YESTERDAY':'EARLIER'}
  async function loadRecent(){
    const box=$('exofActivityRecent'),empty=$('exofActivityRecentEmpty');box.innerHTML='';empty.hidden=true;
    try{
      const user=await me();
-     const {data,error}=await sb().from('notifications').select('*').eq('user_id',user.id).in('type',['like','comment','mention','follow','follow_accepted']).order('created_at',{ascending:false}).limit(50);
+     const {data,error}=await sb().from('notifications').select('*').eq('user_id',user.id).in('type',['like','comment','mention','follow','follow_accepted']).order('created_at',{ascending:false}).limit(100);
      if(error)throw error;if(!data?.length){empty.hidden=false;return}
      const pm=await profiles(data.map(n=>n.actor_id).filter(Boolean));
-     const dropIds=[...new Set(data.map(n=>n.drop_id).filter(Boolean))];
-     const commentIds=[...new Set(data.map(n=>n.comment_id).filter(Boolean))];
+     const dropIds=[...new Set(data.map(n=>n.drop_id).filter(Boolean))],commentIds=[...new Set(data.map(n=>n.comment_id).filter(Boolean))];
      let drops=new Map(),comments=new Map();
      if(dropIds.length){const q=await sb().from('drops').select('id,media_url,media_type').in('id',dropIds);if(!q.error)(q.data||[]).forEach(x=>drops.set(String(x.id),x))}
      if(commentIds.length){const q=await sb().from('drop_comments').select('id,body').in('id',commentIds);if(!q.error)(q.data||[]).forEach(x=>comments.set(String(x.id),x.body||''))}
-     data.forEach(n=>{
-       const p=pm.get(n.actor_id)||{},d=drops.get(String(n.drop_id))||{},el=document.createElement('div');el.className='exofActivityRow recent';
-       let action=n.type==='like'?'liked your Drop':
-         n.type==='follow'?'started following you':
-         n.type==='follow_accepted'?'accepted your follow request':n.type==='mention'?'mentioned you in a comment':'commented';
-       if(n.type==='comment'){const body=comments.get(String(n.comment_id));if(body)action+=': '+body}
-       let thumb='';
-       if(n.type!=='follow'&&n.type!=='follow_accepted'&&d.media_url){
-         thumb=(d.media_type||'').toLowerCase()==='video'
-          ?`<video class="exofActivityThumb" src="${esc(d.media_url)}" muted playsinline preload="metadata"></video>`
-          :`<img class="exofActivityThumb" src="${esc(d.media_url)}">`;
+     // Likes are grouped by Drop. Other activity remains individual so comments/mentions stay prominent.
+     const items=[],likeGroups=new Map();
+     data.forEach(n=>{if(n.type==='like'&&n.drop_id){const k=String(n.drop_id),g=likeGroups.get(k)||[];g.push(n);likeGroups.set(k,g)}else items.push({kind:'one',rows:[n],created_at:n.created_at})});
+     likeGroups.forEach(rows=>items.push({kind:'likes',rows,created_at:rows[0].created_at}));items.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+     let lastDay='';
+     items.forEach(item=>{
+       const rows=item.rows,n=rows[0],d=drops.get(String(n.drop_id))||{},el=document.createElement('div'),label=dayLabel(item.created_at);
+       if(label!==lastDay){const h=document.createElement('div');h.className='exofActivityDay';h.textContent=label;box.appendChild(h);lastDay=label}
+       el.className='exofActivityRow recent'+(rows.some(x=>!x.is_read)?' unread':'')+(item.kind==='likes'?' grouped':'');
+       let thumb='';if(n.type!=='follow'&&n.type!=='follow_accepted'&&d.media_url)thumb=(d.media_type||'').toLowerCase()==='video'?`<video class="exofActivityThumb" src="${esc(d.media_url)}" muted playsinline preload="metadata"></video>`:`<img class="exofActivityThumb" src="${esc(d.media_url)}">`;
+       if(item.kind==='likes'){
+         const actors=[...new Map(rows.map(x=>[x.actor_id,pm.get(x.actor_id)||{}])).entries()],names=actors.map(([id,p])=>who(p));
+         const phrase=actors.length===1?`${names[0]} liked your Drop`:actors.length===2?`${names[0]} and ${names[1]} liked your Drop`:`${names[0]}, ${names[1]} and ${actors.length-2} other${actors.length-2===1?'':'s'} liked your Drop`;
+         const avs=actors.slice(0,2).map(([id,p])=>`<img class="exofProfileLink" data-profile-user="${esc(id)}" src="${av(p)}">`).join('');
+         el.innerHTML=`<div class="exofActivityAvatarStack">${avs}</div><div class="exofActivityText"><div><span>${phrase}</span></div><small>${ago(item.created_at)}</small></div>${thumb}`;
+       }else{
+         const p=pm.get(n.actor_id)||{};let action=n.type==='follow'?'started following you':n.type==='follow_accepted'?'accepted your follow request':n.type==='mention'?'mentioned you in a comment':'commented';
+         if(n.type==='comment'){const body=comments.get(String(n.comment_id));if(body)action+=': '+body}
+         el.innerHTML=`<img class="exofActivityAvatar exofProfileLink" data-profile-user="${esc(n.actor_id||'')}" src="${av(p)}"><div class="exofActivityText"><div><b class="exofProfileLink" data-profile-user="${esc(n.actor_id||'')}">${who(p)}</b> <span>${esc(action)}</span></div><small>${ago(n.created_at)}</small></div>${thumb}`;
        }
-       el.innerHTML=`<img class="exofActivityAvatar exofProfileLink" data-profile-user="${esc(n.actor_id||'')}" src="${av(p)}"><div class="exofActivityText"><div><b class="exofProfileLink" data-profile-user="${esc(n.actor_id||'')}">${who(p)}</b> <span>${esc(action)}</span></div><small>${ago(n.created_at)}</small></div>${thumb}`;
-       el.querySelectorAll('[data-profile-user]').forEach(link=>link.addEventListener('click',e=>{
-         e.stopPropagation();
-         const uid=link.dataset.profileUser;if(!uid)return;
-         page().hidden=true;document.body.style.overflow='';
-         if(uid===currentUser?.id){
-           go('profile');
-         }else{
-           // Initialize EXOF's normal public-profile path exactly as a user coming
-           // from Explore/Search, then open the selected account.
-           go('search',{noRoute:true});
-           openPublicProfile(uid);
-         }
-       }));
-       if((n.type==='mention'||n.type==='comment'||n.type==='like')&&n.drop_id){el.style.cursor='pointer';el.addEventListener('click',async e=>{if(e.target.closest('[data-profile-user]'))return;page().hidden=true;document.body.style.overflow='';go('home');try{await loadDrops()}catch(_e){}let tries=0;const jump=()=>{const card=[...document.querySelectorAll('.card.post[data-drop-id]')].find(x=>String(x.dataset.dropId)===String(n.drop_id));if(card){card.scrollIntoView({behavior:'smooth',block:'center'});if(n.type==='mention'||n.type==='comment'){const comments=card.querySelector('.exofComments');if(comments&&comments.style.display==='none')card.querySelector('.commentBtn')?.click()}return}if(++tries<12)setTimeout(jump,150)};setTimeout(jump,80)})}
+       el.querySelectorAll('[data-profile-user]').forEach(link=>link.addEventListener('click',async e=>{e.stopPropagation();await markIdsRead(rows.map(x=>x.id));const uid=link.dataset.profileUser;if(!uid)return;page().hidden=true;document.body.style.overflow='';if(uid===currentUser?.id)go('profile');else{go('search',{noRoute:true});openPublicProfile(uid)}}));
+       if(n.drop_id){el.style.cursor='pointer';el.addEventListener('click',async e=>{if(e.target.closest('[data-profile-user]'))return;await markIdsRead(rows.map(x=>x.id));page().hidden=true;document.body.style.overflow='';go('home');try{await loadDrops()}catch(_e){}let tries=0;const jump=()=>{const card=[...document.querySelectorAll('.card.post[data-drop-id]')].find(x=>String(x.dataset.dropId)===String(n.drop_id));if(card){card.scrollIntoView({behavior:'smooth',block:'center'});if(n.type==='mention'||n.type==='comment'){const comments=card.querySelector('.exofComments');if(comments&&comments.style.display==='none')card.querySelector('.commentBtn')?.click()}return}if(++tries<12)setTimeout(jump,150)};setTimeout(jump,80)})}
        box.appendChild(el);
      });
-     await sb().from('notifications').update({is_read:true}).eq('user_id',user.id).eq('is_read',false);
    }catch(e){empty.hidden=false;empty.textContent='Could not load recent activity.';console.error(e)}
  }
  async function updateBadge(){
@@ -2751,6 +2757,7 @@ window.EXOF_PRIVACY_API={
 }
 $('exofActivityTabRequests')?.addEventListener('click',()=>setActivityTab('requests'));
 $('exofActivityTabRecent')?.addEventListener('click',()=>setActivityTab('recent'));
+$('exofActivityMarkAll')?.addEventListener('click',async()=>{const b=$('exofActivityMarkAll');b.disabled=true;try{const user=await me();await sb().from('notifications').update({is_read:true}).eq('user_id',user.id).eq('is_read',false);await Promise.all([loadRecent(),updateBadge()])}catch(e){alert(e.message||'Unable to mark activity as read.')}finally{b.disabled=false}});
 async function openActivity(){
  page().hidden=false;document.body.style.overflow='hidden';
  setActivityTab('recent');
