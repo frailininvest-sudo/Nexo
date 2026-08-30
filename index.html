@@ -174,6 +174,10 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 .exofProfileGridTile img,.exofProfileGridTile video{width:100%;height:100%;display:block;object-fit:cover;background:#050806}
 .exofProfileGridType{position:absolute;right:6px;top:5px;color:#fff;font-size:13px;font-weight:950;text-shadow:0 1px 4px #000;background:rgba(0,0,0,.25);border-radius:999px;padding:2px 5px}
 .exofProfileGridType.loop{color:var(--accent)}
+.exofProfileGridEngagement{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:8px;padding:18px 6px 5px;color:#fff;font-size:10px;font-weight:900;line-height:1;pointer-events:none;background:linear-gradient(transparent,rgba(0,0,0,.78));text-shadow:0 1px 3px #000}
+.exofProfileGridEngagement span{display:inline-flex;align-items:center;gap:2px;white-space:nowrap}
+.exofProfileGridEngagement b{font-size:11px;font-weight:950}
+@media(max-width:360px){.exofProfileGridEngagement{gap:5px;padding-left:4px;padding-right:4px;font-size:9px}.exofProfileGridEngagement b{font-size:10px}}
 .exofProfileDropViewer{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.94);display:none;overflow:auto;padding:56px 12px 90px}
 .exofProfileDropViewer.open{display:block}
 .exofProfileDropViewerInner{width:min(560px,100%);margin:0 auto}
@@ -2026,7 +2030,8 @@ async function exofOpenProfileGridDrop(d,pr={},own=false){
 function exofProfileGridTile(d,pr={},own=false){
  const tile=document.createElement('button');tile.type='button';tile.className='exofProfileGridTile';tile.dataset.dropId=d.id;
  const type=String(d.media_type||'image').toLowerCase();const safe=escapeHtml(d.media_url||'');
- tile.innerHTML=(type==='video'?'<video src="'+safe+'" muted playsinline preload="metadata"></video>':'<img src="'+safe+'" alt="Drop" loading="lazy">')+(type==='video'?'<span class="exofProfileGridType">▶</span>':(type==='loop'?'<span class="exofProfileGridType loop">↻</span>':''));
+ tile.innerHTML=(type==='video'?'<video src="'+safe+'" muted playsinline preload="metadata"></video>':'<img src="'+safe+'" alt="Drop" loading="lazy">')+(type==='video'?'<span class="exofProfileGridType">▶</span>':(type==='loop'?'<span class="exofProfileGridType loop">↻</span>':''))+'<span class="exofProfileGridEngagement"><span>♥ <b class="exofGridLikes">–</b></span><span>💬 <b class="exofGridComments">–</b></span></span>';
+ Promise.all([exofLikeCount(d.id),exofCommentCount(d.id)]).then(([likes,comments])=>{if(!tile.isConnected)return;const l=tile.querySelector('.exofGridLikes'),c=tile.querySelector('.exofGridComments');if(l)l.textContent=likes??0;if(c)c.textContent=comments??0}).catch(()=>{const l=tile.querySelector('.exofGridLikes'),c=tile.querySelector('.exofGridComments');if(l)l.textContent='0';if(c)c.textContent='0'});
  tile.onclick=()=>exofOpenProfileGridDrop(d,pr,own);return tile;
 }
 
