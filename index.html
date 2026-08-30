@@ -166,6 +166,19 @@ nav{position:fixed;z-index:30;bottom:0;left:50%;transform:translateX(-50%);width
 
 /* EXOF V1.24.9 — Comment @Mentions */
 .exofCommentForm{position:relative}.exofMentionPicker{position:absolute;left:0;right:0;bottom:48px;z-index:30;background:#0b0f0d;border:1px solid rgba(73,255,135,.28);border-radius:14px;max-height:210px;overflow:auto;box-shadow:0 14px 36px rgba(0,0,0,.5);padding:6px}.exofMentionChoice{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;color:#fff;padding:9px 10px;border-radius:10px;text-align:left}.exofMentionChoice:hover,.exofMentionChoice:focus{background:rgba(73,255,135,.10);outline:none}.exofMentionChoice img{width:34px;height:34px;border-radius:50%;object-fit:cover;background:#172019}.exofMentionChoice b{display:block;font-size:13px}.exofMentionChoice small{display:block;color:#8e9a92;font-size:11px}.exofMentionLink{color:var(--accent,#49ff87);font-weight:800;cursor:pointer}
+
+/* EXOF V1.25.0 — Profile Grid */
+#myDropsList,#publicDropsList{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px!important;margin-top:8px}
+#myDropsList>.emptyState,#publicDropsList>.emptyState,#publicDropsList>.exofPrivateNotice{grid-column:1/-1}
+.exofProfileGridTile{position:relative;aspect-ratio:1/1;border:0;padding:0;margin:0;border-radius:7px;overflow:hidden;background:#071009;cursor:pointer;min-width:0}
+.exofProfileGridTile img,.exofProfileGridTile video{width:100%;height:100%;display:block;object-fit:cover;background:#050806}
+.exofProfileGridType{position:absolute;right:6px;top:5px;color:#fff;font-size:13px;font-weight:950;text-shadow:0 1px 4px #000;background:rgba(0,0,0,.25);border-radius:999px;padding:2px 5px}
+.exofProfileGridType.loop{color:var(--accent)}
+.exofProfileDropViewer{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.94);display:none;overflow:auto;padding:56px 12px 90px}
+.exofProfileDropViewer.open{display:block}
+.exofProfileDropViewerInner{width:min(560px,100%);margin:0 auto}
+.exofProfileDropViewerClose{position:fixed;z-index:1201;right:18px;top:14px;width:38px;height:38px;border-radius:50%;border:1px solid #29402f;background:#09100b;color:#fff;font-size:24px;font-weight:900}
+@media(max-width:430px){#myDropsList,#publicDropsList{gap:2px}.exofProfileGridTile{border-radius:5px}}
 </style>
 
 
@@ -1545,12 +1558,7 @@ async function openPublicProfile(userId,opts={}){
   document.getElementById('publicDropCount').textContent=dropCount;
   if(de){ list.innerHTML='<div class="emptyState">'+escapeHtml(de.message)+'</div>'; }
   else if(!drops||!drops.length){ list.innerHTML='<div class="emptyState">No Drops yet.</div>'; }
-  else list.innerHTML=drops.map(d=>`
-    <article class="card" style="margin:10px 0">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">@${escapeHtml(u.username)}</div>
-      ${d.media_type==='video'?`<video src="${d.media_url}" controls playsinline style="width:100%;border-radius:14px"></video>`:`<img src="${d.media_url}" alt="" style="width:100%;border-radius:14px;display:block">`}
-      ${d.caption?`<p style="margin:10px 2px 2px">${escapeHtml(d.caption)}</p>`:''}
-    </article>`).join('');
+  else { list.innerHTML=''; drops.forEach(d=>list.appendChild(exofProfileGridTile(d,u,false))); }
   activePublicUserId=userId;
   const publicDmBtn=document.getElementById('publicDmBtn');
   if(publicDmBtn){publicDmBtn.dataset.uid=userId;publicDmBtn.style.display=(currentUser&&userId!==currentUser.id)?'flex':'none';}
@@ -2009,6 +2017,19 @@ async function buildDropCard(d,pr={},own=false){
  return card;
 }
 
+async function exofOpenProfileGridDrop(d,pr={},own=false){
+ let viewer=document.getElementById('exofProfileDropViewer');
+ if(!viewer){viewer=document.createElement('div');viewer.id='exofProfileDropViewer';viewer.className='exofProfileDropViewer';viewer.innerHTML='<button class="exofProfileDropViewerClose" type="button" aria-label="Close">×</button><div class="exofProfileDropViewerInner"></div>';document.body.appendChild(viewer);viewer.querySelector('.exofProfileDropViewerClose').onclick=()=>{viewer.classList.remove('open');document.body.style.overflow=''};viewer.addEventListener('click',e=>{if(e.target===viewer){viewer.classList.remove('open');document.body.style.overflow=''}})}
+ const inner=viewer.querySelector('.exofProfileDropViewerInner');inner.innerHTML='<div class="emptyState">Loading Drop…</div>';viewer.classList.add('open');document.body.style.overflow='hidden';
+ const card=await buildDropCard(d,pr,own);inner.replaceChildren(card);viewer.scrollTop=0;
+}
+function exofProfileGridTile(d,pr={},own=false){
+ const tile=document.createElement('button');tile.type='button';tile.className='exofProfileGridTile';tile.dataset.dropId=d.id;
+ const type=String(d.media_type||'image').toLowerCase();const safe=escapeHtml(d.media_url||'');
+ tile.innerHTML=(type==='video'?'<video src="'+safe+'" muted playsinline preload="metadata"></video>':'<img src="'+safe+'" alt="Drop" loading="lazy">')+(type==='video'?'<span class="exofProfileGridType">▶</span>':(type==='loop'?'<span class="exofProfileGridType loop">↻</span>':''));
+ tile.onclick=()=>exofOpenProfileGridDrop(d,pr,own);return tile;
+}
+
 let exofHomeFeedRenderToken=0;
 async function loadDrops(filter='myworld'){
  const renderToken=++exofHomeFeedRenderToken;
@@ -2093,13 +2114,9 @@ async function loadMyDrops(){
     list.innerHTML='<div class="emptyState">No Drops yet.</div>';
   }else{
     for(const d of drops){
-      const card=await buildDropCard(d,currentProfile||{},true);
       if(renderToken!==exofMyDropsRenderToken)return;
-      card.dataset.dropId=d.id;
-      // Final DOM guard: never append the same database Drop ID twice.
-      if(!list.querySelector('[data-drop-id="'+CSS.escape(String(d.id))+'"]')){
-        list.appendChild(card);
-      }
+      const tile=exofProfileGridTile(d,currentProfile||{},true);
+      if(!list.querySelector('[data-drop-id="'+CSS.escape(String(d.id))+'"]')) list.appendChild(tile);
     }
   }
 
@@ -2137,7 +2154,7 @@ async function loadMyDrops(){
     tile.innerHTML=media+'<span class="exofFavoriteLikes">♥ '+d.__likes+'</span>';
     tile.addEventListener('click',()=>{
       const target=list.querySelector('[data-drop-id="'+CSS.escape(String(d.id))+'"]');
-      if(target)target.scrollIntoView({behavior:'smooth',block:'center'});
+      if(target){target.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>target.click(),260);}
     });
     grid.appendChild(tile);
   }
@@ -3031,7 +3048,7 @@ window.addEventListener('load',function(){
       if((t.textContent||'').trim()==='MY DROPS'&&!t.parentElement.classList.contains('profileDropsHeading')){
         var wrap=document.createElement('div');wrap.className='profileDropsHeading';
         t.parentNode.insertBefore(wrap,t);wrap.appendChild(t);
-        var v=document.createElement('span');v.textContent='VIEW DROPS';wrap.appendChild(v);
+        var v=document.createElement('span');v.textContent='GRID';wrap.appendChild(v);
       }
     });
 
