@@ -878,7 +878,18 @@ body.dmHoldOpen{overflow:hidden}
 <style id="exofPulseV1260Style">
 .exofPulsePage{padding-top:18px!important}.exofPulseHead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}.exofPulseHead .title{color:var(--accent);font-size:26px;margin:0}.exofPulseHead .sub{font-size:15px;margin:5px 0 0}.exofPulsePostBtn{border:1px solid var(--accent);background:#071008;color:var(--accent);border-radius:12px;padding:11px 14px;font-weight:900}.exofPulseTabs{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid #1d2a20;margin-bottom:12px}.exofPulseTabs button{background:none;border:0;color:#7e8781;padding:12px 5px;font-weight:900;font-size:11px;position:relative}.exofPulseTabs button.on{color:#fff}.exofPulseTabs button.on:after{content:"";position:absolute;height:2px;background:var(--accent);left:15%;right:15%;bottom:-1px}.exofPulseComposer{border:1px solid #203125;background:#050806;border-radius:17px;padding:12px;margin-bottom:14px}.exofPulseComposer textarea{width:100%;min-height:105px;background:#09100b;border:1px solid #26352a;color:#fff;border-radius:12px;padding:12px;resize:vertical}.exofPulseComposeFoot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;color:#879087;font-size:10px}.exofPulseComposeFoot>div{display:flex;gap:7px}.exofPulseComposeFoot button{width:auto;min-height:34px;padding:0 13px}.pulseCard{border:1px solid #1c2a20;background:linear-gradient(135deg,#071009,#040705);border-radius:17px;padding:13px;margin:10px 0}.pulseTop{display:flex;gap:10px;align-items:center}.pulseAva{width:40px;height:40px;border-radius:50%;background:#121a14 center/cover no-repeat;border:1px solid #31533a;display:grid;place-items:center;font-weight:900}.pulseWho{flex:1;min-width:0}.pulseWho b{font-size:13px}.pulseWho small{display:block;color:#89938c;font-size:10px}.pulseTime{color:#7d877f;font-size:10px}.pulseBody{font-size:16px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere;padding:13px 2px 10px}.pulseActions{display:flex;align-items:center;gap:8px;border-top:1px solid #172219;padding-top:9px}.pulseActions button{border:0;background:none;color:#b9c0bb;font-weight:800;padding:7px 8px}.pulseActions button.liked{color:var(--accent)}.pulseActions .pulseDm{margin-left:auto;color:var(--accent)}.pulseComments{border-top:1px solid #172219;margin-top:5px;padding-top:8px}.pulseComment{padding:7px 2px;font-size:12px}.pulseComment b{color:var(--accent);margin-right:6px}.pulseComment small{color:#7d877f;margin-left:6px}.pulseCommentForm{display:flex;gap:7px;margin-top:8px}.pulseCommentForm input{flex:1;min-width:0}.pulseCommentForm button{width:auto;padding:0 12px}.pulseDelete{color:#ff6969!important}.pulseEmpty{text-align:center;color:#7e8780;padding:40px 10px}@media(max-width:520px){.exofPulsePostBtn{font-size:10px;padding:10px}.pulseBody{font-size:15px}}
 </style>
-</head>
+<style id="exofLegalFoundationCss">
+.exofLegalConsent{display:flex;gap:9px;align-items:flex-start;margin:12px 0 2px;color:#9da59f;font-size:11px;line-height:1.45}
+.exofLegalConsent input{margin-top:3px;accent-color:var(--accent)}
+.exofLegalConsent button{border:0;background:none;color:var(--accent);padding:0;font:inherit;text-decoration:underline;cursor:pointer}
+.exofSignupLegalModal{position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.94);display:none;overflow:auto}
+.exofSignupLegalModal.on{display:block}.exofSignupLegalInner{max-width:720px;margin:0 auto;padding:22px 16px 60px}
+.exofSignupLegalHead{position:sticky;top:0;background:#050705;padding:12px 0;display:flex;align-items:center;gap:12px;border-bottom:1px solid #1d251f}
+.exofSignupLegalHead button{width:40px;height:40px;border-radius:50%;border:1px solid #263028;background:#0a0d0b;color:#fff;font-size:24px}
+.exofSignupLegalCard{margin-top:16px;background:#090c0a;border:1px solid #202922;border-radius:18px;padding:18px;color:#c3c9c5;line-height:1.55;font-size:13px}
+.exofSignupLegalCard h2,.exofSignupLegalCard h3{color:#fff}.exofSignupLegalCard h3{margin-top:22px}.exofSignupLegalCard b{color:#fff}
+.exofLegalDraftNote{border:1px solid #66551d;background:#181407;color:#e6cd72;border-radius:12px;padding:11px;margin-bottom:16px;font-size:11px}
+</style></head>
 <body><div id="exofBuzzToast"></div>
 <div id="authGate">
   <div class="authBox">
@@ -904,6 +915,7 @@ body.dmHoldOpen{overflow:hidden}
       <div class="authField"><label>EMAIL</label><input id="signupEmail" type="email" autocomplete="email" required placeholder="you@email.com"></div>
       <div class="authField"><label>DATE OF BIRTH</label><input id="signupBirthDate" type="date" autocomplete="bday" required><small style="display:block;color:#7f8983;margin-top:6px;line-height:1.35">You must be at least 13 to use EXOF. Your birthday is private and is not shown on your profile.</small></div>
       <div class="authField"><label>PASSWORD</label><input id="signupPassword" type="password" autocomplete="new-password" required minlength="8" placeholder="Minimum 8 characters"></div>
+      <label class="exofLegalConsent"><input id="signupLegalConsent" type="checkbox" required> <span>I agree to the <button type="button" id="signupOpenTerms">Terms of Service</button> and acknowledge the <button type="button" id="signupOpenPrivacy">Privacy Policy</button> and <button type="button" id="signupOpenGuidelines">Community Guidelines</button>.</span></label>
       <button class="primary" type="submit" style="margin-top:8px">CREATE MY EXOF</button>
     </form>
     <form id="recoveryForm" class="authForm">
@@ -915,6 +927,12 @@ body.dmHoldOpen{overflow:hidden}
     </form>
     <div id="authMsg" class="authMsg">Log in or create your EXOF account.</div>
   </div>
+</div>
+<div id="exofSignupLegalModal" class="exofSignupLegalModal" aria-modal="true" role="dialog">
+ <div class="exofSignupLegalInner">
+  <div class="exofSignupLegalHead"><button id="exofSignupLegalClose" type="button">‹</button><b id="exofSignupLegalTitle">EXOF LEGAL</b></div>
+  <div id="exofSignupLegalBody" class="exofSignupLegalCard"></div>
+ </div>
 </div>
 <main id="app" style="display:none">
 <header><div></div><div class="brandLogo"><div class="exofWordmark" aria-label="EXOF"><span>E</span><span class="exofX">X</span><span>O</span><span>F</span></div></div><div class="headerActions"><button id="searchBtn" class="icon searchBtn" aria-label="Search" data-go="search">⌕</button><button id="messagesBtn" class="icon messagesBtn exofDmButton" aria-label="EXOF DM" data-go="messages"><img src="exof-dm-icon.png" alt="EXOF DM"></button></div></header>
@@ -1341,6 +1359,8 @@ signupForm.addEventListener('submit',async(e)=>{
   const email=document.getElementById('signupEmail').value.trim();
   const birthDate=document.getElementById('signupBirthDate').value;
   const password=document.getElementById('signupPassword').value;
+  const legalConsent=document.getElementById('signupLegalConsent')?.checked===true;
+  if(!legalConsent){authMessage('You must agree to the Terms and acknowledge the Privacy Policy and Community Guidelines.','bad');return;}
   const exofAge=(d=>{if(!d)return -1;const b=new Date(d+'T12:00:00'),n=new Date();let a=n.getFullYear()-b.getFullYear();const m=n.getMonth()-b.getMonth();if(m<0||(m===0&&n.getDate()<b.getDate()))a--;return a})(birthDate);
   if(exofAge<13){authMessage('EXOF is for people age 13 and older.','bad');return;}
   if(!/^[a-z0-9._]{3,30}$/.test(username)){
@@ -1351,7 +1371,7 @@ signupForm.addEventListener('submit',async(e)=>{
     email,password,
     options:{
       emailRedirectTo:'https://exofsocial.com/',
-      data:{username,display_name:displayName,birth_date:birthDate}
+      data:{username,display_name:displayName,birth_date:birthDate,exof_legal_version:'2026-09-01-v1',exof_legal_accepted_at:new Date().toISOString()}
     }
   });
   if(error){authMessage(error.message,'bad');return;}
@@ -2470,7 +2490,7 @@ window.EXOF_PRIVACY_API={
     </div></section>
     <section class="exofSettingsSection"><h3>ABOUT EXOF</h3><div class="exofSettingsCard">
       <button class="exofSettingRow" data-setting-action="about"><span class="exofSettingIcon">ⓘ</span><span class="exofSettingText"><b>About EXOF</b><small>Version and platform information</small></span><span class="exofSettingChevron">›</span></button>
-      <button class="exofSettingRow" data-setting-action="terms"><span class="exofSettingIcon">≡</span><span class="exofSettingText"><b>Terms & Privacy</b><small>Terms of Service and Privacy Policy</small></span><span class="exofSettingChevron">›</span></button>
+      <button class="exofSettingRow" data-setting-action="terms"><span class="exofSettingIcon">≡</span><span class="exofSettingText"><b>Terms & Privacy</b><small>Terms of Service and Privacy Policy</small></span><span class="exofSettingChevron">›</span></button><button class="exofSettingRow" id="exofCommunityGuidelinesRow"><span class="exofSettingIcon">⚑</span><span class="exofSettingText"><b>Community Guidelines</b><small>Rules for using EXOF safely</small></span><span class="exofSettingChevron">›</span></button>
     </div></section>
     <section class="exofSettingsSection"><div class="exofSettingsCard">
       <button class="exofSettingRow exofDanger" data-setting-action="logout"><span class="exofSettingIcon">↪</span><span class="exofSettingText"><b>Log out</b></span></button>
@@ -4334,6 +4354,90 @@ $('exofStatusBack')?.addEventListener('click',close);$('exofWarnAcknowledge')?.a
 })();
 </script>
 
+
+<script id="exofLegalFoundationV1269">
+(function(){
+ const VERSION='2026-09-01-v1';
+ const EFFECTIVE='September 1, 2026';
+ const esc=s=>String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+ const docs={
+ terms:`<h2>EXOF Terms of Service</h2><p><b>Effective:</b> ${EFFECTIVE}</p>
+ <div class="exofLegalDraftNote"><b>Beta legal draft.</b> The operator's final legal name, mailing address and legal contact must be inserted before an external/public beta.</div>
+ <h3>1. Eligibility and agreement</h3><p>You must be at least 13 years old to use EXOF. By creating or using an account, you agree to these Terms, the Privacy Policy and Community Guidelines. If you do not agree, do not use EXOF.</p>
+ <h3>2. Your account</h3><p>Provide accurate registration information, protect your credentials, and do not sell, transfer, impersonate, or misuse accounts. You are responsible for activity under your account except where caused by EXOF's own security failure.</p>
+ <h3>3. Your content and license</h3><p>You keep ownership of content you create. You grant EXOF a worldwide, non-exclusive, royalty-free license to host, store, reproduce, display, distribute, transmit, transcode, resize, and otherwise technically process your content only as reasonably necessary to operate, secure, moderate, improve and provide EXOF, subject to your privacy settings and applicable law. This license ends when content is deleted except for reasonable backups, legal preservation, or content retained in another user's lawful context where applicable.</p>
+ <h3>4. Prohibited conduct</h3><p>Do not post or send illegal content; sexual exploitation of minors; non-consensual intimate content; credible threats; targeted harassment; hateful attacks; scams; malware; spam; impersonation; or content that infringes intellectual-property, privacy, publicity or other rights. Do not attempt unauthorized access, scrape protected data, evade enforcement, or interfere with EXOF.</p>
+ <h3>5. Moderation and enforcement</h3><p>EXOF may review reports and remove or restrict content, warn users, suspend accounts, or ban accounts when reasonably necessary to enforce these rules, protect users, comply with law, or secure the service. Enforcement decisions may consider severity, context and repeat behavior. Reporting tools must not be abused.</p>
+ <h3>6. Private messaging</h3><p>EXOF DM is intended for communication between users. Privacy controls reduce access but no online service can guarantee absolute confidentiality. Do not use DMs for illegal activity, exploitation, threats, harassment, fraud, or unwanted sexual content.</p>
+ <h3>7. Copyright</h3><p>Only upload content you have the right to use. EXOF may remove material in response to valid copyright notices and may terminate repeat infringers. A dedicated DMCA process and agent information will be published before public launch.</p>
+ <h3>8. Third-party services</h3><p>Some features may use third-party services, including Supabase infrastructure and YouTube playback. Your use of third-party services may also be governed by their terms and privacy practices.</p>
+ <h3>9. Account termination and deletion</h3><p>You may initiate permanent account deletion from EXOF Settings. EXOF may suspend or terminate access for violations, legal requirements or security risks. Certain records may be retained where legally required or reasonably necessary for fraud prevention, security, disputes or legal claims.</p>
+ <h3>10. Service changes and availability</h3><p>EXOF is under active development. Features may change, be interrupted or be discontinued. To the maximum extent permitted by law, the service is provided without a promise of uninterrupted or error-free operation.</p>
+ <h3>11. Disclaimers and liability</h3><p>To the maximum extent permitted by applicable law, EXOF is provided “as is” and “as available.” EXOF does not control all user-generated content. Nothing in these Terms excludes rights or liabilities that cannot legally be excluded. Final limitation-of-liability, governing-law and dispute provisions will be finalized before external beta after operator/entity review.</p>
+ <h3>12. Changes</h3><p>Material changes will be communicated when required. Continued use after an effective update may constitute acceptance where permitted; when required, EXOF will request renewed consent.</p>`,
+ privacy:`<h2>EXOF Privacy Policy</h2><p><b>Effective:</b> ${EFFECTIVE}</p>
+ <div class="exofLegalDraftNote"><b>Beta legal draft.</b> Final operator identity, legal contact, retention schedule and any state-specific disclosures must be completed before external/public beta.</div>
+ <h3>1. Information EXOF collects</h3><p>EXOF processes account information such as email, username, display name and private date of birth; profile information; photos, videos, loops, voice messages, Drops, Pulses, Chains, comments and DMs; likes, reposts, follows, saves, reports, blocks and searches; and technical/security information such as IP address, browser/device information and service logs when available through EXOF or its providers.</p>
+ <h3>2. Camera, photos and microphone</h3><p>EXOF accesses camera, photo-library/gallery or microphone features only when you choose features that require them and subject to device permissions.</p>
+ <h3>3. How information is used</h3><p>EXOF uses information to create and authenticate accounts; provide feeds, profiles, messaging and social interactions; enforce privacy settings; detect abuse; investigate reports; moderate content; secure accounts; provide support; maintain and improve the service; comply with law; and exercise or defend legal rights.</p>
+ <h3>4. Public and private information</h3><p>Public profile/content may be visible to other users. Private-account controls restrict applicable content to approved audiences. EXOF DM media is designed to use private storage and temporary access URLs, but recipients can still save or capture information they receive.</p>
+ <h3>5. Service providers</h3><p>EXOF uses service providers to operate the service. Supabase provides backend infrastructure, authentication, database and storage functions. If you use profile music or other YouTube-enabled features, Google/YouTube may receive technical information needed to load and operate the player under their own policies.</p>
+ <h3>6. Safety and moderation</h3><p>Reports, warnings, restrictions and moderation records may be processed to enforce Community Guidelines, prevent abuse and protect users. EXOF does not disclose the identity of a reporter to the reported user through normal moderation notices.</p>
+ <h3>7. Children and teens</h3><p>EXOF is not intended for children under 13. Date of birth is used to apply age eligibility and teen-safety settings and is not displayed publicly. Teen accounts may receive more restrictive defaults.</p>
+ <h3>8. Retention and deletion</h3><p>Information is retained while needed to provide EXOF and for legitimate security, moderation, backup, dispute and legal purposes. Users can initiate account deletion in Settings. EXOF is implementing deletion of associated database and storage data; some limited records may be retained where required or permitted by law.</p>
+ <h3>9. Your choices and rights</h3><p>You can manage profile/privacy controls, block users, delete content where available, and delete your account. Depending on your jurisdiction, you may have rights to access, correct, delete or obtain information about personal data processing. A verified privacy-request contact method will be published before external beta.</p>
+ <h3>10. Security</h3><p>EXOF uses access controls, row-level security, private storage for applicable DM media and moderation controls. No system can guarantee perfect security.</p>
+ <h3>11. International processing</h3><p>Service providers may process information in locations different from where you live. Required transfer disclosures and safeguards will be finalized based on EXOF's launch markets and provider configuration.</p>
+ <h3>12. Changes</h3><p>EXOF may update this policy as features and practices change. Material changes will be communicated as required and the effective date will be updated.</p>`,
+ guidelines:`<h2>EXOF Community Guidelines</h2><p><b>Effective:</b> ${EFFECTIVE}</p>
+ <h3>Be human</h3><p>Do not target people with harassment, bullying, hateful attacks, credible threats, stalking or unwanted sexual behavior.</p>
+ <h3>Protect minors</h3><p>Sexual exploitation, grooming, solicitation, sexualized content involving minors, or attempts to obtain exploitative material are prohibited and may be reported to appropriate authorities where required.</p>
+ <h3>No non-consensual sexual content</h3><p>Do not share intimate images without consent, sexual exploitation, or content intended to sexually humiliate another person.</p>
+ <h3>No dangerous or illegal abuse</h3><p>Do not use EXOF to facilitate serious illegal activity, credible violence, fraud, scams, malware or instructions intended to cause harm.</p>
+ <h3>Respect identity and authenticity</h3><p>Do not impersonate others deceptively, manipulate people through fraudulent identity claims, or misrepresent an account as officially verified by EXOF.</p>
+ <h3>Respect intellectual property</h3><p>Post only material you created or have permission or another lawful basis to use. Copyright and trademark complaints may result in removal and repeat-infringer enforcement.</p>
+ <h3>No spam or manipulation</h3><p>Do not mass-post unwanted promotions, artificially manipulate engagement, automate abusive activity or repeatedly send unwanted messages.</p>
+ <h3>Reporting and enforcement</h3><p>Use Report when content or behavior violates these Guidelines. EXOF may remove content, issue warnings, suspend or ban accounts. Serious or repeated violations may receive stronger enforcement without a prior warning.</p>
+ <h3>Appeals</h3><p>An appeals process and support contact will be published before external beta. Do not create replacement accounts to evade an active suspension or ban.</p>`
+ };
+ function openDoc(kind){
+   const m=document.getElementById('exofSignupLegalModal'),b=document.getElementById('exofSignupLegalBody'),t=document.getElementById('exofSignupLegalTitle');
+   if(!m||!b)return;b.innerHTML=docs[kind]||'';t.textContent=kind==='terms'?'TERMS OF SERVICE':kind==='privacy'?'PRIVACY POLICY':'COMMUNITY GUIDELINES';m.classList.add('on');document.body.style.overflow='hidden';
+ }
+ function closeDoc(){document.getElementById('exofSignupLegalModal')?.classList.remove('on');document.body.style.overflow=''}
+ document.getElementById('signupOpenTerms')?.addEventListener('click',()=>openDoc('terms'));
+ document.getElementById('signupOpenPrivacy')?.addEventListener('click',()=>openDoc('privacy'));
+ document.getElementById('signupOpenGuidelines')?.addEventListener('click',()=>openDoc('guidelines'));
+ document.getElementById('exofSignupLegalClose')?.addEventListener('click',closeDoc);
+ document.getElementById('exofCommunityGuidelinesRow')?.addEventListener('click',e=>{e.preventDefault();openDoc('guidelines')});
+ window.EXOF_LEGAL={version:VERSION,docs,openDoc};
+ window.exofSyncLegalAcceptance=async function(){
+   try{
+    const c=window.exofSupabase||window.sb;
+    if(!c?.auth)return;
+    const {data:{user}}=await c.auth.getUser(); if(!user)return;
+    const md=user.user_metadata||{};
+    if(md.exof_legal_version===VERSION && md.exof_legal_accepted_at){
+      await c.rpc('exof_record_legal_acceptance',{p_version:VERSION,p_terms:true,p_privacy:true,p_guidelines:true});
+    }
+   }catch(e){console.warn('EXOF legal acceptance sync',e)}
+ };
+ setTimeout(()=>window.exofSyncLegalAcceptance?.(),1600);
+})();
+</script>
+
+<script id="exofLegalSettingsUpgradeV1269">
+(function(){
+ function apply(){
+  if(!window.EXOF_LEGAL)return setTimeout(apply,100);
+  const t=document.querySelector('#exofTermsPanel .exofLegalCard');
+  const p=document.querySelector('#exofPrivacyPolicyPanel .exofLegalCard');
+  if(t)t.innerHTML=window.EXOF_LEGAL.docs.terms;
+  if(p)p.innerHTML=window.EXOF_LEGAL.docs.privacy;
+ }
+ apply();
+})();
+</script>
 </body></html>
 <style id="exofProfileBackgroundV184">
 #profile #profileShell.profileShell{
