@@ -2443,6 +2443,7 @@ window.EXOF_PRIVACY_API={
     <section class="exofSettingsSection"><h3>YOUR ACCOUNT</h3><div class="exofSettingsCard">
       <button class="exofSettingRow" data-setting-action="edit-profile"><span class="exofSettingIcon">👤</span><span class="exofSettingText"><b>Edit profile</b><small>Name, bio and profile media</small></span><span class="exofSettingChevron">›</span></button>
       <button class="exofSettingRow" data-setting-action="account-info"><span class="exofSettingIcon">◎</span><span class="exofSettingText"><b>Account information</b><small>Email and username</small></span><span class="exofSettingChevron">›</span></button>
+      <button class="exofSettingRow" data-setting-action="account-status"><span class="exofSettingIcon">✓</span><span class="exofSettingText"><b>Account Status</b><small>Warnings and account standing</small></span><span class="exofSettingChevron">›</span></button>
     </div></section>
     <section class="exofSettingsSection"><h3>PRIVACY</h3><div class="exofSettingsCard">
       <button class="exofSettingRow" data-setting-action="privacy"><span class="exofSettingIcon">🔒</span><span class="exofSettingText"><b>Account privacy</b><small>Manage privacy, comments and account visibility</small></span><span class="exofSettingChevron">›</span></button>
@@ -2587,7 +2588,8 @@ window.EXOF_PRIVACY_API={
    if(a==='logout'){await api().logout();location.reload();return}
    if(a==='about')return window.exofOpenAboutFinal();
    if(a==='terms')return window.exofOpenLegalFinal();
-   if(a==='moderation'){settingsClose();window.EXOF_MODERATION?.open();return;}
+   if(a==='account-status'){settingsClose();window.EXOF_ACCOUNT_STATUS?.open();return;}
+  if(a==='moderation'){settingsClose();window.EXOF_MODERATION?.open();return;}
    if(a==='privacy'||a==='blocked')return;
    alert('This setting will be activated in the next update.');
  },true);
@@ -4225,6 +4227,27 @@ document.readyState==='loading'?document.addEventListener('DOMContentLoaded',ini
  // Expose a safe hook so existing renderers can add Report later without duplicating logic.
  window.EXOF_REPORT={open,refresh:loadHidden};
  const mo=new MutationObserver(()=>applyHidden());mo.observe(document.body,{childList:true,subtree:true});loadHidden();
+})();
+</script>
+
+
+<style id="exofAccountStatusV12641Style">
+.exofStatusPage{position:fixed;inset:0;z-index:120000;background:#030503;color:#fff;overflow:auto}.exofStatusPage[hidden],.exofWarnModal[hidden]{display:none!important}.exofStatusHead{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;padding:16px;background:#050805;border-bottom:1px solid #182019}.exofStatusBack{border:0;background:transparent;color:#fff;font-size:30px}.exofStatusWrap{max-width:560px;margin:auto;padding:18px}.exofStanding{border:1px solid #24432e;background:#081009;border-radius:18px;padding:16px;margin-bottom:16px}.exofStanding b{display:block;font-size:18px}.exofStanding small{display:block;color:#9aa59c;margin-top:6px;line-height:1.4}.exofWarningCard{border:1px solid #503d25;background:#120e08;border-radius:16px;padding:14px;margin:10px 0}.exofWarningCard h4{margin:0 0 7px;color:#ffc56c}.exofWarningCard p{margin:0;color:#d8d0c2;line-height:1.45;white-space:pre-wrap}.exofWarningCard small{display:block;color:#8f887d;margin-top:9px}.exofStatusEmpty{color:#89938b;text-align:center;padding:30px 10px}.exofWarnModal{position:fixed;inset:0;z-index:210000;background:rgba(0,0,0,.84);display:flex;align-items:center;justify-content:center;padding:20px}.exofWarnBox{width:min(410px,100%);background:#0b0e0b;border:1px solid #604526;border-radius:20px;padding:20px}.exofWarnBox .shield{font-size:28px}.exofWarnBox h2{margin:8px 0}.exofWarnBox p{color:#c3c9c4;line-height:1.5;white-space:pre-wrap}.exofWarnBox button{width:100%;margin-top:14px;border:1px solid #43654c;background:#102117;color:#fff;border-radius:13px;padding:12px;font-weight:900}.exofSafetyActivity{border-color:#5d4629!important;background:linear-gradient(110deg,#161006,#080705)!important;cursor:pointer}.exofSafetyActivity .exofActivityAvatar{display:grid;place-items:center;background:#182219;color:#8cff9c;font-size:20px}
+</style>
+<section id="exofAccountStatusPage" class="exofStatusPage" hidden><div class="exofStatusHead"><button id="exofStatusBack" class="exofStatusBack">‹</button><b>ACCOUNT STATUS</b></div><div class="exofStatusWrap"><div id="exofStanding" class="exofStanding"></div><div><b>ACCOUNT WARNINGS</b><div id="exofWarningsList"></div></div></div></section>
+<div id="exofWarnModal" class="exofWarnModal" hidden><div class="exofWarnBox"><div class="shield">⚑</div><h2>EXOF SAFETY WARNING</h2><p id="exofWarnModalText"></p><button id="exofWarnAcknowledge">I UNDERSTAND</button></div></div>
+<script id="exofAccountWarningsV12641">
+(()=>{const c=window.exofSupabase,$=id=>document.getElementById(id);if(!c)return;let currentWarning=null;
+const esc=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
+async function uid(){return (await c.auth.getUser()).data?.user?.id||null}
+async function getWarnings(){const u=await uid();if(!u)return[];const q=await c.from('moderation_warnings').select('id,reason,created_at,acknowledged_at').eq('user_id',u).order('created_at',{ascending:false});return q.error?[]:(q.data||[])}
+async function getRestriction(){const u=await uid();if(!u)return null;const q=await c.from('account_restrictions').select('status,reason,suspended_until,updated_at').eq('user_id',u).maybeSingle();return q.error?null:q.data}
+async function open(){const [ws,r]=await Promise.all([getWarnings(),getRestriction()]);const active=r&&r.status!=='active'&&!(r.status==='suspended'&&r.suspended_until&&new Date(r.suspended_until)<=new Date());$('exofStanding').innerHTML='<b>'+(active?esc(r.status.toUpperCase()):'ACCOUNT IN GOOD STANDING')+'</b><small>'+(active?esc(r.reason||'Your account currently has a restriction.'):(ws.length?'Your account has '+ws.length+' warning'+(ws.length===1?'':'s')+'. Review them below.':'No active restrictions or warnings.'))+'</small>';$('exofWarningsList').innerHTML=ws.length?ws.map(w=>'<article class="exofWarningCard"><h4>Community Guidelines Warning</h4><p>'+esc(w.reason)+'</p><small>'+new Date(w.created_at).toLocaleString()+(w.acknowledged_at?' · Acknowledged':' · Needs acknowledgment')+'</small></article>').join(''):'<div class="exofStatusEmpty">No account warnings.</div>';$('exofAccountStatusPage').hidden=false;document.body.style.overflow='hidden'}
+function close(){$('exofAccountStatusPage').hidden=true;document.body.style.overflow='';window.openExofSettings?.()}
+async function checkPopup(){const ws=await getWarnings(),w=ws.find(x=>!x.acknowledged_at);if(!w)return;currentWarning=w;$('exofWarnModalText').textContent='Your account received a warning for violating EXOF Community Guidelines.\n\nReason: '+w.reason+'\n\nDate: '+new Date(w.created_at).toLocaleString();$('exofWarnModal').hidden=false}
+async function ack(){if(!currentWarning)return;const b=$('exofWarnAcknowledge');b.disabled=true;const q=await c.rpc('exof_acknowledge_warning',{p_warning_id:currentWarning.id});b.disabled=false;if(q.error)return alert(q.error.message);$('exofWarnModal').hidden=true;currentWarning=null;await refreshActivity();setTimeout(checkPopup,120)}
+async function refreshActivity(){const box=$('exofActivityRecent');if(!box)return;box.querySelectorAll('.exofSafetyActivity,.exofSafetyDay').forEach(x=>x.remove());const ws=await getWarnings();if(!ws.length)return;let anchor=box.firstChild;const h=document.createElement('div');h.className='exofActivityDay exofSafetyDay';h.textContent='EXOF SAFETY';box.insertBefore(h,anchor);for(const w of ws){const row=document.createElement('div');row.className='exofActivityRow recent exofSafetyActivity'+(!w.acknowledged_at?' unread':'');row.innerHTML='<div class="exofActivityAvatar">⚑</div><div class="exofActivityText"><div><b>EXOF Safety</b> <span>sent you an account warning</span></div><small>'+esc(w.reason)+' · '+new Date(w.created_at).toLocaleDateString()+'</small></div>';row.onclick=()=>open();box.insertBefore(row,anchor)}const unread=ws.filter(x=>!x.acknowledged_at).length;if(unread){document.querySelectorAll('.exofActivityBadge').forEach(b=>{const n=Number(b.textContent||0)+unread;b.textContent=n>99?'99+':n;b.style.display='flex'})}}
+$('exofStatusBack')?.addEventListener('click',close);$('exofWarnAcknowledge')?.addEventListener('click',ack);document.addEventListener('click',e=>{if(e.target.closest('[data-go="activity"],.exofActivityIcon'))setTimeout(refreshActivity,450)},true);window.EXOF_ACCOUNT_STATUS={open,refresh:refreshActivity};c.auth.onAuthStateChange(()=>setTimeout(()=>{checkPopup();refreshActivity()},500));setTimeout(()=>{checkPopup();refreshActivity()},850);
 })();
 </script>
 
