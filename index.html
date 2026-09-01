@@ -2919,7 +2919,7 @@ body.exof-own-profile #exofProfileSettingsGear{
    <div class="exofAboutMark">E<i>X</i>OF</div>
    <h2>Express. Connect. Drop.</h2>
    <p>EXOF is a social experience built around Drops, profiles, loops, discovery and real-time interaction between people.</p>
-   <h3>Version</h3><p>EXOF V1.27.3</p>
+   <h3>Version</h3><p>EXOF V1.27.5</p>
    <h3>Platform</h3><p>Web application / progressive social experience.</p>
   </div>
  </div>
@@ -4332,10 +4332,16 @@ $('exofStatusBack')?.addEventListener('click',close);$('exofWarnAcknowledge')?.a
    try{
      const {data:{user},error:ue}=await c().auth.getUser();if(ue||!user)throw ue||new Error('Please sign in again.');
      const mediaErrors=await cleanupMedia(user.id);
+     if(mediaErrors.length){
+       try{
+         const {error:qe}=await c().from('account_cleanup_queue').insert({user_id:user.id,cleanup_kind:'storage',failed_targets:mediaErrors,details:'Self-service account deletion storage cleanup needs administrative retry.'});
+         if(qe)console.warn('Unable to queue storage cleanup retry',qe);
+       }catch(qe){console.warn('Unable to queue storage cleanup retry',qe)}
+     }
      const {error}=await c().rpc('exof_delete_my_account');if(error)throw error;
      try{await c().auth.signOut()}catch(_){}
      localStorage.removeItem('exof_password_recovery');
-     localStorage.removeItem('exof_password_recovery');
+     sessionStorage.removeItem('exof_password_recovery');
      if(mediaErrors.length)console.warn('Account deleted; some storage cleanup returned errors:',mediaErrors);
      alert('Your EXOF account has been permanently deleted.');location.href='https://exofsocial.com/';
    }catch(e){console.error(e);msg.textContent=e.message||'Unable to delete account. Nothing else was changed.';btn.textContent='DELETE MY ACCOUNT';sync();}
