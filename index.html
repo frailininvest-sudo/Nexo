@@ -940,12 +940,12 @@ body.dmHoldOpen{overflow:hidden}
 <section id="home" class="page active"><div class="tabs exofHomeTabsV15"><button class="on" id="myWorldTab">MY WORLD</button><button data-go="drop" id="globalDropTab"><span class="globalGlobe">🌐</span> GLOBAL DROP</button></div><div id="realFeed"></div></section>
 
 <section id="drop" class="page exofWorldDropV13">
-<div class="title">⚡ World DROP</div>
+<div class="title">⚡ GLOBAL DROP</div>
 <p class="sub">Everyone sees everyone. Today’s window disappears tomorrow at 2:55 PM ET.</p>
 <div class="card dropHero">
   <small class="mint"><b id="worldDropLabel">NEXT DROP · 3:00 PM ET</b></small>
   <div class="clock" id="clock">--:--:--</div>
-  <p class="sub" id="dropStatus">Get ready for today’s World DROP.</p>
+  <p class="sub" id="dropStatus">Get ready for today’s GLOBAL DROP.</p>
   <button class="primary" id="postDrop">⚡ GET READY</button>
   <small id="worldDropHint" class="worldDropHint">Posting opens for only 3 minutes.</small>
 </div>
@@ -956,25 +956,25 @@ body.dmHoldOpen{overflow:hidden}
  <div class="world"><b>MIAMI</b><small>US</small><strong>—</strong><em>moments</em></div>
  <div class="world"><b>SPAIN</b><small>ES</small><strong>—</strong><em>moments</em></div>
 </div>
-<p class="worldPulseNote">Locations rotate automatically based on World DROP activity. Everyone still sees the same global feed.</p>
+<p class="worldPulseNote">Locations rotate automatically based on GLOBAL DROP activity. Everyone still sees the same global feed.</p>
 <input id="worldDropGalleryInput" type="file" accept="image/*" capture="environment" hidden>
 
 </section>
 
 <section id="worldDropPreview" class="page exofWorldDropPreview">
-  <div class="worldDropFlowTop"><button type="button" id="wdPreviewBack">‹</button><b>WORLD DROP PREVIEW</b></div>
+  <div class="worldDropFlowTop"><button type="button" id="wdPreviewBack">‹</button><b>GLOBAL DROP PREVIEW</b></div>
   <p class="sub">Your photo is not posted yet.</p>
-  <div class="wdPreviewMedia"><img id="wdPreviewImg" alt="World Drop preview"></div>
+  <div class="wdPreviewMedia"><img id="wdPreviewImg" alt="Global Drop preview"></div>
   <div class="wdPreviewActions">
     <button type="button" class="secondary" id="wdRetake">↻ RETAKE</button>
-    <button type="button" class="primary" id="wdPublish">⚡ PUBLISH WORLD DROP</button>
+    <button type="button" class="primary" id="wdPublish">⚡ PUBLISH GLOBAL DROP</button>
   </div>
-  <small class="wdOneOnly">One World Drop per day. Once published, it cannot be replaced.</small>
+  <small class="wdOneOnly">One Global Drop per day. Once published, it cannot be replaced.</small>
 </section>
 
 <section id="worldDropLive" class="page exofWorldDropLive">
-  <div class="worldDropFlowTop"><button type="button" id="wdLiveBack">‹</button><div><b>⚡ WORLD DROP · LIVE</b><small>Everyone sees everyone</small></div><span id="wdLiveTimer">LIVE</span></div>
-  <div id="wdLiveFeed" class="wdLiveFeed"><div class="wdEmpty">Your World DROP feed will appear here.</div></div>
+  <div class="worldDropFlowTop"><button type="button" id="wdLiveBack">‹</button><div><b>⚡ GLOBAL DROP · LIVE</b><small>Everyone sees everyone</small></div><span id="wdLiveTimer">LIVE</span></div>
+  <div id="wdLiveFeed" class="wdLiveFeed"><div class="wdEmpty">Your GLOBAL DROP feed will appear here.</div></div>
 </section>
 
 <section id="pulse" class="page exofPulsePage">
@@ -1284,7 +1284,7 @@ forgotPasswordBtn.addEventListener('click',async()=>{
   const email=document.getElementById('loginEmail').value.trim();
   if(!email){authMessage('Enter your email first, then tap Forgot password.','bad');return;}
   authMessage('Sending password recovery email…');
-  sessionStorage.setItem('nexo_password_recovery','1');
+  sessionStorage.setItem('exof_password_recovery','1');
   const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:'https://exofsocial.com/?recovery=1'});
   if(error){authMessage(error.message,'bad');return;}
   authMessage('Recovery email sent. Open it and tap the recovery link.','good');
@@ -1299,7 +1299,7 @@ recoveryForm.addEventListener('submit',async(e)=>{
   authMessage('Updating your password…');
   const {error}=await sb.auth.updateUser({password});
   if(error){authMessage(error.message,'bad');return;}
-  sessionStorage.removeItem('nexo_password_recovery');
+  sessionStorage.removeItem('exof_password_recovery');
   history.replaceState({},document.title,'/');
   await sb.auth.signOut();
   setAuthTab('login');
@@ -1415,7 +1415,7 @@ sb.auth.onAuthStateChange((event,session)=>{
 sb.auth.getSession().then(({data})=>{
   const hash=window.location.hash||'';
   const query=window.location.search||'';
-  const pendingRecovery=sessionStorage.getItem('nexo_password_recovery')==='1';
+  const pendingRecovery=sessionStorage.getItem('exof_password_recovery')==='1';
   const recoveryUrl=hash.includes('type=recovery') || query.includes('type=recovery') || query.includes('recovery=1');
 
   // Modern Supabase PKCE recovery links often return only ?code=...
@@ -2227,7 +2227,7 @@ async function wdPostedToday(){
 }
 async function wdSetMainButton(){
  if(!worldDropBtn)return;
- if(await wdPostedToday()){worldDropBtn.disabled=false;worldDropBtn.textContent='✓ DROP POSTED · ENTER WORLD DROP';}
+ if(await wdPostedToday()){worldDropBtn.disabled=false;worldDropBtn.textContent='✓ DROP POSTED · ENTER GLOBAL DROP';}
 }
 async function wdResolveLocation(){
  return new Promise(resolve=>{
@@ -2277,16 +2277,16 @@ async function wdToggleLike(id,btn){
 }
 async function loadWorldDropLive(){
  const feed=document.getElementById('wdLiveFeed');if(!feed)return;
- feed.innerHTML='<div class="wdEmpty">Loading World DROP…</div>';
+ feed.innerHTML='<div class="wdEmpty">Loading GLOBAL DROP…</div>';
  const {data,error}=await sb.from('world_drops').select('id,user_id,media_url,location_label,created_at,profiles(username,avatar_url)').eq('drop_date',wdETDate()).order('created_at',{ascending:false});
  if(error){feed.innerHTML='<div class="wdEmpty">'+escapeHtml(error.message)+'</div>';return}
- if(!data?.length){feed.innerHTML='<div class="wdEmpty">No World Drops yet.</div>';return}
+ if(!data?.length){feed.innerHTML='<div class="wdEmpty">No Global Drops yet.</div>';return}
  feed.innerHTML='';
  for(const d of data){
    const pr=d.profiles||{}, {count}=await sb.from('world_drop_likes').select('*',{count:'exact',head:true}).eq('world_drop_id',d.id);
    const {data:mine}=currentUser?await sb.from('world_drop_likes').select('id').eq('world_drop_id',d.id).eq('user_id',currentUser.id).maybeSingle():{data:null};
    const card=document.createElement('article');card.className='wdFeedCard';
-   card.innerHTML=`<div class="wdFeedHead"><div class="wdFeedWho">${pr.avatar_url?`<img src="${pr.avatar_url}" alt="">`:''}<div><b>@${escapeHtml(pr.username||'user')}</b><small>World DROP</small></div></div><span>⌖ ${escapeHtml(d.location_label||'WORLD')}</span></div><img class="wdFeedMedia" src="${d.media_url}" alt="World Drop"><div class="wdFeedLike"><button type="button" class="wdHeartBtn ${mine?'liked':''}"><i class="likeFx"></i><b class="heart">${mine?'♥':'♡'}</b><span>${count||0}</span></button></div>`;
+   card.innerHTML=`<div class="wdFeedHead"><div class="wdFeedWho">${pr.avatar_url?`<img src="${pr.avatar_url}" alt="">`:''}<div><b>@${escapeHtml(pr.username||'user')}</b><small>GLOBAL DROP</small></div></div><span>⌖ ${escapeHtml(d.location_label||'WORLD')}</span></div><img class="wdFeedMedia" src="${d.media_url}" alt="Global Drop"><div class="wdFeedLike"><button type="button" class="wdHeartBtn ${mine?'liked':''}"><i class="likeFx"></i><b class="heart">${mine?'♥':'♡'}</b><span>${count||0}</span></button></div>`;
    card.querySelector('.wdHeartBtn').onclick=e=>wdToggleLike(d.id,e.currentTarget);
    feed.appendChild(card);
  }
@@ -2304,19 +2304,19 @@ document.getElementById('wdPublish')?.addEventListener('click',async()=>{
    if(ins.error)throw ins.error;
    pendingWorldDropImage=null;pendingWorldDropFile=null;
    await loadWorldDropLive();await wdSetMainButton();go('worldDropLive');
- }catch(err){alert(err.message||'Could not publish World DROP.')}
- finally{btn.disabled=false;btn.textContent='⚡ PUBLISH WORLD DROP'}
+ }catch(err){alert(err.message||'Could not publish GLOBAL DROP.')}
+ finally{btn.disabled=false;btn.textContent='⚡ PUBLISH GLOBAL DROP'}
 });
 function tick(){
  if(EXOF_WORLD_DROP_TEST_MODE){
    window.exofWorldDropState='open';
    const clock=document.getElementById('clock'),status=document.getElementById('dropStatus'),label=document.getElementById('worldDropLabel'),hint=document.getElementById('worldDropHint');
-   label.textContent='⚡ WORLD DROP · LIVE';
+   label.textContent='⚡ GLOBAL DROP · LIVE';
    clock.textContent='03:00';
    status.textContent='Posting is open now · 3:00 PM – 3:03 PM ET';
    worldDropBtn.disabled=false;
    worldDropBtn.textContent='＋ POST MY DROP';
-   hint.textContent='One World Drop per day · 3:00 PM – 3:03 PM ET';
+   hint.textContent='One Global Drop per day · 3:00 PM – 3:03 PM ET';
    wdSetMainButton();
    return;
  }
@@ -2326,7 +2326,7 @@ function tick(){
  let d;
  if(cur>=open&&cur<close){
    window.exofWorldDropState='open';d=close-cur;
-   label.textContent='⚡ WORLD DROP · LIVE';clock.textContent=[Math.floor(d/60),d%60].map(x=>String(x).padStart(2,'0')).join(':');
+   label.textContent='⚡ GLOBAL DROP · LIVE';clock.textContent=[Math.floor(d/60),d%60].map(x=>String(x).padStart(2,'0')).join(':');
    status.textContent='Posting is open now · 3:00 PM – 3:03 PM ET';
    worldDropBtn.disabled=false;worldDropBtn.textContent='＋ POST MY DROP · '+clock.textContent+' LEFT';
    hint.textContent='Be quick. 3 minutes to be part of today’s moment.';
@@ -2334,8 +2334,8 @@ function tick(){
    window.exofWorldDropState='closed';d=open-cur;if(d<=0)d+=86400;
    clock.textContent=[Math.floor(d/3600),Math.floor((d%3600)/60),d%60].map(x=>String(x).padStart(2,'0')).join(':');
    if(cur>=reset&&cur<open){label.textContent='NEXT DROP · 3:00 PM ET';status.textContent='⚡ RESET WINDOW · Yesterday is gone · New DROP at 3:00 PM ET';worldDropBtn.textContent='⚡ GET READY';}
-   else if(cur>=close){label.textContent='POSTING CLOSED · NEXT DROP 3:00 PM ET';status.textContent='Today’s World DROP is open to watch, like, comment and share.';worldDropBtn.textContent='🔒 POSTING CLOSED · VIEW DROPS';}
-   else{label.textContent='NEXT DROP · 3:00 PM ET';status.textContent='Today’s World DROP posting window: 3:00 PM – 3:03 PM ET';worldDropBtn.textContent='⚡ GET READY';}
+   else if(cur>=close){label.textContent='POSTING CLOSED · NEXT DROP 3:00 PM ET';status.textContent='Today’s GLOBAL DROP is open to watch, like, comment and share.';worldDropBtn.textContent='🔒 POSTING CLOSED · VIEW DROPS';}
+   else{label.textContent='NEXT DROP · 3:00 PM ET';status.textContent='Today’s GLOBAL DROP posting window: 3:00 PM – 3:03 PM ET';worldDropBtn.textContent='⚡ GET READY';}
    worldDropBtn.disabled=true;hint.textContent='Posting opens for only 3 minutes.';
  }
 }
@@ -2380,7 +2380,7 @@ window.EXOF_SETTINGS_API={
     if(!user?.email)throw new Error('No email found for this account.');
     const {error:re}=await window.exofSupabase.auth.resetPasswordForEmail(user.email,{redirectTo:'https://exofsocial.com/?recovery=1'});
     if(re)throw re;
-    sessionStorage.setItem('nexo_password_recovery','1');
+    sessionStorage.setItem('exof_password_recovery','1');
     return user.email;
   },
   accent(color){ exofApplyAccent(color); },
@@ -2918,7 +2918,7 @@ body.exof-own-profile #exofProfileSettingsGear{
    <div class="exofAboutMark">E<i>X</i>OF</div>
    <h2>Express. Connect. Drop.</h2>
    <p>EXOF is a social experience built around Drops, profiles, loops, discovery and real-time interaction between people.</p>
-   <h3>Version</h3><p>EXOF V1.27.0</p>
+   <h3>Version</h3><p>EXOF V1.27.2</p>
    <h3>Platform</h3><p>Web application / progressive social experience.</p>
   </div>
  </div>
@@ -4331,7 +4331,7 @@ $('exofStatusBack')?.addEventListener('click',close);$('exofWarnAcknowledge')?.a
      const mediaErrors=await cleanupMedia(user.id);
      const {error}=await c().rpc('exof_delete_my_account');if(error)throw error;
      try{await c().auth.signOut()}catch(_){}
-     localStorage.removeItem('nexo_password_recovery');
+     localStorage.removeItem('exof_password_recovery');
      localStorage.removeItem('exof_password_recovery');
      if(mediaErrors.length)console.warn('Account deleted; some storage cleanup returned errors:',mediaErrors);
      alert('Your EXOF account has been permanently deleted.');location.href='https://exofsocial.com/';
