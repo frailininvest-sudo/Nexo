@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#07100b"><title>EXOF V1.27.7 — XFOVERSE / Pre-iOS Beta</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="format-detection" content="telephone=no"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#07100b"><title>EXOF V1.27.8 — iOS Compatibility</title>
 <style>
 *{box-sizing:border-box}:root{--accent:#62ff32;--bg:#020403;--panel:rgba(7,9,8,.96);--line:#202723;--text:#f7fff8;--muted:#8b968f;--cardAlpha:.88;--profileOverlay:.55;--profileBlur:0px}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}
@@ -2919,7 +2919,7 @@ body.exof-own-profile #exofProfileSettingsGear{
    <div class="exofAboutMark">E<i>X</i>OF</div>
    <h2>Express. Connect. Drop.</h2>
    <p>EXOF is a social experience built around Drops, profiles, loops, discovery and real-time interaction between people.</p>
-   <h3>Version</h3><p>EXOF V1.27.7</p>
+   <h3>Version</h3><p>EXOF V1.27.8</p>
    <h3>Platform</h3><p>Web application / progressive social experience.</p>
   </div>
  </div>
@@ -4489,7 +4489,37 @@ $('exofStatusBack')?.addEventListener('click',close);$('exofWarnAcknowledge')?.a
 \n<script id="exofUploadSecurityV1271">(()=>{
  const allowed={image:['image/jpeg','image/png','image/webp','image/gif','image/heic','image/heif'],video:['video/mp4','video/quicktime','video/webm','video/x-m4v'],audio:['audio/webm','audio/ogg','audio/mpeg','audio/mp4','audio/x-m4a','audio/aac','audio/wav']};
  window.exofValidateUpload=function(file,kind='media'){if(!file)return true;if(file.size>50*1024*1024)throw new Error('File is too large. Maximum 50 MB.');const t=String(file.type||'').toLowerCase();let ok=false;if(kind==='image')ok=allowed.image.includes(t);else if(kind==='video')ok=allowed.video.includes(t);else if(kind==='audio')ok=allowed.audio.includes(t);else ok=[...allowed.image,...allowed.video,...allowed.audio].includes(t);if(!ok)throw new Error('This file type is not supported by EXOF.');return true};
-})();</script>\n</body></html>
+})();</script>\n
+<script id="exofIOSCompatibilityV1278">
+(()=>{
+  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const isNative=!!(window.Capacitor&&typeof window.Capacitor.isNativePlatform==='function'&&window.Capacitor.isNativePlatform());
+  window.EXOF_PLATFORM={isIOS,isNative,isCapacitor:!!window.Capacitor};
+
+  // Prevent iOS gesture/viewport edge cases from leaving stale focus behind.
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){ try{ document.activeElement?.blur?.(); }catch(_){} }
+  });
+
+  // Stable share/copy fallback for WKWebView and older iOS versions.
+  window.EXOF_SHARE=async(data={})=>{
+    if(navigator.share){
+      try{ await navigator.share(data); return true; }
+      catch(e){ if(e?.name==='AbortError') return false; }
+    }
+    const text=data.url||data.text||'';
+    if(text&&navigator.clipboard?.writeText){
+      try{ await navigator.clipboard.writeText(text); return true; }catch(_){}
+    }
+    return false;
+  };
+
+  // Keep file-input camera capture as the safe web/native fallback. Capacitor can
+  // replace this bridge later without changing EXOF feature code.
+  window.EXOF_IOS_READY=true;
+})();
+</script>
+</body></html>
 <style id="exofProfileBackgroundV184">
 #profile #profileShell.profileShell{
   background:transparent!important;
